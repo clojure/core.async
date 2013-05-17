@@ -6,5 +6,5 @@
   :parent [org.clojure/pom.contrib "0.1.2"]
   :dependencies [[org.clojure/clojure "1.5.1"]]
   :warn-on-reflection true
-  :source-paths ["src/clojure"]
+  :source-paths ["src/clj"]
   :java-source-paths ["src/java"])
