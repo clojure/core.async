@@ -1,6 +1,6 @@
 (ns core.async.mutex-test
   (:use clojure.test)
-  (:import (core.async.mutex Mutex)))
+  (:import (core.async Mutex)))
 
 (deftest mutex-test
   (let [lock (Mutex.)]
