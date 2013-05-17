@@ -29,4 +29,4 @@
 (defprotocol Buffer
   (full? [b])
   (remove! [b])
-  (add! [b]))
+  (add! [b itm]))

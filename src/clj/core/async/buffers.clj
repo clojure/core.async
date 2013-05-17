@@ -12,8 +12,52 @@
 
 (set! *warn-on-reflection* true)
 
-(defn fixed-buffer [n])
+(deftype FixedBuffer [^LinkedList buf ^long n]
+  proto/Buffer
+  (full? [this]
+    (= (.size buf) n))
+  (remove! [this]
+    (.removeLast buf))
+  (add! [this itm]
+    (assert (not (proto/full? this)) "Can't add to a full buffer")
+    (.addFirst buf itm))
+  clojure.lang.Counted
+  (count [this]
+    (.size buf)))
 
-(defn dropping-buffer [n])
+(defn fixed-buffer [^long n]
+  (FixedBuffer. (LinkedList.) n))
 
-(defn sliding-buffer [n])
+
+(deftype DroppingBuffer [^LinkedList buf ^long n]
+  proto/Buffer
+  (full? [this]
+    false)
+  (remove! [this]
+    (.removeLast buf))
+  (add! [this itm]
+    (when-not (= (.size buf) n)
+      (.addFirst buf itm)))
+  clojure.lang.Counted
+  (count [this]
+    (.size buf)))
+
+(defn dropping-buffer [n]
+  (DroppingBuffer. (LinkedList.) n))
+
+(deftype SlidingBuffer [^LinkedList buf ^long n]
+  proto/Buffer
+  (full? [this]
+    false)
+  (remove! [this]
+    (.removeLast buf))
+  (add! [this itm]
+    (when (= (.size buf) n)
+      (proto/remove! this))
+    (.addFirst buf itm))
+  clojure.lang.Counted
+  (count [this]
+    (.size buf)))
+
+(defn sliding-buffer [n]
+  (SlidingBuffer. (LinkedList.) n))
