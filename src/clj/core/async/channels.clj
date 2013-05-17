@@ -151,6 +151,13 @@
        (proto/unlock mutex)
        nil))))
 
+(defn- mutex []
+  (let [m (Mutex.)]
+    (reify
+     proto/Locking
+     (lock [_] (.lock m))
+     (unlock [_] (.unlock m)))))
+
 (defn chan [buf]
- (ManyToManyChannel. (LinkedList.) (LinkedList.) buf (atom nil) (Mutex.)))
+ (ManyToManyChannel. (LinkedList.) (LinkedList.) buf (atom nil) (mutex)))
 

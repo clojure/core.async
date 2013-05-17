@@ -4,7 +4,7 @@
             [core.async :as async]))
 
 (deftest timeout-interval-test
-  #_(let [start-stamp (System/currentTimeMillis)
+  (let [start-stamp (System/currentTimeMillis)
         test-timeout (timeout 500)]
     (is (>= (+ start-stamp 500)
             (do (async/<! test-timeout)
@@ -12,7 +12,7 @@
         "Reading from a timeout channel does not complete until the specified milliseconds have elapsed.")))
 
 (deftest timeout-ordering-test
-  #_(let [test-atom (atom [])
+  (let [test-atom (atom [])
         timeout-channels [(timeout 800)
                           (timeout 600)
                           (timeout 700)

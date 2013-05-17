@@ -29,8 +29,8 @@
   (let [m (Mutex.)]
     (reify
      proto/Locking
-     (lock [_] (.lock ^Mutex mutex))
-     (unlock [_] (.unlock ^Mutex mutex)))))
+     (lock [_] (.lock m))
+     (unlock [_] (.unlock m)))))
 
 (defn <!
   "takes a val from port. Will return nil if closed. Will block/park
