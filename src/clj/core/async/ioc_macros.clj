@@ -11,7 +11,8 @@
 
 (ns core.async.ioc-macros
   (:refer-clojure :exclude [all])
-  (:require [clojure.pprint :refer [pprint]]))
+  (:require [clojure.pprint :refer [pprint]]
+            [core.async.protocols :as proto]))
 
 (def ^:dynamic *symbol-translations* {})
 
@@ -214,7 +215,23 @@
   (writes-to [this] [])
   (block-references [this] [])
   (emit-instruction [this state-sym]
-    `(assoc ~state-sym ::value ~value ::state ::finished)))
+    `(assoc ~state-sym ::value ~value ::action ::return ::state ::finished)))
+
+(defrecord Put! [channel value block]
+  IInstruction
+  (reads-from [this] [channel value])
+  (writes-to [this] [])
+  (block-references [this] [block])
+  (emit-instruction [this state-sym]
+    `(assoc ~state-sym ::value [~channel ~value] ::action ::put! ::state ~block)))
+
+(defrecord Take! [channel block]
+  IInstruction
+  (reads-from [this] [channel])
+  (writes-to [this] [])
+  (block-references [this] [block])
+  (emit-instruction [this state-sym]
+    `(assoc ~state-sym ::value ~channel ::action ::take! ::state ~block)))
 
 (defrecord Pause [value block]
   IInstruction
@@ -222,7 +239,7 @@
   (writes-to [this] [])
   (block-references [this] [block])
   (emit-instruction [this state-sym]
-    `(assoc ~state-sym ::value ~value ::state ~block)))
+    `(assoc ~state-sym ::value ~value ::action ::pause ::state ~block)))
 
 (defrecord CondBr [test then-block else-block]
   IInstruction
@@ -375,6 +392,29 @@
     val-id (add-instruction (->Const ::value))]
    val-id))
 
+(defmethod sexpr-to-ssa 'take!
+  [[_ chan]]
+  (gen-plan
+   [next-blk (add-block)
+    chan-id (item-to-ssa chan)
+    jmp-id (add-instruction (->Take! chan-id next-blk))
+    _ (set-block next-blk)
+    val-id (add-instruction (->Const ::value))]
+   val-id))
+
+(defmethod sexpr-to-ssa 'put!
+  [[_ chan expr]]
+  (gen-plan
+   [next-blk (add-block)
+    chan-id (item-to-ssa chan)
+    expr-id (item-to-ssa expr)
+    jmp-id (add-instruction (->Put! chan-id expr-id next-blk))
+    _ (set-block next-blk)
+    val-id (add-instruction (->Const ::value))]
+   val-id))
+
+
+
 (defmethod -item-to-ssa :list
   [lst]
   (sexpr-to-ssa lst))
@@ -503,26 +543,23 @@
   [state]
   (= (::state state) ::finished))
 
-(defn task-wrapper
+(defn async-chan-wrapper
   "State machine wrapper that uses the async library"
   ([f]
      (let [p (promise)]
-       (task-wrapper f p (f))
-       p))
+       (async-chan-wrapper f p (f))))
   ([f p state]
      (let [value (::value state)]
-       (cond
-        (finished? state)
-        (p value)
-        
-        #_(extends? INotify (class value))
-        #_(then value result
-              (task-wrapper f p (-> state
-                                    (assoc ::value result)
-                                    f)))
-        
-        :else
-        (throw (Exception. "Can't deref something that doesn't implement INotify"))))))
+       (case (::action state)
+         ::take!
+         (proto/take! value (fn [x]
+                        (async-chan-wrapper f p (f (assoc state ::value x)))))
+         ::put!
+         (let [[chan value] value]
+           (proto/put! chan value (fn [x]
+                                    (async-chan-wrapper f p (f (assoc state ::value x))))))
+         ::return
+         (p value)))))
 
 (defn state-machine [body]
   (-> (parse-to-state-machine body)

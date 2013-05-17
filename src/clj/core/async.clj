@@ -118,4 +118,4 @@
 
 (defmacro async [& body]
   (binding [ioc/*symbol-translations* '{await ioc/pause}]
-    `(ioc/task-wrapper ~(ioc/state-machine body))))
+    `(ioc/async-chan-wrapper ~(ioc/state-machine body))))
