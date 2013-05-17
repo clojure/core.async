@@ -8,7 +8,8 @@
 
 (ns core.async
   (:require [core.async.protocols :as proto]
-            [core.async.dispatch :as dispatch]))
+            [core.async.dispatch :as dispatch])
+  (:import [core.async ThreadLocalRandom Mutex]))
 
 (set! *warn-on-reflection* true)
 
@@ -23,6 +24,13 @@
    (active? [_] true)
    (lock-id [_] 0)
    (commit [_] f)))
+
+(defn- mutex []
+  (let [m (Mutex.)]
+    (reify
+     proto/Locking
+     (lock [_] (.lock ^Mutex mutex))
+     (unlock [_] (.unlock ^Mutex mutex)))))
 
 (defn <!
   "takes a val from port. Will return nil if closed. Will block/park
@@ -80,14 +88,29 @@
   [chan]
   (proto/close! chan))
 
+(defn- trand [n]
+  (-> (ThreadLocalRandom/current) .nextLong))
+
+(defn- alt-flag []
+  (let [m (Mutex.)
+        flag (atom true)]
+    (reify
+     proto/Locking
+     (lock [_] (proto/lock m))
+     (unlock [_] (proto/unlock m)))))
+
 (defn do-alt [clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
   (let [clauses (partition 2 clauses)
         default (first (filter #(= :default (first %)) clauses))
         clauses (remove #(= :default (first %)) clauses)]
     (assert (every? keyword? (map first clauses)) "alt clauses must begin with keywords")
-    (assert (every? #{'<! '>!} (map #(-> % second first) clauses)) "alt exprs must be <! or >!")
+    (assert (every? sequential? (map second clauses)) "alt exprs must be async calls")
+    (assert (every? #{'core.async/<! 'core.async/>!} (map #(-> % second first) clauses)) "alt exprs must be <! or >!")
+    (let [gp (gensym)]
+      )
     [default clauses]))
 
-(defmacro alt [& clauses]
+(defmacro alt
+  [& clauses]
   (do-alt clauses))
