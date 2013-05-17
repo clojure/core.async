@@ -22,6 +22,6 @@
                                              (swap! test-atom conj i)))
                            (.start))))]
     (doseq [thread threads]
-      (.join thread))
+      (.join ^Thread thread))
     (is (= @test-atom [3 1 2 0])
         "Timeouts close in order determined by their delays, not in order determined by their creation.")))
