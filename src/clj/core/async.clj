@@ -8,7 +8,8 @@
 
 (ns core.async
   (:require [core.async.protocols :as proto]
-            [core.async.dispatch :as dispatch])
+            [core.async.dispatch :as dispatch]
+            [core.async.ioc-macros :as ioc])
   (:import [core.async ThreadLocalRandom Mutex]))
 
 (set! *warn-on-reflection* true)
@@ -161,4 +162,8 @@
 (defmacro alt
   [& clauses]
   (do-alt clauses))
+
+(defmacro async [& body]
+  (binding [ioc/*symbol-translations* '{await ioc/pause}]
+    `(ioc/async-chan-wrapper ~(ioc/state-machine body))))
 
