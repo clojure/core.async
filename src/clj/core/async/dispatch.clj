@@ -23,7 +23,7 @@
       ThreadFactory
       (newThread [this runnable]
         (doto (Thread. runnable)
-          (.setName (String/format name-format (into-array [(swap! counter inc)])))
+          (.setName (format name-format (swap! counter inc)))
           (.setDaemon daemon))))))
 
 (def processors
@@ -36,7 +36,7 @@
    (counted-thread-factory "async-dispatch-%d" true)))
 
 (defn run
-  "runs fn0 in a thread pool thread"
+  "Runs fn0 in a thread pool thread"
   [^Runnable fn0]
   (.submit ^ExecutorService the-executor fn0)
   nil)
