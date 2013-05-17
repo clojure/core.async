@@ -17,12 +17,11 @@
                           (timeout 600)
                           (timeout 700)
                           (timeout 500)]
-        insert-vals [:d :b :c :a]
-        threads (dorun (for [i (range 4)]
+        threads (doall (for [i (range 4)]
                          (doto (Thread. #(do (async/<! (timeout-channels i))
-                                             (swap! test-atom conj (insert-vals i))))
+                                             (swap! test-atom conj i)))
                            (.start))))]
     (doseq [thread threads]
       (.join thread))
-    (is (= @test-atom [:a :b :c :d])
+    (is (= @test-atom [3 1 2 0])
         "Timeouts close in order determined by their delays, not in order determined by their creation.")))
