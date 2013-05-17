@@ -91,13 +91,36 @@
 (defn- trand [n]
   (-> (ThreadLocalRandom/current) .nextLong))
 
+(defonce ^:private ^java.util.concurrent.atomic.AtomicLong id-gen (java.util.concurrent.atomic.AtomicLong.))
+
 (defn- alt-flag []
   (let [m (Mutex.)
-        flag (atom true)]
+        flag (atom true)
+        id (.incrementAndGet id-gen)]
     (reify
      proto/Locking
      (lock [_] (proto/lock m))
-     (unlock [_] (proto/unlock m)))))
+     (unlock [_] (proto/unlock m))
+
+     proto/Handler
+     (active? [_] @flag)
+     (lock-id [_] id)
+     (commit [_]
+             (reset! flag nil)
+             true))))
+
+(defn- alt-handler [flag cb]
+  (reify
+     proto/Locking
+     (lock [_] (proto/lock flag))
+     (unlock [_] (proto/unlock flag))
+
+     proto/Handler
+     (active? [_] (proto/active? flag))
+     (lock-id [_] (proto/lock-id flag))
+     (commit [_]
+             (proto/commit flag)
+             cb)))
 
 (defn do-alt [clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
@@ -106,11 +129,36 @@
         clauses (remove #(= :default (first %)) clauses)]
     (assert (every? keyword? (map first clauses)) "alt clauses must begin with keywords")
     (assert (every? sequential? (map second clauses)) "alt exprs must be async calls")
-    (assert (every? #{'core.async/<! 'core.async/>!} (map #(-> % second first) clauses)) "alt exprs must be <! or >!")
-    (let [gp (gensym)]
-      )
-    [default clauses]))
+    (assert (every? #{"<!" ">!"} (map #(-> % second first name) clauses)) "alt exprs must be <! or >!")
+    (let [gp (gensym)
+          gflag (gensym)
+          ops (map (fn [[label [op port arg]]]
+                     (case (name op)
+                           "<!" `(fn [] (take! ~port (alt-handler ~gflag (fn [val#] (deliver ~gp [~label val#])))))
+                           ">!" `(fn [] (put! ~port  ~arg (alt-handler ~gflag (fn [] (deliver ~gp [~label nil])))))))
+                   clauses)
+          defops (when default
+                  `((proto/lock ~gflag)
+                    (let [got# (and (proto/active? ~gflag) (proto/commit ~gflag))]
+                      (proto/unlock ~gflag)
+                      (when got#
+                        (deliver ~gp ~(second default))))))]
+      `(let [~gp (promise)
+             ~gflag (alt-flag)
+             ops# [~@ops]
+             n# ~(count clauses)
+             idxs# (random-array n#)]
+         (loop [i# 0]
+           (when (< i# n#)
+             (let [idx# (nth idxs# i#)
+                   cb# ((nth ops# idx#))]
+               (if cb#
+                 (cb#)
+                 (recur (inc i#))))))
+         ~@defops
+         (deref ~gp)))))
 
 (defmacro alt
   [& clauses]
   (do-alt clauses))
+
