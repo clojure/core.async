@@ -39,5 +39,25 @@
     (is (and (or (= r1v :blocked) (= r2v :blocked))
              (or (= 42 r1v) (= 42 r2v))))))
 
+(deftest test-<!-and-put!
+  (let [executed (atom false)
+        test-channel (chan nil)]
+    (put! test-channel :test-val #(swap! executed not))
+    (is (not @executed) "The provided callback does not execute until
+    a reader can consume the written value.")
+    (is (= :test-val (<! test-channel))
+        "The written value is provided over the test channel when a reader arrives.")
+    (is @executed "The provided callback executes once the reader has arrived.")))
 
-
+(deftest test->!-and-take!
+  (let [read-promise (promise)
+        test-channel (chan nil)]
+    (take! test-channel #(do (is (= % :test-val "The read value is
+    provided to the callback function when a writer arrives."))
+                             (deliver read-promise %)))
+    (is (not (realized? read-promise)) "The provided callback does not execute until
+    a writer can provide a value to read.")
+    (>! test-channel :test-val)
+    (is (realized? read-promise) "The provided callback executes once a writer provides a value.")
+    #_(is (= :test-val @read-promise)
+        "The provided callback executes once the writer has arrived.")))
