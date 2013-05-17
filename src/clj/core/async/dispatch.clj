@@ -9,7 +9,7 @@
 (ns core.async.dispatch
   (:require [core.async.protocols :as proto])
   (:import [java.lang Runtime]
-           [java.util.concurrent Executors ThreadFactory ThreadPoolExecutor]))
+           [java.util.concurrent Executors ThreadFactory ExecutorService]))
 
 (set! *warn-on-reflection* true)
 
@@ -37,7 +37,7 @@
 
 (defn run
   "runs fn0 in a thread pool thread"
-  [fn0]
-  (.submit the-executor fn0)
+  [^Runnable fn0]
+  (.submit ^ExecutorService the-executor fn0)
   nil)
 
