@@ -5,4 +5,6 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :parent [org.clojure/pom.contrib "0.1.2"]
   :dependencies [[org.clojure/clojure "1.5.1"]]
-  :warn-on-reflection true)
+  :warn-on-reflection true
+  :source-paths ["src/clojure"]
+  :java-source-paths ["src/java"])
