@@ -8,10 +8,36 @@
 
 (ns core.async.dispatch
   (:require [core.async.protocols :as proto])
-  (:import [java.util.concurrent Executor ThreadPoolExecutor]))
+  (:import [java.lang Runtime]
+           [java.util.concurrent Executors ThreadFactory ThreadPoolExecutor]))
 
 (set! *warn-on-reflection* true)
 
+(defn counted-thread-factory
+  "Create a ThreadFactory that maintains a counter for naming Threads.
+     name-format specifies thread names - use %d to include counter
+     daemon is a flag for whether threads are daemons or not"
+  [name-format daemon]
+  (let [counter (atom 0)]
+    (reify
+      ThreadFactory
+      (newThread [this runnable]
+        (doto (Thread. runnable)
+          (.setName (String/format name-format (into-array [(swap! counter inc)])))
+          (.setDaemon daemon))))))
+
+(def processors
+  "Number of processors reported by Java"
+  (.availableProcessors (Runtime/getRuntime)))
+
+(defonce the-executor
+  (Executors/newFixedThreadPool
+   (+ 2 processors)
+   (counted-thread-factory "async-dispatch-%d" true)))
+
 (defn run
   "runs fn0 in a thread pool thread"
-  [fn0])
+  [fn0]
+  (.submit the-executor fn0)
+  nil)
+
