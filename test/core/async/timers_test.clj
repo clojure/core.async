@@ -6,7 +6,7 @@
 (deftest timeout-interval-test
   (let [start-stamp (System/currentTimeMillis)
         test-timeout (timeout 500)]
-    (is (>= (+ start-stamp 500)
+    (is (<= (+ start-stamp 500)
             (do (async/<! test-timeout)
                 (System/currentTimeMillis)))
         "Reading from a timeout channel does not complete until the specified milliseconds have elapsed.")))

@@ -9,8 +9,7 @@
 (ns core.async.timers
   (:require [core.async.protocols :as proto]
             [core.async.channels :as channels])
-  (:import [java.util.concurrent DelayQueue Delayed TimeUnit]
-           [clojure.lang IDeref]))
+  (:import [java.util.concurrent DelayQueue Delayed TimeUnit]))
 
 (set! *warn-on-reflection* true)
 
@@ -26,9 +25,9 @@
   (compareTo [this other]
     (.compareTo ^Long (.getDelay this TimeUnit/MILLISECONDS)
                 ^Long (.getDelay ^Delayed other TimeUnit/MILLISECONDS)))
-  IDeref
-  (deref [this]
-    channel))
+  proto/Channel
+  (close! [this]
+    (proto/close! channel)))
 
 (defn timeout
   "returns a channel that will close after msecs"
@@ -43,7 +42,7 @@
 (defn timeout-channel
   []
   (let [timeout-delay (.take ^DelayQueue timeouts-queue)]
-    (proto/close! @timeout-delay))
+    (proto/close! timeout-delay))
   (recur))
 
 (defonce timeout-daemon
