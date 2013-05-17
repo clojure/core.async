@@ -50,14 +50,13 @@
     (is @executed "The provided callback executes once the reader has arrived.")))
 
 (deftest test->!-and-take!
-  (let [read-promise (promise)
-        test-channel (chan nil)]
-    (take! test-channel #(do (is (= % :test-val "The read value is
-    provided to the callback function when a writer arrives."))
-                             (deliver read-promise %)))
-    (is (not (realized? read-promise)) "The provided callback does not execute until
-    a writer can provide a value to read.")
-    (>! test-channel :test-val)
-    (is (realized? read-promise) "The provided callback executes once a writer provides a value.")
-    #_(is (= :test-val @read-promise)
-        "The provided callback executes once the writer has arrived.")))
+  (is (= :test-val (let [read-promise (promise)
+                         test-channel (core.async.channels/chan nil)]
+                     (core.async/take! test-channel #(deliver read-promise %))
+                     (is (not (realized? read-promise))
+                         "The read waits until a writer provides a value.")
+                     (core.async/>! test-channel :test-val)
+                     (is (realized? read-promise)
+                         "The read callback executes when a writer provides a value.")
+                     (deref read-promise 1000 false)))
+      "The written value is the value provided to the read callback."))
