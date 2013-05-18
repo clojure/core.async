@@ -89,8 +89,18 @@
   [chan]
   (proto/close! chan))
 
-(defn- trand [n]
-  (-> (ThreadLocalRandom/current) .nextLong))
+(defn random-array
+  [n]
+  (let [rand (ThreadLocalRandom/current)
+        a (int-array n)]
+    (loop [i 1]
+      (if (= i n)
+        a
+        (do
+          (let [j (.nextInt rand (inc i))]
+            (aset a i (aget a j))
+            (aset a j i)
+            (recur (inc i))))))))
 
 (defonce ^:private ^java.util.concurrent.atomic.AtomicLong id-gen (java.util.concurrent.atomic.AtomicLong.))
 
@@ -160,10 +170,40 @@
          (deref ~gp)))))
 
 (defmacro alt
+  "Makes a non-deterministic choice between one of several channel operations (<! and/or >!)
+
+  Each clause takes the form of:
+
+  :keyword-label channel-op
+
+  where channel op is (<! port-expr) or (>! port-expr val-expr)
+
+  The label :default is reserved, and its argument can be any
+  expression.  If more than one of the operations is ready to
+  complete, a pseudo-random choice is made. If none of the operations
+  are ready to complete, and a :default clause is provided, [:default
+  val-of-expression] will be returned. Else alt will block/park until
+  any one of the operations is ready to complete, and its label and
+  value (if any) are returned. At most one of the operations will
+  complete.
+
+  alt returns a vector of [:chosen-label taken-val], taken-val being
+  nil for >! ops and closed channels."
+
   [& clauses]
   (do-alt clauses))
 
-(defmacro async [& body]
+(defmacro async
+  "Asynchronously executes the body, returning immediately to the
+  calling thread. Additionally, any visible calls to <!, >! and alt
+  channel operations within the body will block (if necessary) by
+  'parking' the calling thread rather than tying up an OS thread (or
+  the only JS thread when in ClojureScript). Upon completion of the
+  operation, the body will be resumed.
+
+  Returns a channel which will receive the result of the body when
+  completed"
+  [& body]
   (binding [ioc/*symbol-translations* '{await ioc/pause}]
     `(ioc/async-chan-wrapper ~(ioc/state-machine body))))
 
