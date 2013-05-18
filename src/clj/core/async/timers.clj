@@ -13,18 +13,23 @@
 
 (set! *warn-on-reflection* true)
 
-(defonce ^:private timeouts-queue
+(defonce ^:private ^DelayQueue timeouts-queue
   (DelayQueue.))
 
-(deftype TimeoutQueueEntry [channel timestamp]
+(deftype TimeoutQueueEntry [channel ^long timestamp]
   Delayed
   (getDelay [this time-unit]
     (.convert time-unit
               (- timestamp (System/currentTimeMillis))
               TimeUnit/MILLISECONDS))
-  (compareTo [this other]
-    (.compareTo ^Long (.getDelay this TimeUnit/MILLISECONDS)
-                ^Long (.getDelay ^Delayed other TimeUnit/MILLISECONDS)))
+  (compareTo
+   [this other]
+   (let [ostamp (.timestamp ^TimeoutQueueEntry other)]
+     (if (< timestamp ostamp)
+       -1
+       (if (= timestamp ostamp)
+         0
+         1))))
   proto/Channel
   (close! [this]
     (proto/close! channel)))
@@ -35,17 +40,17 @@
   (let [timeout (+ (System/currentTimeMillis) msecs)
         timeout-channel (channels/chan nil)
         timeout-delay (TimeoutQueueEntry. timeout-channel timeout)]
-    (locking timeouts-queue
-      (.put ^DelayQueue timeouts-queue timeout-delay))
+    (.put timeouts-queue timeout-delay)
     timeout-channel))
 
-(defn timeout-channel
+(defn- timeout-worker
   []
-  (let [timeout-delay (.take ^DelayQueue timeouts-queue)]
-    (proto/close! timeout-delay))
-  (recur))
+  (let [q timeouts-queue]
+    (loop []
+      (proto/close! (.take q))
+      (recur))))
 
 (defonce timeout-daemon
-  (doto (Thread. ^Runnable timeout-channel "core.async.timers/timeout-daemon")
+  (doto (Thread. ^Runnable timeout-worker "core.async.timers/timeout-daemon")
     (.setDaemon true)
     (.start)))
