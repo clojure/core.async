@@ -188,7 +188,11 @@
   complete.
 
   alt returns a vector of [:chosen-label taken-val], taken-val being
-  nil for >! ops and closed channels."
+  nil for >! ops and closed channels.
+
+  Note: there is no guarantee that the port-exps or val-exprs will be
+  used, nor in what order should they be, so they should not be
+  depended upon for side effects."
 
   [& clauses]
   (do-alt clauses))
