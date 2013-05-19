@@ -1,8 +1,8 @@
 (ns core.async-test
   (:use clojure.test
         core.async)
-  (:require [core.async.channels :refer [chan]]
-            [core.async.buffers :refer [fixed-buffer]]))
+  (:require [core.async.impl.channels :refer [chan]]
+            [core.async.impl.buffers :refer [fixed-buffer]]))
 
 
 (defn default-chan []

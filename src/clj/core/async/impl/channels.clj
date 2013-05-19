@@ -6,9 +6,9 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.channels
-  (:require [core.async.protocols :as proto]
-            [core.async.dispatch :as dispatch])
+(ns core.async.impl.channels
+  (:require [core.async.impl.protocols :as proto]
+            [core.async.impl.dispatch :as dispatch])
   (:import [java.util LinkedList Queue Iterator]
            [core.async Mutex]))
 

@@ -9,10 +9,10 @@
 ;; by Timothy Baldridge
 ;; April 13, 2013
 
-(ns core.async.ioc-macros
+(ns core.async.impl.ioc-macros
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
-            [core.async.protocols :as proto]))
+            [core.async.impl.protocols :as proto]))
 
 (def ^:dynamic *symbol-translations* {})
 

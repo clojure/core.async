@@ -6,7 +6,7 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.protocols)
+(ns core.async.impl.protocols)
 
 (defprotocol ReadPort
   (take! [port fn1-handler] "returns fn0 (fn1 bound to val) cb if taken, nil if take was enqueued"))

@@ -7,9 +7,9 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns core.async
-  (:require [core.async.protocols :as proto]
-            [core.async.dispatch :as dispatch]
-            [core.async.ioc-macros :as ioc])
+  (:require [core.async.impl.protocols :as proto]
+            [core.async.impl.dispatch :as dispatch]
+            [core.async.impl.ioc-macros :as ioc])
   (:import [core.async ThreadLocalRandom Mutex]))
 
 (set! *warn-on-reflection* true)

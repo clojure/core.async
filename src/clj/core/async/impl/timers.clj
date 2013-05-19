@@ -6,9 +6,9 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.timers
-  (:require [core.async.protocols :as proto]
-            [core.async.channels :as channels])
+(ns core.async.impl.timers
+  (:require [core.async.impl.protocols :as proto]
+            [core.async.impl.channels :as channels])
   (:import [java.util.concurrent DelayQueue Delayed TimeUnit]))
 
 (set! *warn-on-reflection* true)

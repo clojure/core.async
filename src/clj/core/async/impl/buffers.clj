@@ -6,8 +6,8 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.buffers
-  (:require [core.async.protocols :as proto])
+(ns core.async.impl.buffers
+  (:require [core.async.impl.protocols :as proto])
   (:import [java.util LinkedList Queue]))
 
 (set! *warn-on-reflection* true)

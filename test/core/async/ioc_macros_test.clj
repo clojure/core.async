@@ -1,5 +1,5 @@
 (ns core.async.ioc-macros-test
-  (:require [core.async.ioc-macros :as ioc]
+  (:require [core.async.impl.ioc-macros :as ioc]
             [clojure.test :refer :all]))
 
 (defn runner-wrapper

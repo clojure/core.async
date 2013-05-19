@@ -8,7 +8,7 @@
 
 (ns core.async.dispatch-test
   (:require [clojure.test :refer :all]
-            [core.async.dispatch :as dispatch])
+            [core.async.impl.dispatch :as dispatch])
   (:import [java.util.concurrent ThreadFactory]))
 
 (deftest test-counted-thread-factory

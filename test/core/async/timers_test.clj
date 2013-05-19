@@ -1,6 +1,6 @@
 (ns core.async.timers-test
   (:require [clojure.test :refer :all]
-            [core.async.timers :refer :all]
+            [core.async.impl.timers :refer :all]
             [core.async :as async]))
 
 (deftest timeout-interval-test

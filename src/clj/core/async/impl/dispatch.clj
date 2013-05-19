@@ -6,8 +6,8 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.dispatch
-  (:require [core.async.protocols :as proto])
+(ns core.async.impl.dispatch
+  (:require [core.async.impl.protocols :as proto])
   (:import [java.lang Runtime]
            [java.util.concurrent Executors ThreadFactory ExecutorService]))
 
