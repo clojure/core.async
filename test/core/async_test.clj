@@ -4,7 +4,7 @@
 
 
 (defn default-chan []
-  (chan (buffer 1)))
+  (chan 1))
 
 (defn drain [c]
   (close! c)

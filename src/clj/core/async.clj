@@ -41,21 +41,23 @@
   (buffers/fixed-buffer n))
 
 (defn dropping-buffer
-  "Returns a fixed buffer of size n. When full, puts will complete but
-  be dropped (no data transferred)."
+  "Returns a buffer of size n. When full, puts will complete but
+  val will be dropped (no transfer)."
   [n]
   (buffers/dropping-buffer n))
 
 (defn sliding-buffer
-  "Returns a fixed buffer of size n. When full, puts will enqueue but
-  oldest elements in buffer will be dropped (not transferred)."
+  "Returns a buffer of size n. When full, puts will complete, and be
+  buffered, but oldest elements in buffer will be dropped (not
+  transferred)."
   [n]
   (buffers/sliding-buffer n))
 
 (defn chan
-  "Creates a channel with an optional buffer"
+  "Creates a channel with an optional buffer. If buf-or-n is a number,
+  will create and use a fixed buffer of that size."
   ([] (chan nil))
-  ([buf] (channels/chan buf)))
+  ([buf-or-n] (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n))))
 
 (defn <!
   "takes a val from port. Will return nil if closed. Will block/park
