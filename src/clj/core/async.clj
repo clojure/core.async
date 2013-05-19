@@ -8,6 +8,8 @@
 
 (ns core.async
   (:require [core.async.impl.protocols :as proto]
+            [core.async.impl.channels :as channels]
+            [core.async.impl.buffers :as buffers]
             [core.async.impl.dispatch :as dispatch]
             [core.async.impl.ioc-macros :as ioc])
   (:import [core.async ThreadLocalRandom Mutex]))
@@ -32,6 +34,28 @@
      proto/Locking
      (lock [_] (.lock m))
      (unlock [_] (.unlock m)))))
+
+(defn buffer
+  "Returns a fixed buffer of size n. When full, puts will block/park."
+  [n]
+  (buffers/fixed-buffer n))
+
+(defn dropping-buffer
+  "Returns a fixed buffer of size n. When full, puts will complete but
+  be dropped (no data transferred)."
+  [n]
+  (buffers/dropping-buffer n))
+
+(defn sliding-buffer
+  "Returns a fixed buffer of size n. When full, puts will enqueue but
+  oldest elements in buffer will be dropped (not transferred)."
+  [n]
+  (buffers/sliding-buffer n))
+
+(defn chan
+  "Creates a channel with an optional buffer"
+  ([] (chan nil))
+  ([buf] (channels/chan buf)))
 
 (defn <!
   "takes a val from port. Will return nil if closed. Will block/park
