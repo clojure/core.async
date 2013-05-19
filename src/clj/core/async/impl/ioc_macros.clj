@@ -12,7 +12,7 @@
 (ns core.async.impl.ioc-macros
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
-            [core.async.impl.protocols :as proto]))
+            [core.async.impl.protocols :as impl]))
 
 (def ^:dynamic *symbol-translations* {})
 
@@ -552,11 +552,11 @@
      (let [value (::value state)]
        (case (::action state)
          ::take!
-         (proto/take! value (fn [x]
+         (impl/take! value (fn [x]
                         (async-chan-wrapper f p (f (assoc state ::value x)))))
          ::put!
          (let [[chan value] value]
-           (proto/put! chan value (fn [x]
+           (impl/put! chan value (fn [x]
                                     (async-chan-wrapper f p (f (assoc state ::value x))))))
          ::return
          (p value)))))

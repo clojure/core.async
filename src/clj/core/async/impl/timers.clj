@@ -7,7 +7,7 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns core.async.impl.timers
-  (:require [core.async.impl.protocols :as proto]
+  (:require [core.async.impl.protocols :as impl]
             [core.async.impl.channels :as channels])
   (:import [java.util.concurrent DelayQueue Delayed TimeUnit]))
 
@@ -30,9 +30,9 @@
        (if (= timestamp ostamp)
          0
          1))))
-  proto/Channel
+  impl/Channel
   (close! [this]
-    (proto/close! channel)))
+    (impl/close! channel)))
 
 (defn timeout
   "returns a channel that will close after msecs"
@@ -47,7 +47,7 @@
   []
   (let [q timeouts-queue]
     (loop []
-      (proto/close! (.take q))
+      (impl/close! (.take q))
       (recur))))
 
 (defonce timeout-daemon

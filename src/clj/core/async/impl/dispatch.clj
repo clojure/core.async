@@ -7,7 +7,6 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns core.async.impl.dispatch
-  (:require [core.async.impl.protocols :as proto])
   (:import [java.lang Runtime]
            [java.util.concurrent Executors ThreadFactory ExecutorService]))
 

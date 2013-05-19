@@ -7,7 +7,7 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns core.async.impl.channels
-  (:require [core.async.impl.protocols :as proto]
+  (:require [core.async.impl.protocols :as impl]
             [core.async.impl.dispatch :as dispatch])
   (:import [java.util LinkedList Queue Iterator]
            [core.async Mutex]))
@@ -24,137 +24,137 @@
    (when-not (.isEmpty takes)
      (let [iter (.iterator takes)]
        (loop [taker (.next iter)]
-         (when-not (proto/active? taker)
+         (when-not (impl/active? taker)
            (.remove iter))
          (when (.hasNext iter)
            (recur (.next iter))))))
    (when-not (.isEmpty puts)
      (let [iter (.iterator puts)]
        (loop [[putter] (.next iter)]
-         (when-not (proto/active? putter)
+         (when-not (impl/active? putter)
            (.remove iter))
          (when (.hasNext iter)
            (recur (.next iter)))))))
 
-  proto/WritePort
+  impl/WritePort
   (put!
    [this val handler]
-   (proto/lock mutex)
+   (impl/lock mutex)
    (cleanup this)
    (if @closed
-     (do (proto/unlock mutex)
+     (do (impl/unlock mutex)
          (throw (IllegalStateException. "put! on closed channel")))
      (let [iter (.iterator takes)
            [put-cb take-cb] (when (.hasNext iter)
                               (loop [taker (.next iter)]
-                                (if (< (proto/lock-id handler) (proto/lock-id taker))
-                                  (do (proto/lock handler) (proto/lock taker))
-                                  (do (proto/lock taker) (proto/lock handler)))
-                                (let [ret (when (and (proto/active? handler) (proto/active? taker))
-                                            [(proto/commit handler) (proto/commit taker)])]
-                                  (proto/unlock handler)
-                                  (proto/unlock taker)
+                                (if (< (impl/lock-id handler) (impl/lock-id taker))
+                                  (do (impl/lock handler) (impl/lock taker))
+                                  (do (impl/lock taker) (impl/lock handler)))
+                                (let [ret (when (and (impl/active? handler) (impl/active? taker))
+                                            [(impl/commit handler) (impl/commit taker)])]
+                                  (impl/unlock handler)
+                                  (impl/unlock taker)
                                   (if ret
                                     ret
                                     (when (.hasNext iter)
                                       (recur (.next iter)))))))]
        (if (and put-cb take-cb)
          (do
-           (proto/unlock mutex)
+           (impl/unlock mutex)
            (dispatch/run (fn [] (take-cb val)))
            put-cb)
-         (if (and buf (not (proto/full? buf)))
+         (if (and buf (not (impl/full? buf)))
            (do
-             (proto/lock handler)
-             (let [put-cb (and (proto/active? handler) (proto/commit handler))]
-               (proto/unlock handler)
+             (impl/lock handler)
+             (let [put-cb (and (impl/active? handler) (impl/commit handler))]
+               (impl/unlock handler)
                (if put-cb
-                 (do (proto/add! buf val)
-                     (proto/unlock mutex)
+                 (do (impl/add! buf val)
+                     (impl/unlock mutex)
                      put-cb)
-                 (proto/unlock mutex))))
+                 (impl/unlock mutex))))
            (do
              (.add puts [handler val])
-             (proto/unlock mutex)
+             (impl/unlock mutex)
              nil))))))
   
-  proto/ReadPort
+  impl/ReadPort
   (take!
    [this handler]
-   (proto/lock mutex)
+   (impl/lock mutex)
    (cleanup this)
    (let [commit-handler (fn []
-                          (proto/lock handler)
-                          (let [take-cb (and (proto/active? handler) (proto/commit handler))]
-                            (proto/unlock handler)
+                          (impl/lock handler)
+                          (let [take-cb (and (impl/active? handler) (impl/commit handler))]
+                            (impl/unlock handler)
                             take-cb))]
      (if (and buf (pos? (count buf)))
        (do
          (if-let [take-cb (commit-handler)]
-           (let [val (proto/remove! buf)]
-             (proto/unlock mutex)
+           (let [val (impl/remove! buf)]
+             (impl/unlock mutex)
              (fn [] (take-cb val)))
-           (do (proto/unlock mutex)
+           (do (impl/unlock mutex)
                nil)))
        (let [iter (.iterator puts)
              [take-cb put-cb val]
              (when (.hasNext iter)
                (loop [[putter val] (.next iter)]
-                 (if (< (proto/lock-id handler) (proto/lock-id putter))
-                   (do (proto/lock handler) (proto/lock putter))
-                   (do (proto/lock putter) (proto/lock handler)))
-                 (let [ret (when (and (proto/active? handler) (proto/active? putter))
-                             [(proto/commit handler) (proto/commit putter) val])]
-                   (proto/unlock handler)
-                   (proto/unlock putter)
+                 (if (< (impl/lock-id handler) (impl/lock-id putter))
+                   (do (impl/lock handler) (impl/lock putter))
+                   (do (impl/lock putter) (impl/lock handler)))
+                 (let [ret (when (and (impl/active? handler) (impl/active? putter))
+                             [(impl/commit handler) (impl/commit putter) val])]
+                   (impl/unlock handler)
+                   (impl/unlock putter)
                    (if ret
                      ret
                      (when (.hasNext iter)
                        (recur (.next iter)))))))]
          (if (and put-cb take-cb)
            (do
-             (proto/unlock mutex)
+             (impl/unlock mutex)
              (dispatch/run put-cb)
              (fn [] (take-cb val)))
            (if @closed
              (do
-               (proto/unlock mutex)
+               (impl/unlock mutex)
                (if-let [take-cb (commit-handler)]
                  (fn [] (take-cb nil))
                  nil))
              (do
                (.add takes handler)
-               (proto/unlock mutex)
+               (impl/unlock mutex)
                nil)))))))
 
-  proto/Channel
+  impl/Channel
   (close!
    [this]
-   (proto/lock mutex)
+   (impl/lock mutex)
    (cleanup this)
    (if @closed
      (do
-       (proto/unlock mutex)
+       (impl/unlock mutex)
        nil)
      (do
        (reset! closed true)
        (let [iter (.iterator takes)]
          (when (.hasNext iter)
            (loop [taker (.next iter)]
-             (proto/lock taker)
-             (let [take-cb (and (proto/active? taker) (proto/commit taker))]
-               (proto/unlock taker)
+             (impl/lock taker)
+             (let [take-cb (and (impl/active? taker) (impl/commit taker))]
+               (impl/unlock taker)
                (if take-cb
                  (dispatch/run (fn [] (take-cb nil)))
                  (when (.hasNext iter)
                    (recur (.next iter))))))))
-       (proto/unlock mutex)
+       (impl/unlock mutex)
        nil))))
 
 (defn- mutex []
   (let [m (Mutex.)]
     (reify
-     proto/Locking
+     impl/Locking
      (lock [_] (.lock m))
      (unlock [_] (.unlock m)))))
 

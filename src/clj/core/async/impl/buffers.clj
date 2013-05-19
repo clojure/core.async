@@ -7,19 +7,19 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns core.async.impl.buffers
-  (:require [core.async.impl.protocols :as proto])
+  (:require [core.async.impl.protocols :as impl])
   (:import [java.util LinkedList Queue]))
 
 (set! *warn-on-reflection* true)
 
 (deftype FixedBuffer [^LinkedList buf ^long n]
-  proto/Buffer
+  impl/Buffer
   (full? [this]
     (= (.size buf) n))
   (remove! [this]
     (.removeLast buf))
   (add! [this itm]
-    (assert (not (proto/full? this)) "Can't add to a full buffer")
+    (assert (not (impl/full? this)) "Can't add to a full buffer")
     (.addFirst buf itm))
   clojure.lang.Counted
   (count [this]
@@ -30,7 +30,7 @@
 
 
 (deftype DroppingBuffer [^LinkedList buf ^long n]
-  proto/Buffer
+  impl/Buffer
   (full? [this]
     false)
   (remove! [this]
@@ -46,14 +46,14 @@
   (DroppingBuffer. (LinkedList.) n))
 
 (deftype SlidingBuffer [^LinkedList buf ^long n]
-  proto/Buffer
+  impl/Buffer
   (full? [this]
     false)
   (remove! [this]
     (.removeLast buf))
   (add! [this itm]
     (when (= (.size buf) n)
-      (proto/remove! this))
+      (impl/remove! this))
     (.addFirst buf itm))
   clojure.lang.Counted
   (count [this]

@@ -7,7 +7,7 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns core.async
-  (:require [core.async.impl.protocols :as proto]
+  (:require [core.async.impl.protocols :as impl]
             [core.async.impl.channels :as channels]
             [core.async.impl.buffers :as buffers]
             [core.async.impl.dispatch :as dispatch]
@@ -19,11 +19,11 @@
 (defn- fn-handler
   [f]
   (reify
-   proto/Locking
+   impl/Locking
    (lock [_])
    (unlock [_])
    
-   proto/Handler
+   impl/Handler
    (active? [_] true)
    (lock-id [_] 0)
    (commit [_] f)))
@@ -31,7 +31,7 @@
 (defn- mutex []
   (let [m (Mutex.)]
     (reify
-     proto/Locking
+     impl/Locking
      (lock [_] (.lock m))
      (unlock [_] (.unlock m)))))
 
@@ -62,7 +62,7 @@
   if nothing is available. Can participate in alt"
   [port]
   (let [p (promise)
-        cb (proto/take! port (fn-handler (fn [v] (deliver p v))))]
+        cb (impl/take! port (fn-handler (fn [v] (deliver p v))))]
     (when cb (cb))
     (deref p)))
 
@@ -73,7 +73,7 @@
    Returns nil."
   ([port fn1] (take! port fn1 true))
   ([port fn1 on-caller?]
-     (let [cb (proto/take! port (fn-handler fn1))]
+     (let [cb (impl/take! port (fn-handler fn1))]
        (when cb
          (if on-caller?
            (cb)
@@ -85,7 +85,7 @@
   available. Returns nil. Can participate in alt"
   [port val]
   (let [p (promise)
-        cb (proto/put! port val (fn-handler (fn [] (deliver p nil))))]
+        cb (impl/put! port val (fn-handler (fn [] (deliver p nil))))]
     (when cb (cb))
     (deref p)
     nil))
@@ -97,7 +97,7 @@
    thread.  Returns nil."
   ([port val fn0] (put! port val fn0 true))
   ([port val fn0 on-caller?]
-     (let [cb (proto/put! port val (fn-handler fn0))]
+     (let [cb (impl/put! port val (fn-handler fn0))]
        (when cb
          (if on-caller?
            (cb)
@@ -111,7 +111,7 @@
   pending takes, they will be dispatched with nil. Closing a closed
   channel is a no-op. Returns nil."
   [chan]
-  (proto/close! chan))
+  (impl/close! chan))
 
 (defn random-array
   [n]
@@ -133,11 +133,11 @@
         flag (atom true)
         id (.incrementAndGet id-gen)]
     (reify
-     proto/Locking
-     (lock [_] (proto/lock m))
-     (unlock [_] (proto/unlock m))
+     impl/Locking
+     (lock [_] (impl/lock m))
+     (unlock [_] (impl/unlock m))
 
-     proto/Handler
+     impl/Handler
      (active? [_] @flag)
      (lock-id [_] id)
      (commit [_]
@@ -146,15 +146,15 @@
 
 (defn- alt-handler [flag cb]
   (reify
-     proto/Locking
-     (lock [_] (proto/lock flag))
-     (unlock [_] (proto/unlock flag))
+     impl/Locking
+     (lock [_] (impl/lock flag))
+     (unlock [_] (impl/unlock flag))
 
-     proto/Handler
-     (active? [_] (proto/active? flag))
-     (lock-id [_] (proto/lock-id flag))
+     impl/Handler
+     (active? [_] (impl/active? flag))
+     (lock-id [_] (impl/lock-id flag))
      (commit [_]
-             (proto/commit flag)
+             (impl/commit flag)
              cb)))
 
 (defn do-alt [clauses]
@@ -173,9 +173,9 @@
                            ">!" `(fn [] (put! ~port  ~arg (alt-handler ~gflag (fn [] (deliver ~gp [~label nil])))))))
                    clauses)
           defops (when default
-                  `((proto/lock ~gflag)
-                    (let [got# (and (proto/active? ~gflag) (proto/commit ~gflag))]
-                      (proto/unlock ~gflag)
+                  `((impl/lock ~gflag)
+                    (let [got# (and (impl/active? ~gflag) (impl/commit ~gflag))]
+                      (impl/unlock ~gflag)
                       (when got#
                         (deliver ~gp ~(second default))))))]
       `(let [~gp (promise)
