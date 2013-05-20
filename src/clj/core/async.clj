@@ -10,6 +10,7 @@
   (:require [core.async.impl.protocols :as impl]
             [core.async.impl.channels :as channels]
             [core.async.impl.buffers :as buffers]
+            [core.async.impl.timers :as timers]
             [core.async.impl.dispatch :as dispatch]
             [core.async.impl.ioc-macros :as ioc])
   (:import [core.async ThreadLocalRandom Mutex]))
@@ -58,6 +59,11 @@
   will create and use a fixed buffer of that size."
   ([] (chan nil))
   ([buf-or-n] (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n))))
+
+(defn timeout
+  "Returns a channel that will close after msecs"
+  [msecs]
+  (timers/timeout msecs))
 
 (defn <!
   "takes a val from port. Will return nil if closed. Will block/park
@@ -131,7 +137,7 @@
 (defonce ^:private ^java.util.concurrent.atomic.AtomicLong id-gen (java.util.concurrent.atomic.AtomicLong.))
 
 (defn- alt-flag []
-  (let [m (Mutex.)
+  (let [m (mutex)
         flag (atom true)
         id (.incrementAndGet id-gen)]
     (reify
@@ -171,8 +177,8 @@
           gflag (gensym)
           ops (map (fn [[label [op port arg]]]
                      (case (name op)
-                           "<!" `(fn [] (take! ~port (alt-handler ~gflag (fn [val#] (deliver ~gp [~label val#])))))
-                           ">!" `(fn [] (put! ~port  ~arg (alt-handler ~gflag (fn [] (deliver ~gp [~label nil])))))))
+                           "<!" `(fn [] (impl/take! ~port (alt-handler ~gflag (fn [val#] (deliver ~gp [~label val#])))))
+                           ">!" `(fn [] (impl/put! ~port  ~arg (alt-handler ~gflag (fn [] (deliver ~gp [~label nil])))))))
                    clauses)
           defops (when default
                   `((impl/lock ~gflag)
