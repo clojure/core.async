@@ -55,7 +55,9 @@
                                   (impl/unlock handler)
                                   (impl/unlock taker)
                                   (if ret
-                                    ret
+                                    (do
+                                      (.remove iter)
+                                      ret)
                                     (when (.hasNext iter)
                                       (recur (.next iter)))))))]
        (if (and put-cb take-cb)
@@ -108,7 +110,9 @@
                    (impl/unlock handler)
                    (impl/unlock putter)
                    (if ret
-                     ret
+                     (do
+                       (.remove iter)
+                       ret)
                      (when (.hasNext iter)
                        (recur (.next iter)))))))]
          (if (and put-cb take-cb)
