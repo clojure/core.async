@@ -24,7 +24,7 @@
 (defprotocol Handler
   (active? [h] "returns true if has callback. Must work w/o lock")
   (lock-id [h] "a unique id for lock acquisition order, 0 if no lock")
-  (commit [h] "commit to fulfilling its end of the transfer, returns cb. Must be caled within lock"))
+  (commit [h] "commit to fulfilling its end of the transfer, returns cb. Must be called within lock"))
 
 (defprotocol Buffer
   (full? [b])
