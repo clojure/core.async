@@ -12,7 +12,8 @@
 (ns core.async.impl.ioc-macros
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
-            [core.async.impl.protocols :as impl]))
+            [core.async.impl.protocols :as impl]
+            [core.async.impl.dispatch :as dispatch]))
 
 (def ^:dynamic *symbol-translations* {})
 
@@ -563,15 +564,15 @@
   "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. "
   ([f c state]
      (let [value (::value state)]
-       (println "value " value)
        (case (::action state)
          ::take!
-         (impl/take! value (fn-handler
-                            (fn [x]
-                              (->> x
-                                   (assoc state ::value)
-                                   f
-                                   (async-chan-wrapper f c)))))
+         (-> (impl/take! value (fn-handler
+                                (fn [x]
+                                  (->> x
+                                       (assoc state ::value)
+                                       f
+                                       (async-chan-wrapper f c)))))
+             dispatch/run)
          ::put!
          (let [[chan value] value]
            (impl/put! chan value (fn-handler (fn []

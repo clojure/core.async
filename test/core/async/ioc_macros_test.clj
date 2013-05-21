@@ -99,16 +99,4 @@
 (deftest async-test
   (testing "values are returned correctly"
     (is (= 10
-           (<!
-            (async
-             (<!
-              (identity-chan 10)))))))
-  #_(testing "supports hash map literals"
-    (is (= {:a 42 :b 43}
-           @(async {:a (await (future 42))
-                    :b (await (future 43))}))))
- 
-  #_(testing "supports atom derefs"
-    (is (= {:a 42 :b 43}
-           @(async {:a (await (future 42))
-                    :b @(atom 43)})))))
+           (<! (async (<! (identity-chan 10))))))))
