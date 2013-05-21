@@ -94,9 +94,15 @@
   [x]
   (let [c (chan 1)]
     (>! c x)
+    (close! c)
     c))
 
 (deftest async-test
   (testing "values are returned correctly"
     (is (= 10
-           (<! (async (<! (identity-chan 10))))))))
+           (<! (async (<! (identity-chan 10)))))))
+  (testing "writes work"
+    (is (= 11
+           (<! (async (let [c (chan 1)]
+                        (>! c (<! (identity-chan 11)))
+                        (<! c))))))))

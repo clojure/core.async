@@ -575,14 +575,16 @@
              dispatch/run)
          ::put!
          (let [[chan value] value]
-           (impl/put! chan value (fn-handler (fn []
-                                               (->> nil
-                                                    (assoc state ::value)
-                                                    f
-                                                    (async-chan-wrapper f c))))))
+           (-> (impl/put! chan value (fn-handler (fn []
+                                                    (->> nil
+                                                         (assoc state ::value)
+                                                         f
+                                                         (async-chan-wrapper f c)))))
+               dispatch/run))
          ::return
          (do
            (impl/put! c value (fn-handler (fn [] nil)))
+           (impl/close! c)
            c)))))
 
 
