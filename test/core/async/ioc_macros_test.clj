@@ -1,5 +1,6 @@
 (ns core.async.ioc-macros-test
   (:require [core.async.impl.ioc-macros :as ioc]
+            [core.async :refer :all]
             [clojure.test :refer :all]))
 
 (defn runner-wrapper
@@ -88,16 +89,26 @@
                   f (fn [] x)]
               (f)))))))
 
-#_(deftest async-test
+(defn identity-chan 
+  "Defines a channel that instantly writes the given value"
+  [x]
+  (let [c (chan 1)]
+    (>! c x)
+    c))
+
+(deftest async-test
   (testing "values are returned correctly"
     (is (= 10
-           @(async (await (future 10))))))
-  (testing "supports hash map literals"
+           (<!
+            (async
+             (<!
+              (identity-chan 10)))))))
+  #_(testing "supports hash map literals"
     (is (= {:a 42 :b 43}
            @(async {:a (await (future 42))
                     :b (await (future 43))}))))
  
-  (testing "supports atom derefs"
+  #_(testing "supports atom derefs"
     (is (= {:a 42 :b 43}
            @(async {:a (await (future 42))
                     :b @(atom 43)})))))

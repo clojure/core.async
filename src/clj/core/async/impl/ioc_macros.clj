@@ -392,7 +392,7 @@
     val-id (add-instruction (->Const ::value))]
    val-id))
 
-(defmethod sexpr-to-ssa 'take!
+(defmethod sexpr-to-ssa '<!
   [[_ chan]]
   (gen-plan
    [next-blk (add-block)
@@ -402,7 +402,7 @@
     val-id (add-instruction (->Const ::value))]
    val-id))
 
-(defmethod sexpr-to-ssa 'put!
+(defmethod sexpr-to-ssa '>!
   [[_ chan expr]]
   (gen-plan
    [next-blk (add-block)
@@ -515,6 +515,10 @@
       `(assoc ~state-sym ~@results)
       state-sym)))
 
+(defn debug [x]
+  (pprint x)
+  x)
+
 (defn- emit-state-machine [machine]
   (let [index (index-state-machine machine)
         state-sym (gensym "state_")]
@@ -543,23 +547,43 @@
   [state]
   (= (::state state) ::finished))
 
+(defn- fn-handler
+  [f]
+  (reify
+   impl/Locking
+   (lock [_])
+   (unlock [_])
+   
+   impl/Handler
+   (active? [_] true)
+   (lock-id [_] 0)
+   (commit [_] f)))
+
 (defn async-chan-wrapper
-  "State machine wrapper that uses the async library"
-  ([f]
-     (let [p (promise)]
-       (async-chan-wrapper f p (f))))
-  ([f p state]
+  "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. "
+  ([f c state]
      (let [value (::value state)]
+       (println "value " value)
        (case (::action state)
          ::take!
-         (impl/take! value (fn [x]
-                        (async-chan-wrapper f p (f (assoc state ::value x)))))
+         (impl/take! value (fn-handler
+                            (fn [x]
+                              (->> x
+                                   (assoc state ::value)
+                                   f
+                                   (async-chan-wrapper f c)))))
          ::put!
          (let [[chan value] value]
-           (impl/put! chan value (fn [x]
-                                    (async-chan-wrapper f p (f (assoc state ::value x))))))
+           (impl/put! chan value (fn-handler (fn []
+                                               (->> nil
+                                                    (assoc state ::value)
+                                                    f
+                                                    (async-chan-wrapper f c))))))
          ::return
-         (p value)))))
+         (do
+           (impl/put! c value (fn-handler (fn [] nil)))
+           c)))))
+
 
 (defn state-machine [body]
   (-> (parse-to-state-machine body)

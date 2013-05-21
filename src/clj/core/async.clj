@@ -235,5 +235,6 @@
   completed"
   [& body]
   (binding [ioc/*symbol-translations* '{await ioc/pause}]
-    `(ioc/async-chan-wrapper ~(ioc/state-machine body))))
+    `(let [f# ~(ioc/state-machine body)]
+      (ioc/async-chan-wrapper f# (chan 1) (f#)))))
 
