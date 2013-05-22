@@ -566,21 +566,21 @@
      (let [value (::value state)]
        (case (::action state)
          ::take!
-         (-> (impl/take! value (fn-handler
-                                (fn [x]
-                                  (->> x
-                                       (assoc state ::value)
-                                       f
-                                       (async-chan-wrapper f c)))))
-             dispatch/run)
+         (when-let [cb (impl/take! value (fn-handler
+                                          (fn [x]
+                                            (->> x
+                                                 (assoc state ::value)
+                                                 f
+                                                 (async-chan-wrapper f c)))))]
+           (dispatch/run cb))
          ::put!
          (let [[chan value] value]
-           (-> (impl/put! chan value (fn-handler (fn []
-                                                    (->> nil
-                                                         (assoc state ::value)
-                                                         f
-                                                         (async-chan-wrapper f c)))))
-               dispatch/run))
+           (when-let [cb (impl/put! chan value (fn-handler (fn []
+                                                             (->> nil
+                                                                  (assoc state ::value)
+                                                                  f
+                                                                  (async-chan-wrapper f c)))))]
+             (dispatch/run cb)))
          ::return
          (do
            (impl/put! c value (fn-handler (fn [] nil)))

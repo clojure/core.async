@@ -107,23 +107,24 @@
                         (>! c (<! (identity-chan 11)))
                         (<! c))))))))
 
-(defn full-chan
-  "Defines a full channel that will enqueue puts"
-  [only-item]
-  (let [c (chan 1)]
-    (>! c only-item)
-    c))
-
 (deftest enqueued-chan-ops
   (testing "enqueued channel puts re-enter async properly"
-    (is (= [:foo :bar]
-           (<! (async
-                (let [c (full-chan :foo)]
-                  (>! c :bar)
-                  [(<! c) (<! c)]))))))
+    (is (= [:foo 42]
+           (let [c (chan)
+                 result-chan (async (>! c :foo) 42)]
+             [(<! c) (<! result-chan)]))))
   (testing "enqueued channel takes re-enter async properly"
     (is (= :foo
-           (let [c (chan 1)
+           (let [c (chan)
                  async-chan (async (<! c))]
              (>! c :foo)
+             (<! async-chan)))))
+  (testing "puts into channels with full buffers re-enter async properly"
+    (is (= :bar
+           (let [c (chan 1)
+                 async-chan (async
+                             (>! c :foo)
+                             (>! c :bar)
+                             (<! c))]
+             (<! c)
              (<! async-chan))))))
