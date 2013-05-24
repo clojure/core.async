@@ -155,6 +155,9 @@
              (<! c)
              (<! async-chan))))))
 
+(defn rand-timeout [x]
+  (timeout (rand-int x)))
+
 (deftest alt-tests
   (testing "alt works at all"
     (is (= [:foo 42]
@@ -164,5 +167,27 @@
     (is (= [:default 42]
            (<! (go (alt
                     :foo (<! (chan))
-                    :default 42)))))))
+                    :default 42))))))
+  (testing "alt randomly selects"
+    (is (= #{:one :two :three}
+           (<! (go (loop [acc #{}
+                          cnt 0]
+                     (if (< cnt 10)
+                       (let [[label _] (alt
+                                        :one (<! (rand-timeout 100))
+                                        :two (<! (rand-timeout 100))
+                                        :three (<! (rand-timeout 100)))]
+                         (recur (conj acc label) (inc cnt))))
+                     acc))))))
+  
+  (testing "case with go"
+    (is (= :1
+           (<! (go (case (name :1)
+                     "0" :0
+                     "1" :1
+                     :3))))))
+
+  (testing "nil result of go"
+    (is (= nil
+           (<! (go nil))))))
 
