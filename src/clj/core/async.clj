@@ -136,7 +136,7 @@
 
 (defonce ^:private ^java.util.concurrent.atomic.AtomicLong id-gen (java.util.concurrent.atomic.AtomicLong.))
 
-(defn- alt-flag []
+(defn alt-flag []
   (let [m (mutex)
         flag (atom true)
         id (.incrementAndGet id-gen)]
@@ -152,7 +152,7 @@
              (reset! flag nil)
              true))))
 
-(defn- alt-handler [flag cb]
+(defn alt-handler [flag cb]
   (reify
      impl/Locking
      (lock [_] (impl/lock flag))
