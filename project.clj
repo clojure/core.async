@@ -7,4 +7,5 @@
   :dependencies [[org.clojure/clojure "1.5.1"]]
   :warn-on-reflection true
   :source-paths ["src/clj"]
+  :jvm-opts ["-Xmx1g" "-server"]
   :java-source-paths ["src/java"])
