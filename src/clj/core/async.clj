@@ -12,8 +12,9 @@
             [core.async.impl.buffers :as buffers]
             [core.async.impl.timers :as timers]
             [core.async.impl.dispatch :as dispatch]
-            [core.async.impl.ioc-macros :as ioc])
-  (:import [core.async ThreadLocalRandom Mutex]))
+            [core.async.impl.ioc-macros :as ioc]
+            [core.async.impl.ioc-alt]
+            [core.async.impl.alt-helpers :refer :all]))
 
 (set! *warn-on-reflection* true)
 
@@ -28,13 +29,6 @@
    (active? [_] true)
    (lock-id [_] 0)
    (commit [_] f)))
-
-(defn- mutex []
-  (let [m (Mutex.)]
-    (reify
-     impl/Locking
-     (lock [_] (.lock m))
-     (unlock [_] (.unlock m)))))
 
 (defn buffer
   "Returns a fixed buffer of size n. When full, puts will block/park."
@@ -121,49 +115,6 @@
   [chan]
   (impl/close! chan))
 
-(defn random-array
-  [n]
-  (let [rand (ThreadLocalRandom/current)
-        a (int-array n)]
-    (loop [i 1]
-      (if (= i n)
-        a
-        (do
-          (let [j (.nextInt rand (inc i))]
-            (aset a i (aget a j))
-            (aset a j i)
-            (recur (inc i))))))))
-
-(defonce ^:private ^java.util.concurrent.atomic.AtomicLong id-gen (java.util.concurrent.atomic.AtomicLong.))
-
-(defn- alt-flag []
-  (let [m (mutex)
-        flag (atom true)
-        id (.incrementAndGet id-gen)]
-    (reify
-     impl/Locking
-     (lock [_] (impl/lock m))
-     (unlock [_] (impl/unlock m))
-
-     impl/Handler
-     (active? [_] @flag)
-     (lock-id [_] id)
-     (commit [_]
-             (reset! flag nil)
-             true))))
-
-(defn- alt-handler [flag cb]
-  (reify
-     impl/Locking
-     (lock [_] (impl/lock flag))
-     (unlock [_] (impl/unlock flag))
-
-     impl/Handler
-     (active? [_] (impl/active? flag))
-     (lock-id [_] (impl/lock-id flag))
-     (commit [_]
-             (impl/commit flag)
-             cb)))
 
 (defn do-alt [clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
@@ -185,7 +136,7 @@
                     (let [got# (and (impl/active? ~gflag) (impl/commit ~gflag))]
                       (impl/unlock ~gflag)
                       (when got#
-                        (deliver ~gp ~(second default))))))]
+                        (deliver ~gp [:blah ~(second default)])))))]
       `(let [~gp (promise)
              ~gflag (alt-flag)
              ops# [~@ops]
@@ -240,9 +191,11 @@
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (binding [ioc/*symbol-translations* '{await ioc/pause}]
+  (binding [ioc/*symbol-translations* '{alt core.async.impl.ioc-alt/alt}]
     `(let [f# ~(ioc/state-machine body)
-           c# (chan 1)]
-       (ioc/async-chan-wrapper f# c# (f#))
+           c# (chan 1)
+           state# (-> (f#)
+                      (assoc ::ioc/chan c#))]
+       (ioc/async-chan-wrapper state#)
        c#)))
 

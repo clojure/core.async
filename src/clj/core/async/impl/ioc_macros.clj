@@ -112,6 +112,10 @@
   (fn [plan]
     [(get-in plan path) plan]))
 
+(defn print-plan []
+  (fn [plan]
+    (pprint plan)
+    [nil plan]))
 
 (defn set-block
   "Sets the current block being written to by the functions. The next add-instruction call will append to this block"
@@ -264,7 +268,7 @@
 
 ;; macroexpand forms before translation
 (defn item-to-ssa [x]
-  (-item-to-ssa (macroexpand x)))
+  (-item-to-ssa x))
 
 ;; given an sexpr, dispatch on the first item 
 (defmulti sexpr-to-ssa (fn [[x & _]]
@@ -418,7 +422,12 @@
 
 (defmethod -item-to-ssa :list
   [lst]
-  (sexpr-to-ssa lst))
+  (if (*symbol-translations* (first lst))
+    (sexpr-to-ssa lst)
+    (let [result (macroexpand lst)]
+      (if (seq? result)
+        (sexpr-to-ssa result)
+        (item-to-ssa result)))))
 
 (defmethod -item-to-ssa :default
   [x]
@@ -525,11 +534,9 @@
         state-sym (gensym "state_")]
     `(let [bindings# (get-thread-bindings)]
        (fn state-machine#
-         ([]
-            (state-machine#
-             (assoc {}
-               ::state ~(:start-block machine)
-               ::bindings bindings#)))
+         ([] {::state ~(:start-block machine)
+              ::fn state-machine#
+              ::bindings bindings#})
          ([~state-sym]
             (with-bindings (::bindings ~state-sym)
               (loop [~state-sym ~state-sym]
@@ -562,30 +569,34 @@
 
 (defn async-chan-wrapper
   "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. "
-  ([f c state]
-     (let [value (::value state)]
+  ([state]
+     (let [state ((::fn state) state)
+           value (::value state)]
        (case (::action state)
          ::take!
          (when-let [cb (impl/take! value (fn-handler
                                           (fn [x]
                                             (->> x
                                                  (assoc state ::value)
-                                                 f
-                                                 (async-chan-wrapper f c)))))]
+                                                 async-chan-wrapper))))]
            (dispatch/run cb))
          ::put!
          (let [[chan value] value]
            (when-let [cb (impl/put! chan value (fn-handler (fn []
                                                              (->> nil
                                                                   (assoc state ::value)
-                                                                  f
-                                                                  (async-chan-wrapper f c)))))]
+                                                                  async-chan-wrapper))))]
              (dispatch/run cb)))
+         
          ::return
-         (do
+         (let [c (::chan state)]
+           (assert c)
            (impl/put! c value (fn-handler (fn [] nil)))
            (impl/close! c)
-           c)))))
+           c)
+
+         ; Default case, return nil
+         nil))))
 
 
 (defn state-machine [body]

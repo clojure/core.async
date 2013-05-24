@@ -89,6 +89,8 @@
                   f (fn [] x)]
               (f)))))))
 
+
+
 (defn identity-chan 
   "Defines a channel that instantly writes the given value"
   [x]
@@ -128,3 +130,14 @@
                              (<! c))]
              (<! c)
              (<! async-chan))))))
+
+(deftest alt-tests
+  (testing "alt works at all"
+    (is (= [:foo 42]
+           (<! (async (alt
+                       :foo (<! (identity-chan 42))))))))
+  (testing "prefer default"
+      (is (= [:default 42]
+             (<! (async (alt
+                         :foo (<! (chan))
+                         :default 42)))))))
