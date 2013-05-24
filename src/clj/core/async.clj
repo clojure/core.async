@@ -180,7 +180,7 @@
   [& clauses]
   (do-alt clauses))
 
-(defmacro async
+(defmacro go
   "Asynchronously executes the body, returning immediately to the
   calling thread. Additionally, any visible calls to <!, >! and alt
   channel operations within the body will block (if necessary) by

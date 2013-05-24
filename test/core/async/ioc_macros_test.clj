@@ -102,29 +102,29 @@
 (deftest async-test
   (testing "values are returned correctly"
     (is (= 10
-           (<! (async (<! (identity-chan 10)))))))
+           (<! (go (<! (identity-chan 10)))))))
   (testing "writes work"
     (is (= 11
-           (<! (async (let [c (chan 1)]
-                        (>! c (<! (identity-chan 11)))
-                        (<! c))))))))
+           (<! (go (let [c (chan 1)]
+                     (>! c (<! (identity-chan 11)))
+                     (<! c))))))))
 
 (deftest enqueued-chan-ops
   (testing "enqueued channel puts re-enter async properly"
     (is (= [:foo 42]
            (let [c (chan)
-                 result-chan (async (>! c :foo) 42)]
+                 result-chan (go (>! c :foo) 42)]
              [(<! c) (<! result-chan)]))))
   (testing "enqueued channel takes re-enter async properly"
     (is (= :foo
            (let [c (chan)
-                 async-chan (async (<! c))]
+                 async-chan (go (<! c))]
              (>! c :foo)
              (<! async-chan)))))
   (testing "puts into channels with full buffers re-enter async properly"
     (is (= :bar
            (let [c (chan 1)
-                 async-chan (async
+                 async-chan (go
                              (>! c :foo)
                              (>! c :bar)
                              (<! c))]
@@ -134,10 +134,11 @@
 (deftest alt-tests
   (testing "alt works at all"
     (is (= [:foo 42]
-           (<! (async (alt
-                       :foo (<! (identity-chan 42))))))))
+           (<! (go (alt
+                    :foo (<! (identity-chan 42))))))))
   (testing "prefer default"
-      (is (= [:default 42]
-             (<! (async (alt
-                         :foo (<! (chan))
-                         :default 42)))))))
+    (is (= [:default 42]
+           (<! (go (alt
+                    :foo (<! (chan))
+                    :default 42)))))))
+
