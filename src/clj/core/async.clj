@@ -191,7 +191,8 @@
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (binding [ioc/*symbol-translations* '{alt core.async.impl.ioc-alt/alt}]
+  (binding [ioc/*symbol-translations* '{alt core.async.impl.ioc-alt/alt
+                                        case case}]
     `(let [f# ~(ioc/state-machine body)
            c# (chan 1)
            state# (-> (f#)

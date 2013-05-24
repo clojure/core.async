@@ -16,8 +16,13 @@
   into a state machine. At run time the body will be run as normal. This transform is
   only really useful for testing."
   [& body]
-  (binding [ioc/*symbol-translations* '{pause core.async.ioc-macros/pause}]
+  (binding [ioc/*symbol-translations* '{pause core.async.ioc-macros/pause
+                                        case case}]
     `(runner-wrapper ~(ioc/state-machine body))))
+
+(deftest case-test
+  )
+
 
 (deftest runner-tests
   (testing "do blocks"
@@ -80,6 +85,11 @@
            (runner [(pause 1)
                     (pause 2)
                     (pause 3)]))))
+  (testing "dotimes"
+    (is (= 42 (runner
+               (dotimes [x 10]
+                 (pause x))
+               42))))
   
   (testing "fn closures"
     (is (= 42
@@ -87,7 +97,21 @@
             (let [x 42
                   _ (pause x)
                   f (fn [] x)]
-              (f)))))))
+              (f))))))
+
+  (testing "case"
+    (is (= 43
+           (runner
+            (let [value :bar]
+              (case value
+                :foo (pause 42)
+                :bar (pause 43)
+                :baz (pause 44))))))
+    (is (= :default
+           (runner
+            (case :baz
+              :foo 44
+              :default))))))
 
 
 

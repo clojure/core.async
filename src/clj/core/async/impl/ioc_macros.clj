@@ -196,6 +196,19 @@
   (emit-instruction [this state-sym]
     `[~(:id this) ~(seq refs)]))
 
+(defrecord Case [val-id test-vals jmp-blocks default-block]
+  IInstruction
+  (reads-from [this] [val-id])
+  (writes-to [this] [])
+  (block-references [this] [])
+  (emit-instruction [this state-sym]
+    `(case ~val-id
+       ~@(concat (mapcat (fn [test blk]
+                           `[~test (recur (assoc ~state-sym ::state ~blk))])
+                         test-vals jmp-blocks)
+                 (when default-block
+                   `[(recur (assoc ~state-sym ::state ~default-block))])))))
+
 (defrecord Fn [fn-expr local-names local-refs]
   IInstruction
   (reads-from [this] local-refs)
@@ -335,6 +348,37 @@
   (gen-plan
    [ids (all (map item-to-ssa body))]
    (last ids)))
+
+(defmethod sexpr-to-ssa 'case
+  [[_ val & body]]
+  (let [clauses (partition 2 body)
+        default (when (odd? (count body))
+                  (last body))]
+    (gen-plan
+     [end-blk (add-block)
+      start-blk (get-block)
+      clause-blocks (all (map (fn [expr]
+                                (gen-plan
+                                 [blk-id (add-block)
+                                  _ (set-block blk-id)
+                                  expr-id (item-to-ssa expr)
+                                  _ (add-instruction (->Jmp expr-id end-blk))]
+                                 blk-id))
+                              (map second clauses)))
+      default-block (if default
+                      (gen-plan
+                       [blk-id (add-block)
+                        _ (set-block blk-id)
+                        expr-id (item-to-ssa default)
+                        _ (add-instruction (->Jmp expr-id end-blk))]
+                       blk-id)
+                      (no-op))
+      _ (set-block start-blk)
+      val-id (item-to-ssa val)
+      case-id (add-instruction (->Case val-id (map first clauses) clause-blocks default-block))
+      _ (set-block end-blk)
+      ret-id (add-instruction (->Const ::value))]
+     ret-id)))
 
 (defmethod sexpr-to-ssa 'recur
   [[_ & vals]]
@@ -590,7 +634,6 @@
          
          ::return
          (let [c (::chan state)]
-           (assert c)
            (impl/put! c value (fn-handler (fn [] nil)))
            (impl/close! c)
            c)
