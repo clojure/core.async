@@ -179,6 +179,15 @@
                                         :three (<! (rand-timeout 100)))]
                          (recur (conj acc label) (inc cnt))))
                      acc))))))
+
+  (testing "alt only invokes a single body"
+    (is (= 1
+           (let [a (atom 0)
+                 c (chan 1)]
+             (<! (go (alt
+                      :one (>! c (swap! a inc))
+                      :two (>! c (swap! a inc)))))
+             @a))))
   
   (testing "case with go"
     (is (= :1
