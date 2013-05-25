@@ -137,13 +137,13 @@
         clauses (remove #(= :default (first %)) clauses)]
     (assert (every? keyword? (map first clauses)) "alt clauses must begin with keywords")
     (assert (every? sequential? (map second clauses)) "alt exprs must be async calls")
-    (assert (every? #{"<!" ">!"} (map #(-> % second first name) clauses)) "alt exprs must be <! or >!")
+    (assert (every? #{"<!!" ">!!"} (map #(-> % second first name) clauses)) "alt exprs must be <!! or >!!")
     (let [gp (gensym)
           gflag (gensym)
           ops (map (fn [[label [op port arg]]]
                      (case (name op)
-                           "<!" `(fn [] (impl/take! ~port (alt-handler ~gflag (fn [val#] (deliver ~gp [~label val#])))))
-                           ">!" `(fn [] (impl/put! ~port  ~arg (alt-handler ~gflag (fn [] (deliver ~gp [~label nil])))))))
+                           "<!!" `(fn [] (impl/take! ~port (alt-handler ~gflag (fn [val#] (deliver ~gp [~label val#])))))
+                           ">!!" `(fn [] (impl/put! ~port  ~arg (alt-handler ~gflag (fn [] (deliver ~gp [~label nil])))))))
                    clauses)
           defops (when default
                   `((impl/lock ~gflag)
