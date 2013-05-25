@@ -59,14 +59,21 @@
   [msecs]
   (timers/timeout msecs))
 
-(defn <!
-  "takes a val from port. Will return nil if closed. Will block/park
-  if nothing is available. Can participate in alt"
+(defn <!!
+  "takes a val from port. Will return nil if closed. Will block
+  if nothing is available. Can participate in alt!!"
   [port]
   (let [p (promise)
         cb (impl/take! port (fn-handler (fn [v] (deliver p v))))]
     (when cb (cb))
     (deref p)))
+
+(defn <!
+  "takes a val from port. Must be called inside a (go ...) block. Will
+  return nil if closed. Will park if nothing is available. Can
+  participate in alt!"
+  [port]
+  (assert nil "<! used not in (go ...) block"))
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
@@ -82,15 +89,22 @@
            (dispatch/run cb)))
        nil)))
 
-(defn >!
-  "puts a val into port. Will block/park if no buffer space is
-  available. Returns nil. Can participate in alt"
+(defn >!!
+  "puts a val into port. Will block if no buffer space is
+  available. Returns nil. Can participate in alt!!"
   [port val]
   (let [p (promise)
         cb (impl/put! port val (fn-handler (fn [] (deliver p nil))))]
     (when cb (cb))
     (deref p)
     nil))
+
+(defn >!
+  "puts a val into port. Must be called inside a (go ...) block. Will
+  park if no buffer space is available. Returns nil. Can participate
+  in alt!"
+  [port val]
+  (assert nil ">! used not in (go ...) block"))
 
 (defn put!
   "Asynchronously puts a val into port, calling fn0 when
@@ -116,7 +130,7 @@
   (impl/close! chan))
 
 
-(defn do-alt [clauses]
+(defn do-alt!! [clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
   (let [clauses (partition 2 clauses)
         default (first (filter #(= :default (first %)) clauses))
@@ -152,8 +166,37 @@
          ~@defops
          (deref ~gp)))))
 
-(defmacro alt
-  "Makes a non-deterministic choice between one of several channel operations (<! and/or >!)
+(defmacro alt!!
+  "Makes a non-deterministic choice between one of several channel operations (<!! and/or >!!)
+
+  Each clause takes the form of:
+
+  :keyword-label channel-op
+
+  where channel op is (<!! port-expr) or (>!! port-expr val-expr)
+
+  The label :default is reserved, and its argument can be any
+  expression.  If more than one of the operations is ready to
+  complete, a pseudo-random choice is made. If none of the operations
+  are ready to complete, and a :default clause is provided, [:default
+  val-of-expression] will be returned. Else alt!! will block until
+  any one of the operations is ready to complete, and its label and
+  value (if any) are returned. At most one of the operations will
+  complete.
+
+  alt!! returns a vector of [:chosen-label taken-val], taken-val being
+  nil for >!! ops and closed channels.
+
+  Note: there is no guarantee that the port-exps or val-exprs will be
+  used, nor in what order should they be, so they should not be
+  depended upon for side effects."
+
+  [& clauses]
+  (do-alt!! clauses))
+
+(defmacro alt!
+  "Makes a non-deterministic choice between one of several channel operations (<! and/or >!).
+  Must be called inside a (go ...) block.
 
   Each clause takes the form of:
 
@@ -165,12 +208,12 @@
   expression.  If more than one of the operations is ready to
   complete, a pseudo-random choice is made. If none of the operations
   are ready to complete, and a :default clause is provided, [:default
-  val-of-expression] will be returned. Else alt will block/park until
+  val-of-expression] will be returned. Else alt! will park until
   any one of the operations is ready to complete, and its label and
   value (if any) are returned. At most one of the operations will
   complete.
 
-  alt returns a vector of [:chosen-label taken-val], taken-val being
+  alt! returns a vector of [:chosen-label taken-val], taken-val being
   nil for >! ops and closed channels.
 
   Note: there is no guarantee that the port-exps or val-exprs will be
@@ -178,11 +221,11 @@
   depended upon for side effects."
 
   [& clauses]
-  (do-alt clauses))
+  (assert nil "alt! used not in (go ...) block"))
 
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
-  calling thread. Additionally, any visible calls to <!, >! and alt
+  calling thread. Additionally, any visible calls to <!, >! and alt!
   channel operations within the body will block (if necessary) by
   'parking' the calling thread rather than tying up an OS thread (or
   the only JS thread when in ClojureScript). Upon completion of the
@@ -191,7 +234,7 @@
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (binding [ioc/*symbol-translations* '{alt core.async.impl.ioc-alt/alt
+  (binding [ioc/*symbol-translations* '{alt! core.async.impl.ioc-alt/alt
                                         case case}]
     `(let [f# ~(ioc/state-machine body)
            c# (chan 1)

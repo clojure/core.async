@@ -9,51 +9,51 @@
 (defn drain [c]
   (close! c)
   (dorun (take-while #(not (nil? %)) 
-                     (repeatedly #(<! c)))))
+                     (repeatedly #(<!! c)))))
 
 
 (deftest basic-channel-test
   (let [c (default-chan)
-        f (future (<! c))]
-    (>! c 42)
+        f (future (<!! c))]
+    (>!! c 42)
     (is (= @f 42))))
 
 (def DEREF_WAIT 20)
 
 (deftest writes-block-on-full-buffer
   (let [c (default-chan)
-        _ (>! c 42)
-        blocking (deref (future (>! c 43)) DEREF_WAIT :blocked)]
+        _ (>!! c 42)
+        blocking (deref (future (>!! c 43)) DEREF_WAIT :blocked)]
     (is (= blocking :blocked))
     #_(drain c)))
 
 (deftest unfulfilled-readers-block
   (let [c (default-chan)
-        r1 (future (<! c))
-        r2 (future (<! c))
-        _ (>! c 42)
+        r1 (future (<!! c))
+        r2 (future (<!! c))
+        _ (>!! c 42)
         r1v (deref r1 DEREF_WAIT :blocked)
         r2v (deref r2 DEREF_WAIT :blocked)]
     (is (and (or (= r1v :blocked) (= r2v :blocked))
              (or (= 42 r1v) (= 42 r2v))))))
 
-(deftest test-<!-and-put!
+(deftest test-<!!-and-put!
   (let [executed (promise)
         test-channel (chan nil)]
     (put! test-channel :test-val #(deliver executed true))
     (is (not (realized? executed)) "The provided callback does not execute until
     a reader can consume the written value.")
-    (is (= :test-val (<! test-channel))
+    (is (= :test-val (<!! test-channel))
         "The written value is provided over the channel when a reader arrives.")
     (is @executed "The provided callback executes once the reader has arrived.")))
 
-(deftest test->!-and-take!
+(deftest test->!!-and-take!
   (is (= :test-val (let [read-promise (promise)
                          test-channel (chan nil)]
                      (take! test-channel #(deliver read-promise %))
                      (is (not (realized? read-promise))
                          "The read waits until a writer provides a value.")
-                     (>! test-channel :test-val)
+                     (>!! test-channel :test-val)
                      (is (realized? read-promise)
                          "The read callback executes when a writer provides a value.")
                      (deref read-promise 1000 false)))
@@ -64,7 +64,7 @@
                       test-channel (chan nil)
                       read-promise (promise)]
                   (take! test-channel (fn [_] (deliver read-promise (Thread/currentThread))) true)
-                  (>! test-channel :foo)
+                  (>!! test-channel :foo)
                   [starting-thread @read-promise]))
       "When on-caller? requested, but no value is immediately
       available, take!'s callback executes on another thread.")

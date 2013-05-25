@@ -7,7 +7,7 @@
   (let [start-stamp (System/currentTimeMillis)
         test-timeout (timeout 500)]
     (is (<= (+ start-stamp 500)
-            (do (async/<! test-timeout)
+            (do (async/<!! test-timeout)
                 (System/currentTimeMillis)))
         "Reading from a timeout channel does not complete until the specified milliseconds have elapsed.")))
 
@@ -18,7 +18,7 @@
                           (timeout 700)
                           (timeout 500)]
         threads (doall (for [i (range 4)]
-                         (doto (Thread. #(do (async/<! (timeout-channels i))
+                         (doto (Thread. #(do (async/<!! (timeout-channels i))
                                              (swap! test-atom conj i)))
                            (.start))))]
     (doseq [thread threads]
