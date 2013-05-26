@@ -13,8 +13,9 @@
             [core.async.impl.timers :as timers]
             [core.async.impl.dispatch :as dispatch]
             [core.async.impl.ioc-macros :as ioc]
-            [core.async.impl.ioc-alt]
-            [core.async.impl.alt-helpers :refer :all]))
+            ;;[core.async.impl.ioc-alt]
+            )
+  (:import [core.async Mutex ThreadLocalRandom]))
 
 (set! *warn-on-reflection* true)
 
@@ -61,7 +62,7 @@
 
 (defn <!!
   "takes a val from port. Will return nil if closed. Will block
-  if nothing is available. Can participate in alt!!"
+  if nothing is available."
   [port]
   (let [p (promise)
         cb (impl/take! port (fn-handler (fn [v] (deliver p v))))]
@@ -70,8 +71,7 @@
 
 (defn <!
   "takes a val from port. Must be called inside a (go ...) block. Will
-  return nil if closed. Will park if nothing is available. Can
-  participate in alt!"
+  return nil if closed. Will park if nothing is available."
   [port]
   (assert nil "<! used not in (go ...) block"))
 
@@ -91,7 +91,7 @@
 
 (defn >!!
   "puts a val into port. Will block if no buffer space is
-  available. Returns nil. Can participate in alt!!"
+  available. Returns nil."
   [port val]
   (let [p (promise)
         cb (impl/put! port val (fn-handler (fn [] (deliver p nil))))]
@@ -101,8 +101,7 @@
 
 (defn >!
   "puts a val into port. Must be called inside a (go ...) block. Will
-  park if no buffer space is available. Returns nil. Can participate
-  in alt!"
+  park if no buffer space is available."
   [port val]
   (assert nil ">! used not in (go ...) block"))
 
@@ -129,103 +128,197 @@
   [chan]
   (impl/close! chan))
 
+(defonce ^:private ^java.util.concurrent.atomic.AtomicLong id-gen (java.util.concurrent.atomic.AtomicLong.))
 
-(defn do-alt!! [clauses]
+(defn- mutex []
+  (let [m (Mutex.)]
+    (reify
+     impl/Locking
+     (lock [_] (.lock m))
+     (unlock [_] (.unlock m)))))
+
+(defn- random-array
+  [n]
+  (let [rand (ThreadLocalRandom/current)
+        a (int-array n)]
+    (loop [i 1]
+      (if (= i n)
+        a
+        (do
+          (let [j (.nextInt rand (inc i))]
+            (aset a i (aget a j))
+            (aset a j i)
+            (recur (inc i))))))))
+
+(defn- alt-flag []
+  (let [m (mutex)
+        flag (atom true)
+        id (.incrementAndGet id-gen)]
+    (reify
+     impl/Locking
+     (lock [_] (impl/lock m))
+     (unlock [_] (impl/unlock m))
+
+     impl/Handler
+     (active? [_] @flag)
+     (lock-id [_] id)
+     (commit [_]
+             (reset! flag nil)
+             true))))
+
+(defn- alt-handler [flag cb]
+  (reify
+     impl/Locking
+     (lock [_] (impl/lock flag))
+     (unlock [_] (impl/unlock flag))
+
+     impl/Handler
+     (active? [_] (impl/active? flag))
+     (lock-id [_] (impl/lock-id flag))
+     (commit [_]
+             (impl/commit flag)
+             cb)))
+
+(defn- do-alts
+  [fret ports opts]
+  (let [flag (alt-flag)
+        n (count ports)
+        ^ints idxs (random-array n)
+        priority (:priority opts)
+        cb
+        (loop [i 0]
+          (when (< i n)
+            (let [idx (if priority i (aget idxs i))
+                  port (nth ports idx)
+                  cb (if (vector? port)
+                       (let [[port val] port]
+                         (impl/put! port val (alt-handler flag (fn [] (fret [nil port])))))
+                       (impl/take! port (alt-handler flag (fn [val] (fret [val port])))))]
+              (or cb
+                  (recur (inc i))))))]
+    (if cb
+      (cb)
+      (when (contains? opts :default)
+        (impl/lock flag)
+        (let [got (and (impl/active? flag) (impl/commit flag))]
+          (impl/unlock flag)
+          (when got
+            (fret [(:default opts) :default])))))))
+
+(defn alts!!
+  "Like alts!, except takes will be made as if by <!!, and puts will
+  be made as if by >!!, will block until completed, and not intended
+  for use in (go ...) blocks."
+
+  [ports & {:as opts}]
+  (let [p (promise)]
+    (do-alts (partial deliver p) ports opts)
+    (deref p)))
+
+(defn alts!
+  "Completes at most one of several channel operations. Must be called
+  inside a (go ...) block. ports is a set of channel endpoints, which
+  can be either a channel to take from or a vector of
+  [channel-to-put-to val-to-put], in any combination. Takes will be
+  made as if by <!, and puts will be made as if by >!. Unless
+  the :priority option is true, if more than one port operation is
+  ready a non-deterministic choice will be made. If no operation is
+  ready and a :default value is supplied, [default-val :default] will
+  be returned, otherwise alts! will park until the first operation to
+  become ready completes. Returns [val port] of the completed
+  operation, where val is the value taken for takes, and nil for puts.
+
+  opts are passed as :key val ... Supported options:
+
+  :default val - the value to use if none of the operations are immediately ready
+  :priority true - (default nil) when true, the operations will be tried in order.
+
+  Note: there is no guarantee that the port exps or val exprs will be
+  used, nor in what order should they be, so they should not be
+  depended upon for side effects."
+
+  [ports & {:as opts}]
+  (assert nil "alts! used not in (go ...) block"))
+
+(defn- do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
   (let [clauses (partition 2 clauses)
-        default (first (filter #(= :default (first %)) clauses))
-        clauses (remove #(= :default (first %)) clauses)]
-    (assert (every? keyword? (map first clauses)) "alt clauses must begin with keywords")
-    (assert (every? sequential? (map second clauses)) "alt exprs must be async calls")
-    (assert (every? #{"<!!" ">!!"} (map #(-> % second first name) clauses)) "alt exprs must be <!! or >!!")
-    (let [gp (gensym)
-          gflag (gensym)
-          ops (map (fn [[label [op port arg]]]
-                     (case (name op)
-                           "<!!" `(fn [] (impl/take! ~port (alt-handler ~gflag (fn [val#] (deliver ~gp [~label val#])))))
-                           ">!!" `(fn [] (impl/put! ~port  ~arg (alt-handler ~gflag (fn [] (deliver ~gp [~label nil])))))))
-                   clauses)
-          defops (when default
-                  `((impl/lock ~gflag)
-                    (let [got# (and (impl/active? ~gflag) (impl/commit ~gflag))]
-                      (impl/unlock ~gflag)
-                      (when got#
-                        (deliver ~gp [:blah ~(second default)])))))]
-      `(let [~gp (promise)
-             ~gflag (alt-flag)
-             ops# [~@ops]
-             n# ~(count clauses)
-             idxs# (random-array n#)]
-         (loop [i# 0]
-           (when (< i# n#)
-             (let [idx# (nth idxs# i#)
-                   cb# ((nth ops# idx#))]
-               (if cb#
-                 (cb#)
-                 (recur (inc i#))))))
-         ~@defops
-         (deref ~gp)))))
+        opt? #(keyword? (first %)) 
+        opts (filter opt? clauses)
+        clauses (remove opt? clauses)
+        [clauses bindings]
+        (reduce
+         (fn [[clauses bindings] [ports expr]]
+           (let [ports (if (vector? ports) ports [ports])
+                 [ports bindings]
+                 (reduce
+                  (fn [[ports bindings] port]
+                    (if (vector? port)
+                      (let [[port val] port
+                            gp (gensym)
+                            gv (gensym)]
+                        [(conj ports [gp gv]) (conj bindings [gp port] [gv val])])
+                      (let [gp (gensym)]
+                        [(conj ports gp) (conj bindings [gp port])])))
+                  [[] bindings] ports)]
+             [(conj clauses [ports expr]) bindings]))
+         [[] []] clauses)
+        gch (gensym "ch")
+        gret (gensym "ret")]
+    `(let [~@(mapcat identity bindings)
+           [val# ~gch :as ~gret] (~alts [~@(apply concat (map first clauses))] ~@(apply concat opts))]
+       (cond
+        ~@(mapcat (fn [[ports expr]]
+                    [`(or ~@(map (fn [port]
+                                   `(= ~gch ~(if (vector? port) (first port) port)))
+                                 ports))
+                     (if (and (seq? expr) (vector? (first expr)))
+                       `(let [~(first expr) ~gret] ~@(rest expr)) 
+                       expr)])
+                  clauses)
+        (= ~gch :default) val#))))
 
 (defmacro alt!!
-  "Makes a non-deterministic choice between one of several channel operations (<!! and/or >!!)
-
-  Each clause takes the form of:
-
-  :keyword-label channel-op
-
-  where channel op is (<!! port-expr) or (>!! port-expr val-expr)
-
-  The label :default is reserved, and its argument can be any
-  expression.  If more than one of the operations is ready to
-  complete, a pseudo-random choice is made. If none of the operations
-  are ready to complete, and a :default clause is provided, [:default
-  val-of-expression] will be returned. Else alt!! will block until
-  any one of the operations is ready to complete, and its label and
-  value (if any) are returned. At most one of the operations will
-  complete.
-
-  alt!! returns a vector of [:chosen-label taken-val], taken-val being
-  nil for >!! ops and closed channels.
-
-  Note: there is no guarantee that the port-exps or val-exprs will be
-  used, nor in what order should they be, so they should not be
-  depended upon for side effects."
+  "Like alt!, except as if by alts!!, will block until completed, and
+  not intended for use in (go ...) blocks."
 
   [& clauses]
-  (do-alt!! clauses))
+  (do-alt `alts!! clauses))
 
 (defmacro alt!
-  "Makes a non-deterministic choice between one of several channel operations (<! and/or >!).
-  Must be called inside a (go ...) block.
+  "Makes a single choice between one of several channel operations,
+  as if by alts!, returning the value of the result expr corresponding
+  to the operation completed. Must be called inside a (go ...) block.
 
   Each clause takes the form of:
 
-  :keyword-label channel-op
+  channel-op[s] result-expr
 
-  where channel op is (<! port-expr) or (>! port-expr val-expr)
+  where channel-ops is one of:
 
-  The label :default is reserved, and its argument can be any
-  expression.  If more than one of the operations is ready to
-  complete, a pseudo-random choice is made. If none of the operations
-  are ready to complete, and a :default clause is provided, [:default
-  val-of-expression] will be returned. Else alt! will park until
-  any one of the operations is ready to complete, and its label and
-  value (if any) are returned. At most one of the operations will
-  complete.
+  take-port - a single port to take
+  [take-port | [put-port put-val] ...] - a vector of ports as per alts!
+  :default | :priority - an option for alts!
 
-  alt! returns a vector of [:chosen-label taken-val], taken-val being
-  nil for >! ops and closed channels.
+  and result-expr is either a list beginning with a vector, whereupon that
+  vector will be treated as a binding for the [val port] return of the
+  operation, else any other expression.
 
-  Note: there is no guarantee that the port-exps or val-exprs will be
-  used, nor in what order should they be, so they should not be
-  depended upon for side effects."
+  (alt!
+    [c t] ([val ch] (foo ch val))
+    x ([v] v)
+    [[out val]] :wrote
+    :default 42)
+
+  Each option may appear at most once. The choice and parking
+  characteristics are those of alts!."
 
   [& clauses]
-  (assert nil "alt! used not in (go ...) block"))
+  (do-alt `alts! clauses))
 
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
-  calling thread. Additionally, any visible calls to <!, >! and alt!
+  calling thread. Additionally, any visible calls to <!, >! and alt!/alts!
   channel operations within the body will block (if necessary) by
   'parking' the calling thread rather than tying up an OS thread (or
   the only JS thread when in ClojureScript). Upon completion of the
@@ -234,7 +327,7 @@
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (binding [ioc/*symbol-translations* '{alt! core.async.impl.ioc-alt/alt
+  (binding [ioc/*symbol-translations* '{;;alts! core.async.impl.ioc-alt/alts
                                         case case}]
     `(let [f# ~(ioc/state-machine body)
            c# (chan 1)
