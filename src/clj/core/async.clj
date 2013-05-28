@@ -13,7 +13,7 @@
             [core.async.impl.timers :as timers]
             [core.async.impl.dispatch :as dispatch]
             [core.async.impl.ioc-macros :as ioc]
-            ;;[core.async.impl.ioc-alt]
+            [core.async.impl.ioc-alt]
             )
   (:import [core.async Mutex ThreadLocalRandom]))
 
@@ -179,7 +179,7 @@
              (impl/commit flag)
              cb)))
 
-(defn- do-alts
+(defn do-alts
   [fret ports opts]
   (let [flag (alt-flag)
         n (count ports)
@@ -240,7 +240,7 @@
   [ports & {:as opts}]
   (assert nil "alts! used not in (go ...) block"))
 
-(defn- do-alt [alts clauses]
+(defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
   (let [clauses (partition 2 clauses)
         opt? #(keyword? (first %)) 
@@ -327,7 +327,8 @@
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (binding [ioc/*symbol-translations* '{;;alts! core.async.impl.ioc-alt/alts
+  (binding [ioc/*symbol-translations* '{alts! core.async.impl.ioc-alt/alts!
+                                        core.async/alts! core.async.impl.ioc-alt/alts!
                                         case case}]
     `(let [f# ~(ioc/state-machine body)
            c# (chan 1)
