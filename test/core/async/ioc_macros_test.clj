@@ -24,7 +24,7 @@
   )
 
 
-#_(deftest runner-tests
+(deftest runner-tests
   (testing "do blocks"
     (is (= 42
            (runner (do (pause 42)))))
@@ -123,7 +123,7 @@
     (close! c)
     c))
 
-#_(deftest async-test
+(deftest async-test
   (testing "values are returned correctly"
     (is (= 10
            (<!! (go (<! (identity-chan 10)))))))
@@ -133,7 +133,7 @@
                       (>! c (<! (identity-chan 11)))
                       (<! c))))))))
 
-#_(deftest enqueued-chan-ops
+(deftest enqueued-chan-ops
   (testing "enqueued channel puts re-enter async properly"
     (is (= [:foo 42]
            (let [c (chan)
@@ -159,11 +159,21 @@
   (timeout (rand-int x)))
 
 (deftest alt-tests
-  (testing "alt works at all"
+  (testing "alts works at all"
     (let [c (identity-chan 42)]
       (is (= [42 c]
              (<!! (go (alts!
                        [c])))))))
+  (testing "alt works"
+    (is (= [42 :foo]
+           (<!! (go (alt!
+                     (identity-chan 42) ([v] [v :foo])))))))
+
+  (testing "alts can use default"
+    (is (= [42 :default]
+           (<!! (go (alts!
+                     [(chan 1)] {:default 42}))))))
+  
   (comment (testing "prefer default"
              (is (= [:default 42]
                     (<!! (go (alt!
