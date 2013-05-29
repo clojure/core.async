@@ -6,9 +6,9 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.dispatch-test
+(ns clojure.core.async.dispatch-test
   (:require [clojure.test :refer :all]
-            [core.async.impl.dispatch :as dispatch])
+            [clojure.core.async.impl.dispatch :as dispatch])
   (:import [java.util.concurrent ThreadFactory]))
 
 (deftest test-counted-thread-factory

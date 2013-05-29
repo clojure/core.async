@@ -9,11 +9,11 @@
 ;; by Timothy Baldridge
 ;; April 13, 2013
 
-(ns core.async.impl.ioc-macros
+(ns clojure.core.async.impl.ioc-macros
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
-            [core.async.impl.protocols :as impl]
-            [core.async.impl.dispatch :as dispatch]))
+            [clojure.core.async.impl.protocols :as impl]
+            [clojure.core.async.impl.dispatch :as dispatch]))
 
 (def ^:dynamic *symbol-translations* {})
 
@@ -431,7 +431,7 @@
     fn-id (add-instruction (->Fn fn-expr (keys locals) (vals locals)))]
    fn-id))
 
-(defmethod sexpr-to-ssa 'core.async.ioc-macros/pause
+(defmethod sexpr-to-ssa 'clojure.core.async.ioc-macros/pause
   [[_ expr]]
   (gen-plan
    [next-blk (add-block)

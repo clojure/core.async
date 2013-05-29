@@ -6,9 +6,9 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.impl.timers
-  (:require [core.async.impl.protocols :as impl]
-            [core.async.impl.channels :as channels])
+(ns clojure.core.async.impl.timers
+  (:require [clojure.core.async.impl.protocols :as impl]
+            [clojure.core.async.impl.channels :as channels])
   (:import [java.util.concurrent DelayQueue Delayed TimeUnit]))
 
 (set! *warn-on-reflection* true)
@@ -51,6 +51,6 @@
       (recur))))
 
 (defonce timeout-daemon
-  (doto (Thread. ^Runnable timeout-worker "core.async.timers/timeout-daemon")
+  (doto (Thread. ^Runnable timeout-worker "clojure.core.async.timers/timeout-daemon")
     (.setDaemon true)
     (.start)))

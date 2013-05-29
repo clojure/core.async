@@ -1,6 +1,6 @@
-(ns core.async.impl.ioc-alt
-  (:require [core.async.impl.ioc-macros :refer :all :as m]
-            [core.async.impl.protocols :as impl]))
+(ns clojure.core.async.impl.ioc-alt
+  (:require [clojure.core.async.impl.ioc-macros :refer :all :as m]
+            [clojure.core.async.impl.protocols :as impl]))
 
 (defrecord Park [ids cont-block]
   IInstruction
@@ -9,13 +9,13 @@
   (block-references [this] [])
   (emit-instruction [this state-sym]
     (let [[ports opts] ids]
-      `(core.async/do-alts (fn [val#]
+      `(clojure.core.async/do-alts (fn [val#]
                              (m/async-chan-wrapper (assoc ~state-sym ::m/value val# ::m/state ~cont-block)))
                            ~ports
                            ~opts))))
 
 
-(defmethod sexpr-to-ssa 'core.async.impl.ioc-alt/alts!
+(defmethod sexpr-to-ssa 'clojure.core.async.impl.ioc-alt/alts!
   [[_ & args]]
   (gen-plan
    [ids (all (map item-to-ssa args))

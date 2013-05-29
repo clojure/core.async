@@ -6,11 +6,11 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.impl.channels
-  (:require [core.async.impl.protocols :as impl]
-            [core.async.impl.dispatch :as dispatch])
+(ns clojure.core.async.impl.channels
+  (:require [clojure.core.async.impl.protocols :as impl]
+            [clojure.core.async.impl.dispatch :as dispatch])
   (:import [java.util LinkedList Queue Iterator]
-           [core.async Mutex]))
+           [clojure.core.async Mutex]))
 
 (set! *warn-on-reflection* true)
 

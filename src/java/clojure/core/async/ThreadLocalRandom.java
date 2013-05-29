@@ -8,7 +8,7 @@
  You must not remove this notice, or any other, from this software.
 */
 
-package core.async;
+package clojure.core.async;
 
 import java.util.Random;
 

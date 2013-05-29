@@ -6,16 +6,16 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async
-  (:require [core.async.impl.protocols :as impl]
-            [core.async.impl.channels :as channels]
-            [core.async.impl.buffers :as buffers]
-            [core.async.impl.timers :as timers]
-            [core.async.impl.dispatch :as dispatch]
-            [core.async.impl.ioc-macros :as ioc]
-            [core.async.impl.ioc-alt]
+(ns clojure.core.async
+  (:require [clojure.core.async.impl.protocols :as impl]
+            [clojure.core.async.impl.channels :as channels]
+            [clojure.core.async.impl.buffers :as buffers]
+            [clojure.core.async.impl.timers :as timers]
+            [clojure.core.async.impl.dispatch :as dispatch]
+            [clojure.core.async.impl.ioc-macros :as ioc]
+            [clojure.core.async.impl.ioc-alt]
             )
-  (:import [core.async Mutex ThreadLocalRandom]))
+  (:import [clojure.core.async Mutex ThreadLocalRandom]))
 
 (set! *warn-on-reflection* true)
 
@@ -327,8 +327,8 @@
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (binding [ioc/*symbol-translations* '{alts! core.async.impl.ioc-alt/alts!
-                                        core.async/alts! core.async.impl.ioc-alt/alts!
+  (binding [ioc/*symbol-translations* '{alts! clojure.core.async.impl.ioc-alt/alts!
+                                        clojure.core.async/alts! core.async.impl.ioc-alt/alts!
                                         case case}]
     `(let [f# ~(ioc/state-machine body)
            c# (chan 1)

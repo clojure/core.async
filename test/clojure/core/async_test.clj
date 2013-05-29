@@ -1,6 +1,6 @@
-(ns core.async-test
+(ns clojure.core.async-test
   (:use clojure.test
-        core.async))
+        clojure.core.async))
 
 
 (defn default-chan []

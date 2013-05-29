@@ -1,6 +1,6 @@
-(ns core.async.ioc-macros-test
-  (:require [core.async.impl.ioc-macros :as ioc]
-            [core.async :refer :all]
+(ns clojure.core.async.ioc-macros-test
+  (:require [clojure.core.async.impl.ioc-macros :as ioc]
+            [clojure.core.async :refer :all]
             [clojure.test :refer :all]))
 
 (defn runner-wrapper
@@ -16,7 +16,7 @@
   into a state machine. At run time the body will be run as normal. This transform is
   only really useful for testing."
   [& body]
-  (binding [ioc/*symbol-translations* '{pause core.async.ioc-macros/pause
+  (binding [ioc/*symbol-translations* '{pause clojure.core.async.ioc-macros/pause
                                         case case}]
     `(runner-wrapper ~(ioc/state-machine body))))
 

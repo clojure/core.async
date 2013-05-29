@@ -6,8 +6,8 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.impl.buffers
-  (:require [core.async.impl.protocols :as impl])
+(ns clojure.core.async.impl.buffers
+  (:require [clojure.core.async.impl.protocols :as impl])
   (:import [java.util LinkedList Queue]))
 
 (set! *warn-on-reflection* true)

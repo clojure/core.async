@@ -6,10 +6,10 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns core.async.buffers-test
+(ns clojure.core.async.buffers-test
   (:require [clojure.test :refer :all]
-            [core.async.impl.buffers :refer :all]
-            [core.async.impl.protocols :refer [full? add! remove!]]))
+            [clojure.core.async.impl.buffers :refer :all]
+            [clojure.core.async.impl.protocols :refer [full? add! remove!]]))
 
 (defmacro throws? [expr]
   `(try
