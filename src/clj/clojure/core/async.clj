@@ -328,7 +328,7 @@
   completed"
   [& body]
   (binding [ioc/*symbol-translations* '{alts! clojure.core.async.impl.ioc-alt/alts!
-                                        clojure.core.async/alts! core.async.impl.ioc-alt/alts!
+                                        clojure.core.async/alts! clojure.core.async.impl.ioc-alt/alts!
                                         case case}]
     `(let [f# ~(ioc/state-machine body)
            c# (chan 1)
