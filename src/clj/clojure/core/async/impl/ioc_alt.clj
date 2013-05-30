@@ -18,9 +18,9 @@
 
 
 (defmethod sexpr-to-ssa 'clojure.core.async.impl.ioc-alt/alts!
-  [[_ & args]]
+  [[_ ports & {:as args}]]
   (gen-plan
-   [ids (all (map item-to-ssa args))
+   [ids (all (map item-to-ssa [ports args]))
     cont-block (add-block)
     park-id (add-instruction (->Park ids cont-block))
     _ (set-block cont-block)

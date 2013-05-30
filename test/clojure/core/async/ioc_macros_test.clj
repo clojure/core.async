@@ -172,13 +172,15 @@
   (testing "alts can use default"
     (is (= [42 :default]
            (<!! (go (alts!
-                     [(chan 1)] {:default 42}))))))
-  
-  (comment (testing "prefer default"
-             (is (= [:default 42]
+                     [(chan 1)] :default 42))))))
+
+  (testing "alt can use default"
+             (is (= 42
                     (<!! (go (alt!
-                              :foo (<! (chan))
+                              (chan) ([v] :failed)
                               :default 42))))))
+  
+  (comment 
            (testing "alt randomly selects"
              (is (= #{:one :two :three}
                     (<!! (go (loop [acc #{}
