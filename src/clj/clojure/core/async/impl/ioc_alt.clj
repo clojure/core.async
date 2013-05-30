@@ -1,5 +1,6 @@
 (ns clojure.core.async.impl.ioc-alt
   (:require [clojure.core.async.impl.ioc-macros :refer :all :as m]
+            [clojure.core.async.impl.dispatch :as dispatch]  
             [clojure.core.async.impl.protocols :as impl]))
 
 (defrecord Park [ids cont-block]
@@ -13,7 +14,7 @@
                              (m/async-chan-wrapper (assoc ~state-sym ::m/value val# ::m/state ~cont-block)))
                            ~ports
                            ~opts)]
-         (cb#)))))
+         (dispatch/run cb#)))))
 
 
 (defmethod sexpr-to-ssa 'clojure.core.async.impl.ioc-alt/alts!
