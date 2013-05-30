@@ -9,10 +9,11 @@
   (block-references [this] [])
   (emit-instruction [this state-sym]
     (let [[ports opts] ids]
-      `(clojure.core.async/do-alts (fn [val#]
+      `(when-let [cb# (clojure.core.async/do-alts (fn [val#]
                              (m/async-chan-wrapper (assoc ~state-sym ::m/value val# ::m/state ~cont-block)))
                            ~ports
-                           ~opts))))
+                           ~opts)]
+         (cb#)))))
 
 
 (defmethod sexpr-to-ssa 'clojure.core.async.impl.ioc-alt/alts!
