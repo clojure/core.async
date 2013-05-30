@@ -179,19 +179,21 @@
                     (<!! (go (alt!
                               (chan) ([v] :failed)
                               :default 42))))))
+
+  (testing "alt randomly selects"
+    (is (= #{:one :two :three}
+           (<!! (go (loop [acc #{}
+                           cnt 0]
+                      (if (< cnt 10)
+                        (let [label (alt!
+                                     (rand-timeout 100) ([v] :one)
+                                     (rand-timeout 100) ([v] :two)
+                                     (rand-timeout 100) ([v] :three))]
+                          (recur (conj acc label) (inc cnt))))
+                      acc))))))
   
   (comment 
-           (testing "alt randomly selects"
-             (is (= #{:one :two :three}
-                    (<!! (go (loop [acc #{}
-                                    cnt 0]
-                               (if (< cnt 10)
-                                 (let [[label _] (alt!
-                                                  :one (<! (rand-timeout 100))
-                                                  :two (<! (rand-timeout 100))
-                                                  :three (<! (rand-timeout 100)))]
-                                   (recur (conj acc label) (inc cnt))))
-                               acc))))))
+           
 
            (testing "alt only invokes a single body"
              (is (= 1
