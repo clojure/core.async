@@ -131,7 +131,18 @@
     (is (= 11
            (<!! (go (let [c (chan 1)]
                       (>! c (<! (identity-chan 11)))
-                      (<! c))))))))
+                      (<! c)))))))
+
+  (testing "case with go"
+    (is (= :1
+           (<!! (go (case (name :1)
+                      "0" :0
+                      "1" :1
+                      :3))))))
+
+  (testing "nil result of go"
+    (is (= nil
+           (<!! (go nil))))))
 
 (deftest enqueued-chan-ops
   (testing "enqueued channel puts re-enter async properly"
@@ -190,29 +201,4 @@
                                      (rand-timeout 100) ([v] :two)
                                      (rand-timeout 100) ([v] :three))]
                           (recur (conj acc label) (inc cnt))))
-                      acc))))))
-  
-  (comment 
-           
-
-           (testing "alt only invokes a single body"
-             (is (= 1
-                    (let [a (atom 0)
-                          c (chan 1)]
-                      (<!! (go (alt!
-                                :one (>! c (swap! a inc))
-                                :two (>! c (swap! a inc)))))
-                      @a))))
-           
-           (testing "case with go"
-             (is (= :1
-                    (<!! (go (case (name :1)
-                               "0" :0
-                               "1" :1
-                               :3))))))
-
-           (testing "nil result of go"
-             (is (= nil
-                    (<!! (go nil)))))
-
-))
+                      acc)))))))
