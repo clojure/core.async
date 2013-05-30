@@ -192,27 +192,27 @@
                   port (nth ports idx)
                   cb (if (vector? port)
                        (let [[port val] port]
-                         (impl/put! port val (alt-handler flag (fn [] (fret [nil port])))))
-                       (impl/take! port (alt-handler flag (fn [val] (fret [val port])))))]
+                         (impl/put! port val (alt-handler flag #(fret [nil port]))))
+                       (impl/take! port (alt-handler flag #(fret [% port]))))]
               (or cb
                   (recur (inc i))))))]
-    (if cb
-      (cb)
+    (or
+      cb
       (when (contains? opts :default)
         (impl/lock flag)
         (let [got (and (impl/active? flag) (impl/commit flag))]
           (impl/unlock flag)
           (when got
-            (fret [(:default opts) :default])))))))
+            #(fret [(:default opts) :default])))))))
 
 (defn alts!!
   "Like alts!, except takes will be made as if by <!!, and puts will
   be made as if by >!!, will block until completed, and not intended
   for use in (go ...) blocks."
-
   [ports & {:as opts}]
-  (let [p (promise)]
-    (do-alts (partial deliver p) ports opts)
+  (let [p (promise)
+        cb (do-alts (partial deliver p) ports opts)]
+    (when cb (cb))
     (deref p)))
 
 (defn alts!
