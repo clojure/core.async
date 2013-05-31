@@ -13,7 +13,8 @@
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
             [clojure.core.async.impl.protocols :as impl]
-            [clojure.core.async.impl.dispatch :as dispatch]))
+            [clojure.core.async.impl.dispatch :as dispatch])
+  (:import [java.util.concurrent.locks Lock]))
 
 (def ^:dynamic *symbol-translations* {})
 
@@ -602,7 +603,7 @@
 (defn- fn-handler
   [f]
   (reify
-   impl/Locking
+   Lock
    (lock [_])
    (unlock [_])
    

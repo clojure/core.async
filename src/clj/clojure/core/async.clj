@@ -14,15 +14,17 @@
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.ioc-macros :as ioc]
             [clojure.core.async.impl.ioc-alt]
+            [clojure.core.async.impl.mutex :as mutex]
             )
-  (:import [clojure.core.async Mutex ThreadLocalRandom]))
+  (:import [clojure.core.async ThreadLocalRandom]
+           [java.util.concurrent.locks Lock]))
 
 (set! *warn-on-reflection* true)
 
 (defn- fn-handler
   [f]
   (reify
-   impl/Locking
+   Lock
    (lock [_])
    (unlock [_])
    
@@ -130,13 +132,6 @@
 
 (defonce ^:private ^java.util.concurrent.atomic.AtomicLong id-gen (java.util.concurrent.atomic.AtomicLong.))
 
-(defn- mutex []
-  (let [m (Mutex.)]
-    (reify
-     impl/Locking
-     (lock [_] (.lock m))
-     (unlock [_] (.unlock m)))))
-
 (defn- random-array
   [n]
   (let [rand (ThreadLocalRandom/current)
@@ -151,13 +146,13 @@
             (recur (inc i))))))))
 
 (defn- alt-flag []
-  (let [m (mutex)
+  (let [^Lock m (mutex/mutex)
         flag (atom true)
         id (.incrementAndGet id-gen)]
     (reify
-     impl/Locking
-     (lock [_] (impl/lock m))
-     (unlock [_] (impl/unlock m))
+     Lock
+     (lock [_] (.lock m))
+     (unlock [_] (.unlock m))
 
      impl/Handler
      (active? [_] @flag)
@@ -166,11 +161,11 @@
              (reset! flag nil)
              true))))
 
-(defn- alt-handler [flag cb]
+(defn- alt-handler [^Lock flag cb]
   (reify
-     impl/Locking
-     (lock [_] (impl/lock flag))
-     (unlock [_] (impl/unlock flag))
+     Lock
+     (lock [_] (.lock flag))
+     (unlock [_] (.unlock flag))
 
      impl/Handler
      (active? [_] (impl/active? flag))
@@ -199,9 +194,9 @@
     (or
       cb
       (when (contains? opts :default)
-        (impl/lock flag)
+        (.lock ^Lock flag)
         (let [got (and (impl/active? flag) (impl/commit flag))]
-          (impl/unlock flag)
+          (.unlock ^Lock flag)
           (when got
             #(fret [(:default opts) :default])))))))
 

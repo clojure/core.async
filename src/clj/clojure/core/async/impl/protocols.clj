@@ -17,10 +17,6 @@
 (defprotocol Channel
   (close! [chan]))
 
-(defprotocol Locking
-  (lock [h])
-  (unlock [h]))
-
 (defprotocol Handler
   (active? [h] "returns true if has callback. Must work w/o lock")
   (lock-id [h] "a unique id for lock acquisition order, 0 if no lock")
