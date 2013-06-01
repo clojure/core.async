@@ -9,10 +9,10 @@
 (ns clojure.core.async.impl.protocols)
 
 (defprotocol ReadPort
-  (take! [port fn1-handler] "returns fn0 (fn1 bound to val) cb if taken, nil if take was enqueued"))
+  (take! [port fn1-handler] "derefable val if taken, nil if take was enqueued"))
 
 (defprotocol WritePort
-  (put! [port val fn0-handler] "returns fn0 cb if put, nil if put was enqueued"))
+  (put! [port val fn0-handler] "derefable nil if put, nil if put was enqueued"))
 
 (defprotocol Channel
   (close! [chan]))

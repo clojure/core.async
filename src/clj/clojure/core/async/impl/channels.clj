@@ -15,6 +15,10 @@
 
 (set! *warn-on-reflection* true)
 
+(defn box [val]
+  (reify clojure.lang.IDeref
+         (deref [_] val)))
+
 (defprotocol MMC
   (cleanup [_]))
 
@@ -44,7 +48,7 @@
    (cleanup this)
    (if @closed
      (do (.unlock mutex)
-         (throw (IllegalStateException. "put! on closed channel")))
+         (box nil))
      (let [^Lock handler handler
            iter (.iterator takes)
            [put-cb take-cb] (when (.hasNext iter)
@@ -66,7 +70,7 @@
          (do
            (.unlock mutex)
            (dispatch/run (fn [] (take-cb val)))
-           put-cb)
+           (box nil))
          (if (and buf (not (impl/full? buf)))
            (do
              (.lock handler)
@@ -75,8 +79,9 @@
                (if put-cb
                  (do (impl/add! buf val)
                      (.unlock mutex)
-                     put-cb)
-                 (.unlock mutex))))
+                     (box nil))
+                 (do (.unlock mutex)
+                     nil))))
            (do
              (.add puts [handler val])
              (.unlock mutex)
@@ -98,7 +103,7 @@
          (if-let [take-cb (commit-handler)]
            (let [val (impl/remove! buf)]
              (.unlock mutex)
-             (fn [] (take-cb val)))
+             (box val))
            (do (.unlock mutex)
                nil)))
        (let [iter (.iterator puts)
@@ -122,12 +127,12 @@
            (do
              (.unlock mutex)
              (dispatch/run put-cb)
-             (fn [] (take-cb val)))
+             (box val))
            (if @closed
              (do
                (.unlock mutex)
                (if-let [take-cb (commit-handler)]
-                 (fn [] (take-cb nil))
+                 (box nil)
                  nil))
              (do
                (.add takes handler)

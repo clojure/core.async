@@ -67,9 +67,10 @@
   if nothing is available."
   [port]
   (let [p (promise)
-        cb (impl/take! port (fn-handler (fn [v] (deliver p v))))]
-    (when cb (cb))
-    (deref p)))
+        ret (impl/take! port (fn-handler (fn [v] (deliver p v))))]
+    (if ret
+      @ret
+      (deref p))))
 
 (defn <!
   "takes a val from port. Must be called inside a (go ...) block. Will
@@ -84,11 +85,12 @@
    Returns nil."
   ([port fn1] (take! port fn1 true))
   ([port fn1 on-caller?]
-     (let [cb (impl/take! port (fn-handler fn1))]
-       (when cb
-         (if on-caller?
-           (cb)
-           (dispatch/run cb)))
+     (let [ret (impl/take! port (fn-handler fn1))]
+       (when ret
+         (let [val @ret]
+           (if on-caller?
+             (fn1 val)
+             (dispatch/run #(fn1 val)))))
        nil)))
 
 (defn >!!
@@ -96,10 +98,10 @@
   available. Returns nil."
   [port val]
   (let [p (promise)
-        cb (impl/put! port val (fn-handler (fn [] (deliver p nil))))]
-    (when cb (cb))
-    (deref p)
-    nil))
+        ret (impl/put! port val (fn-handler (fn [] (deliver p nil))))]
+    (if ret
+      @ret
+      (deref p))))
 
 (defn >!
   "puts a val into port. Must be called inside a (go ...) block. Will
@@ -114,16 +116,16 @@
    thread.  Returns nil."
   ([port val fn0] (put! port val fn0 true))
   ([port val fn0 on-caller?]
-     (let [cb (impl/put! port val (fn-handler fn0))]
-       (when cb
+     (let [ret (impl/put! port val (fn-handler fn0))]
+       (when ret
          (if on-caller?
-           (cb)
-           (dispatch/run cb)))
+           (fn0)
+           (dispatch/run fn0)))
        nil)))
 
 (defn close!
   "Closes a channel. The channel will no longer accept any puts (they
-  will throw). Data in the channel remains avaiable for taking, until
+  will be ignored). Data in the channel remains available for taking, until
   exhausted, after which takes will return nil. If there are any
   pending takes, they will be dispatched with nil. Closing a closed
   channel is a no-op. Returns nil."
@@ -175,30 +177,32 @@
              cb)))
 
 (defn do-alts
+  "returns derefable [val port] if immediate, nil if enqueued"
   [fret ports opts]
   (let [flag (alt-flag)
         n (count ports)
         ^ints idxs (random-array n)
         priority (:priority opts)
-        cb
+        ret
         (loop [i 0]
           (when (< i n)
             (let [idx (if priority i (aget idxs i))
                   port (nth ports idx)
-                  cb (if (vector? port)
-                       (let [[port val] port]
-                         (impl/put! port val (alt-handler flag #(fret [nil port]))))
-                       (impl/take! port (alt-handler flag #(fret [% port]))))]
-              (or cb
-                  (recur (inc i))))))]
+                  wport (when (vector? port) (port 0))
+                  vbox (if wport
+                         (impl/put! wport (port 1) (alt-handler flag #(fret [nil wport])))
+                         (impl/take! port (alt-handler flag #(fret [% port]))))]
+              (if vbox
+                (channels/box [@vbox (or wport port)])
+                (recur (inc i))))))]
     (or
-      cb
-      (when (contains? opts :default)
-        (.lock ^Lock flag)
-        (let [got (and (impl/active? flag) (impl/commit flag))]
-          (.unlock ^Lock flag)
-          (when got
-            #(fret [(:default opts) :default])))))))
+     ret
+     (when (contains? opts :default)
+       (.lock ^Lock flag)
+       (let [got (and (impl/active? flag) (impl/commit flag))]
+         (.unlock ^Lock flag)
+         (when got
+           (channels/box [(:default opts) :default])))))))
 
 (defn alts!!
   "Like alts!, except takes will be made as if by <!!, and puts will
@@ -206,9 +210,10 @@
   for use in (go ...) blocks."
   [ports & {:as opts}]
   (let [p (promise)
-        cb (do-alts (partial deliver p) ports opts)]
-    (when cb (cb))
-    (deref p)))
+        ret (do-alts (partial deliver p) ports opts)]
+    (if ret
+      @ret
+      (deref p))))
 
 (defn alts!
   "Completes at most one of several channel operations. Must be called
