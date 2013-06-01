@@ -157,14 +157,19 @@
              (>!! c :foo)
              (<!! async-chan)))))
   (testing "puts into channels with full buffers re-enter async properly"
-    (is (= :bar
+    (is (= #{:foo :bar :baz :boz}
            (let [c (chan 1)
                  async-chan (go
                              (>! c :foo)
                              (>! c :bar)
+                             (>! c :baz)
+
+                             (>! c :boz)
                              (<! c))]
-             (<!! c)
-             (<!! async-chan))))))
+             (set [(<!! c)
+                   (<!! c)
+                   (<!! c)
+                   (<!! async-chan)]))))))
 
 (defn rand-timeout [x]
   (timeout (rand-int x)))

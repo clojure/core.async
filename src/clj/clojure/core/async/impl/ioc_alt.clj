@@ -14,7 +14,7 @@
                              (m/async-chan-wrapper (assoc ~state-sym ::m/value val# ::m/state ~cont-block)))
                            ~ports
                            ~opts)]
-         (dispatch/run cb#)))))
+         (recur (assoc ~state-sym ::m/value @cb# ::m/state ~cont-block ))))))
 
 
 (defmethod sexpr-to-ssa 'clojure.core.async.impl.ioc-alt/alts!

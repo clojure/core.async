@@ -624,14 +624,14 @@
                                             (->> x
                                                  (assoc state ::value)
                                                  async-chan-wrapper))))]
-           (dispatch/run cb))
+           (recur (assoc state ::value @cb)))
          ::put!
          (let [[chan value] value]
            (when-let [cb (impl/put! chan value (fn-handler (fn []
                                                              (->> nil
                                                                   (assoc state ::value)
                                                                   async-chan-wrapper))))]
-             (dispatch/run cb)))
+             (recur (assoc state ::value @cb))))
          
          ::return
          (let [c (::chan state)]
@@ -639,7 +639,7 @@
            (impl/close! c)
            c)
 
-         ; Default case, return nil
+                                        ; Default case, return nil
          nil))))
 
 
