@@ -635,7 +635,8 @@
          
          ::return
          (let [c (::chan state)]
-           (impl/put! c value (fn-handler (fn [] nil)))
+           (when-not (nil? value)
+             (impl/put! c value (fn-handler (fn [] nil))))
            (impl/close! c)
            c)
 
