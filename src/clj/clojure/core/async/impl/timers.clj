@@ -9,12 +9,17 @@
 (ns clojure.core.async.impl.timers
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.channels :as channels])
-  (:import [java.util.concurrent DelayQueue Delayed TimeUnit]))
+  (:import [java.util.concurrent DelayQueue Delayed TimeUnit ConcurrentSkipListMap]))
 
 (set! *warn-on-reflection* true)
 
 (defonce ^:private ^DelayQueue timeouts-queue
   (DelayQueue.))
+
+(defonce ^:private ^ConcurrentSkipListMap timeouts-map
+  (ConcurrentSkipListMap.))
+
+(def ^:const TIMEOUT_RESOLUTION_MS 10)
 
 (deftype TimeoutQueueEntry [channel ^long timestamp]
   Delayed
@@ -38,16 +43,22 @@
   "returns a channel that will close after msecs"
   [msecs]
   (let [timeout (+ (System/currentTimeMillis) msecs)
-        timeout-channel (channels/chan nil)
-        timeout-delay (TimeoutQueueEntry. timeout-channel timeout)]
-    (.put timeouts-queue timeout-delay)
-    timeout-channel))
+        me (.ceilingEntry timeouts-map timeout)]
+    (or (when (and me (< (.getKey me) (+ timeout TIMEOUT_RESOLUTION_MS)))
+          (.channel ^TimeoutQueueEntry (.getValue me)))
+        (let [timeout-channel (channels/chan nil)
+              timeout-entry (TimeoutQueueEntry. timeout-channel timeout)]
+          (.put timeouts-map timeout timeout-entry)
+          (.put timeouts-queue timeout-entry)
+          timeout-channel))))
 
 (defn- timeout-worker
   []
   (let [q timeouts-queue]
     (loop []
-      (impl/close! (.take q))
+      (let [^TimeoutQueueEntry tqe (.take q)]
+        (.remove timeouts-map (.timestamp tqe) tqe)
+        (impl/close! tqe))
       (recur))))
 
 (defonce timeout-daemon
