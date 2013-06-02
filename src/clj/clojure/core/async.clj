@@ -94,8 +94,8 @@
        nil)))
 
 (defn >!!
-  "puts a val into port. Will block if no buffer space is
-  available. Returns nil."
+  "puts a val into port. nil values are not allowed. Will block if no
+  buffer space is available. Returns nil."
   [port val]
   (let [p (promise)
         ret (impl/put! port val (fn-handler (fn [] (deliver p nil))))]
@@ -104,16 +104,16 @@
       (deref p))))
 
 (defn >!
-  "puts a val into port. Must be called inside a (go ...) block. Will
-  park if no buffer space is available."
+  "puts a val into port. nil values are not allowed. Must be called
+  inside a (go ...) block. Will park if no buffer space is available."
   [port val]
   (assert nil ">! used not in (go ...) block"))
 
 (defn put!
-  "Asynchronously puts a val into port, calling fn0 when
-   complete. Will throw if closed. If on-caller? (default true) is
-   true, and the put is immediately accepted, will call fn0 on calling
-   thread.  Returns nil."
+  "Asynchronously puts a val into port, calling fn0 when complete. nil
+   values are not allowed. Will throw if closed. If
+   on-caller? (default true) is true, and the put is immediately
+   accepted, will call fn0 on calling thread.  Returns nil."
   ([port val fn0] (put! port val fn0 true))
   ([port val fn0 on-caller?]
      (let [ret (impl/put! port val (fn-handler fn0))]
@@ -190,7 +190,8 @@
                   port (nth ports idx)
                   wport (when (vector? port) (port 0))
                   vbox (if wport
-                         (impl/put! wport (port 1) (alt-handler flag #(fret [nil wport])))
+                         (let [val (port 1)]
+                           (impl/put! wport val (alt-handler flag #(fret [nil wport]))))
                          (impl/take! port (alt-handler flag #(fret [% port]))))]
               (if vbox
                 (channels/box [@vbox (or wport port)])

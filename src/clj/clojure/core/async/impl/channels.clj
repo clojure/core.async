@@ -44,6 +44,8 @@
   impl/WritePort
   (put!
    [this val handler]
+   (when (nil? val)
+     (throw (IllegalArgumentException. "Can't put nil on channel")))
    (.lock mutex)
    (cleanup this)
    (if @closed
