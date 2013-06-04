@@ -196,14 +196,16 @@
                               (chan) ([v] :failed)
                               :default 42))))))
 
-  (testing "alt randomly selects"
-    (is (= #{:one :two :three}
-           (<!! (go (loop [acc #{}
-                           cnt 0]
-                      (if (< cnt 10)
-                        (let [label (alt!
-                                     (rand-timeout 100) ([v] :one)
-                                     (rand-timeout 100) ([v] :two)
-                                     (rand-timeout 100) ([v] :three))]
-                          (recur (conj acc label) (inc cnt))))
-                      acc)))))))
+  (testing "alt obeys its random-array initialization"
+    (is (= #{:two}
+           (with-redefs [clojure.core.async/random-array
+                         (constantly (int-array [1 2 0]))]
+             (<!! (go (loop [acc #{}
+                             cnt 0]
+                        (if (< cnt 10)
+                          (let [label (alt!
+                                        (identity-chan :one) ([v] v)
+                                        (identity-chan :two) ([v] v)
+                                        (identity-chan :three) ([v] v))]
+                            (recur (conj acc label) (inc cnt))))
+                        acc))))))))
