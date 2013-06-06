@@ -158,10 +158,10 @@
              (.lock taker)
              (let [take-cb (and (impl/active? taker) (impl/commit taker))]
                (.unlock taker)
-               (if take-cb
-                 (dispatch/run (fn [] (take-cb nil)))
-                 (when (.hasNext iter)
-                   (recur (.next iter))))))))
+               (when take-cb
+                 (dispatch/run (fn [] (take-cb nil))))
+               (when (.hasNext iter)
+                   (recur (.next iter)))))))
        (.unlock mutex)
        nil))))
 
