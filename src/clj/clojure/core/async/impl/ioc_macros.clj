@@ -631,7 +631,7 @@
 (defn- emit-state-machine [machine num-user-params]
   (let [index (index-state-machine machine)
         state-sym (with-meta (gensym "state_")
-                    {:tag (symbol "objects")})
+                    {:tag 'objects})
         local-start-idx (+ num-user-params USER-START-IDX)
         state-arr-size (+ local-start-idx (count-persistent-values index))
         local-map (atom {::next-idx local-start-idx})]
