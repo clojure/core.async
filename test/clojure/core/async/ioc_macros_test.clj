@@ -8,7 +8,7 @@
   [f]
   (loop [state (f)]
     (if (ioc/finished? state)
-      (::ioc/value state)
+      (aget ^objects state ioc/VALUE-IDX)
       (recur (f state)))))
 
 (defmacro runner
@@ -18,11 +18,7 @@
   [& body]
   (binding [ioc/*symbol-translations* '{pause clojure.core.async.ioc-macros/pause
                                         case case}]
-    `(runner-wrapper ~(ioc/state-machine body))))
-
-(deftest case-test
-  )
-
+    `(runner-wrapper ~(ioc/state-machine body 0))))
 
 (deftest runner-tests
   (testing "do blocks"
@@ -115,7 +111,7 @@
 
 
 
-(defn identity-chan 
+#_(defn identity-chan 
   "Defines a channel that instantly writes the given value"
   [x]
   (let [c (chan 1)]
@@ -123,7 +119,7 @@
     (close! c)
     c))
 
-(deftest async-test
+#_(deftest async-test
   (testing "values are returned correctly"
     (is (= 10
            (<!! (go (<! (identity-chan 10)))))))
@@ -144,7 +140,7 @@
     (is (= nil
            (<!! (go nil))))))
 
-(deftest enqueued-chan-ops
+#_(deftest enqueued-chan-ops
   (testing "enqueued channel puts re-enter async properly"
     (is (= [:foo 42]
            (let [c (chan)
@@ -174,7 +170,7 @@
 (defn rand-timeout [x]
   (timeout (rand-int x)))
 
-(deftest alt-tests
+#_(deftest alt-tests
   (testing "alts works at all"
     (let [c (identity-chan 42)]
       (is (= [42 c]
