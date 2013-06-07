@@ -27,7 +27,7 @@
 (def ^:const BINDINGS-IDX 4)
 (def ^:const USER-START-IDX 5)
 
-(defn aset-object [^objects arr ^long idx ^Object o]
+(defn aset-object [^objects arr idx ^Object o]
   (aset arr idx o))
 
 (defmacro aset-all!
@@ -630,7 +630,8 @@
 
 (defn- emit-state-machine [machine num-user-params]
   (let [index (index-state-machine machine)
-        state-sym (with-meta (gensym "state_") {:tag (symbol "objects")})
+        state-sym (with-meta (gensym "state_")
+                    {:tag (symbol "objects")})
         local-start-idx (+ num-user-params USER-START-IDX)
         state-arr-size (+ local-start-idx (count-persistent-values index))
         local-map (atom {::next-idx local-start-idx})]
@@ -641,17 +642,17 @@
                         ~BINDINGS-IDX bindings#
                         ~STATE-IDX ~(:start-block machine)))
          ([~state-sym]
-            ;;(with-bindings (aget ~state-sym ~BINDINGS-IDX))
-            (loop [~state-sym ~state-sym]
-              (case (int (aget ~state-sym ~STATE-IDX))
-                ~@(mapcat
-                   (fn [[id blk]]
-                     `(~id
-                       (let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                       (build-block-body state-sym blk))
-                             ~state-sym ~(build-new-state local-map index state-sym blk)]
-                         ~(emit-instruction (last blk) state-sym))))
-                   (:blocks machine)))))))))
+            (with-bindings (aget ~state-sym ~BINDINGS-IDX)
+              (loop [~state-sym ~state-sym]
+                (case (int (aget ~state-sym ~STATE-IDX))
+                  ~@(mapcat
+                     (fn [[id blk]]
+                       `(~id
+                         (let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                         (build-block-body state-sym blk))
+                               ~state-sym ~(build-new-state local-map index state-sym blk)]
+                           ~(emit-instruction (last blk) state-sym))))
+                     (:blocks machine))))))))))
 
 (defn finished?
   "Returns true if the machine is in a finished state"
