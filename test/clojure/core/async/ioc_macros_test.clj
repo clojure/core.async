@@ -111,7 +111,7 @@
 
 
 
-#_(defn identity-chan 
+(defn identity-chan 
   "Defines a channel that instantly writes the given value"
   [x]
   (let [c (chan 1)]
@@ -119,7 +119,7 @@
     (close! c)
     c))
 
-#_(deftest async-test
+(deftest async-test
   (testing "values are returned correctly"
     (is (= 10
            (<!! (go (<! (identity-chan 10)))))))
@@ -140,7 +140,7 @@
     (is (= nil
            (<!! (go nil))))))
 
-#_(deftest enqueued-chan-ops
+(deftest enqueued-chan-ops
   (testing "enqueued channel puts re-enter async properly"
     (is (= [:foo 42]
            (let [c (chan)
@@ -170,7 +170,7 @@
 (defn rand-timeout [x]
   (timeout (rand-int x)))
 
-#_(deftest alt-tests
+(deftest alt-tests
   (testing "alts works at all"
     (let [c (identity-chan 42)]
       (is (= [42 c]

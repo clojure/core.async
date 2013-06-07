@@ -673,27 +673,27 @@
 
 (defn async-chan-wrapper
   "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. "
-  ([state]
-     (let [state ((::fn state) state)
-           value (::value state)]
-       (case (::action state)
+  ([^objects state]
+     (let [state ((aget state FN-IDX) state)
+           value (aget ^objects state VALUE-IDX)]
+       (case (aget ^objects state ACTION-IDX)
          ::take!
          (when-let [cb (impl/take! value (fn-handler
                                           (fn [x]
                                             (->> x
-                                                 (assoc state ::value)
+                                                 (aset-all! state VALUE-IDX)
                                                  async-chan-wrapper))))]
-           (recur (assoc state ::value @cb)))
+           (recur (aset-all! state VALUE-IDX @cb)))
          ::put!
          (let [[chan value] value]
            (when-let [cb (impl/put! chan value (fn-handler (fn []
                                                              (->> nil
-                                                                  (assoc state ::value)
+                                                                  (aset-all! state VALUE-IDX)
                                                                   async-chan-wrapper))))]
-             (recur (assoc state ::value @cb))))
+             (recur (aset-all! state VALUE-IDX @cb))))
          
          ::return
-         (let [c (::chan state)]
+         (let [c (aget ^objects state USER-START-IDX)]
            (when-not (nil? value)
              (impl/put! c value (fn-handler (fn [] nil))))
            (impl/close! c)

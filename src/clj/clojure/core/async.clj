@@ -334,7 +334,7 @@
     `(let [f# ~(ioc/state-machine body 1)
            c# (chan 1)
            state# (-> (f#)
-                      (assoc ::ioc/chan c#))]
+                      (ioc/aset-all! ioc/USER-START-IDX c#))]
        (ioc/async-chan-wrapper state#)
        c#)))
 
