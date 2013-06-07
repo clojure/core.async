@@ -8,7 +8,7 @@
   [f]
   (loop [state (f)]
     (if (ioc/finished? state)
-      (::ioc/value state)
+      (aget ^objects state ioc/VALUE-IDX)
       (recur (f state)))))
 
 (defmacro runner
@@ -18,11 +18,7 @@
   [& body]
   (binding [ioc/*symbol-translations* '{pause clojure.core.async.ioc-macros/pause
                                         case case}]
-    `(runner-wrapper ~(ioc/state-machine body))))
-
-(deftest case-test
-  )
-
+    `(runner-wrapper ~(ioc/state-machine body 0))))
 
 (deftest runner-tests
   (testing "do blocks"

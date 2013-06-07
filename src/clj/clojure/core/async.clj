@@ -331,10 +331,10 @@
   (binding [ioc/*symbol-translations* '{alts! clojure.core.async.impl.ioc-alt/alts!
                                         clojure.core.async/alts! clojure.core.async.impl.ioc-alt/alts!
                                         case case}]
-    `(let [f# ~(ioc/state-machine body)
+    `(let [f# ~(ioc/state-machine body 1)
            c# (chan 1)
            state# (-> (f#)
-                      (assoc ::ioc/chan c#))]
+                      (ioc/aset-all! ioc/USER-START-IDX c#))]
        (ioc/async-chan-wrapper state#)
        c#)))
 
