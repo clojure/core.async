@@ -18,6 +18,8 @@
 
 (def ^:dynamic *symbol-translations* {})
 
+(defonce ^:private ^java.util.concurrent.atomic.AtomicLong block-id-gen (java.util.concurrent.atomic.AtomicLong.))
+
 ;; State monad stuff, used only in SSA construction
 
 (defn- with-bind [id expr psym body]
@@ -133,14 +135,14 @@
 (defn add-block
   "Adds a new block, returns its id, but does not change the current block (does not call set-block)."
   []
-  (let [blk-sym (keyword (gensym "blk_"))]
+  (let [blk-id (.incrementAndGet block-id-gen)]
     (gen-plan
      [cur-blk (get-block)
-      _ (assoc-in-plan [:blocks blk-sym] [])
+      _ (assoc-in-plan [:blocks blk-id] [])
       _ (if-not cur-blk
-          (assoc-in-plan [:start-block] blk-sym)
+          (assoc-in-plan [:start-block] blk-id)
           (no-op))]
-     blk-sym)))
+     blk-id)))
 
 
 (defn instruction? [x]
@@ -585,10 +587,10 @@
          ([~state-sym]
             (with-bindings (::bindings ~state-sym)
               (loop [~state-sym ~state-sym]
-                (case (::state ~state-sym)
+                (case (int (::state ~state-sym))
                   ~@(mapcat
                      (fn [[id blk]]
-                       `(~(keyword id)
+                       `(~id
                          (let [~@(concat (build-block-preamble index state-sym blk)
                                          (build-block-body state-sym blk))
                                ~state-sym ~(build-new-state index state-sym blk)]
