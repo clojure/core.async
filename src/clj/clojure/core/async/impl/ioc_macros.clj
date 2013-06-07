@@ -20,6 +20,27 @@
 
 (defonce ^:private ^java.util.concurrent.atomic.AtomicLong block-id-gen (java.util.concurrent.atomic.AtomicLong.))
 
+(def ^:const FN-IDX 0)
+(def ^:const STATE-IDX 1)
+(def ^:const VALUE-IDX 2)
+(def ^:const ACTION-IDX 3)
+(def ^:const BINDINGS-IDX 4)
+(def ^:const USER-START-IDX 5)
+
+(defn aset-object [^objects arr ^long idx ^Object o]
+  (aset arr idx o))
+
+(defmacro aset-all!
+  [arr & more]
+  (let [bindings (partition 2 more)
+        arr-sym (gensym "statearr-")]
+    `(let [~arr-sym ~arr]
+       ~@(map
+          (fn [[idx val]]
+            `(aset-object ~arr-sym ~idx ~val))
+          bindings)
+       ~arr-sym)))
+
 ;; State monad stuff, used only in SSA construction
 
 (defn- with-bind [id expr psym body]
@@ -180,7 +201,7 @@
   (block-references [this] [])
   (emit-instruction [this state-sym]
     (if (= value ::value)
-      `[~(:id this) (::value ~state-sym)]
+      `[~(:id this) (aget ~state-sym ~VALUE-IDX)]
       `[~(:id this) ~value])))
 
 (defrecord Set [set-id value]
@@ -207,10 +228,11 @@
   (emit-instruction [this state-sym]
     `(case ~val-id
        ~@(concat (mapcat (fn [test blk]
-                           `[~test (recur (assoc ~state-sym ::state ~blk))])
+                           `[~test (recur (aset-all! ~state-sym
+                                                     ~STATE-IDX ~blk))])
                          test-vals jmp-blocks)
                  (when default-block
-                   `[(recur (assoc ~state-sym ::state ~default-block))])))))
+                   `[(recur (aset-all! ~state-sym ~STATE-IDX ~default-block))])))))
 
 (defrecord Fn [fn-expr local-names local-refs]
   IInstruction
@@ -228,7 +250,7 @@
   (writes-to [this] [])
   (block-references [this] [block])
   (emit-instruction [this state-sym]
-    `(recur (assoc ~state-sym ::value ~value ::state ~block))))
+    `(recur (aset-all! ~state-sym ~VALUE-IDX ~value ~STATE-IDX ~block))))
 
 (defrecord Return [value]
   IInstruction
@@ -236,7 +258,10 @@
   (writes-to [this] [])
   (block-references [this] [])
   (emit-instruction [this state-sym]
-    `(assoc ~state-sym ::value ~value ::action ::return ::state ::finished)))
+    `(aset-all! ~state-sym
+                ~VALUE-IDX ~value
+                ~ACTION-IDX ::return
+                ~STATE-IDX ::finished)))
 
 (defrecord Put! [channel value block]
   IInstruction
@@ -244,7 +269,10 @@
   (writes-to [this] [])
   (block-references [this] [block])
   (emit-instruction [this state-sym]
-    `(assoc ~state-sym ::value [~channel ~value] ::action ::put! ::state ~block)))
+    `(aset-all! ~state-sym
+                ~VALUE-IDX [~channel ~value]
+                ~ACTION-IDX ::put!
+                ~STATE-IDX ~block)))
 
 (defrecord Take! [channel block]
   IInstruction
@@ -252,7 +280,10 @@
   (writes-to [this] [])
   (block-references [this] [block])
   (emit-instruction [this state-sym]
-    `(assoc ~state-sym ::value ~channel ::action ::take! ::state ~block)))
+    `(aset-all! ~state-sym
+                ~VALUE-IDX ~channel
+                ~ACTION-IDX ::take!
+                ~STATE-IDX ~block)))
 
 (defrecord Pause [value block]
   IInstruction
@@ -260,7 +291,10 @@
   (writes-to [this] [])
   (block-references [this] [block])
   (emit-instruction [this state-sym]
-    `(assoc ~state-sym ::value ~value ::action ::pause ::state ~block)))
+    `(aset-all! ~state-sym
+                ~VALUE-IDX ~value
+                ~ACTION-IDX ::pause
+                ~STATE-IDX ~block)))
 
 (defrecord CondBr [test then-block else-block]
   IInstruction
@@ -269,8 +303,10 @@
   (block-references [this] [then-block else-block])
   (emit-instruction [this state-sym]
     `(if ~test
-       (recur (assoc ~state-sym ::state ~then-block))
-       (recur (assoc ~state-sym ::state ~else-block)))))
+       (recur (aset-all! ~state-sym
+                         ~STATE-IDX ~then-block))
+       (recur (aset-all! ~state-sym
+                         ~STATE-IDX ~else-block)))))
 
 ;; Dispatch clojure forms based on data type
 (defmulti -item-to-ssa (fn [x]
@@ -537,6 +573,14 @@
 (defn index-state-machine [machine]
   (reduce index-block {} (:blocks machine)))
 
+(defn id-for-inst [m sym] ;; m :: symbols -> integers
+  (if-let [i (get @m sym)]
+    i
+    (let [next-idx (get @m ::next-idx)]
+      (swap! m assoc sym next-idx)
+      (swap! m assoc ::next-idx (inc next-idx))
+      next-idx)))
+
 (defn persistent-value?
   "Returns true if this value should be saved in the state hash map"
   [index value]
@@ -544,8 +588,14 @@
             (-> index value :written-in))
       (-> index value :read-in count (> 1))))
 
+(defn count-persistent-values
+  [index]
+  (->> (keys index)
+       (filter instruction?)
+       (filter (partial persistent-value? index))
+       count))
 
-(defn- build-block-preamble [idx state-sym blk]
+(defn- build-block-preamble [local-map idx state-sym blk]
   (let [args (->> (mapcat reads-from blk)
                   (filter instruction?)
                   (filter (partial persistent-value? idx))
@@ -553,54 +603,60 @@
                   vec)]
     (if (empty? args)
       []
-      `({:keys ~args} ~state-sym))))
+      (mapcat (fn [sym]
+             `[~sym (aget ~state-sym ~(id-for-inst local-map sym))])
+              args))))
 
 (defn- build-block-body [state-sym blk]
   (mapcat
    #(emit-instruction % state-sym)
    (butlast blk)))
 
-(defn- build-new-state [idx state-sym blk]
+(defn- build-new-state [local-map idx state-sym blk]
   (let [results (->> blk
                      (mapcat writes-to)
                      (filter instruction?)
                      (filter (partial persistent-value? idx))
                      set
                      vec)
-        results (interleave (map keyword results) results)]
+        results (interleave (map (partial id-for-inst local-map) results) results)]
     (if-not (empty? results)
-      `(assoc ~state-sym ~@results)
+      `(aset-all! ~state-sym ~@results)
       state-sym)))
 
 (defn debug [x]
   (pprint x)
   x)
 
-(defn- emit-state-machine [machine]
+(defn- emit-state-machine [machine num-user-params]
   (let [index (index-state-machine machine)
-        state-sym (gensym "state_")]
+        state-sym (with-meta (gensym "state_") {:tag (symbol "objects")})
+        local-start-idx (+ num-user-params USER-START-IDX)
+        state-arr-size (+ local-start-idx (count-persistent-values index))
+        local-map (atom {::next-idx local-start-idx})]
     `(let [bindings# (get-thread-bindings)]
        (fn state-machine#
-         ([] {::state ~(:start-block machine)
-              ::fn state-machine#
-              ::bindings bindings#})
+         ([] (aset-all! ^objects (make-array Object ~state-arr-size)
+                        ~FN-IDX state-machine#
+                        ~BINDINGS-IDX bindings#
+                        ~STATE-IDX ~(:start-block machine)))
          ([~state-sym]
-            (with-bindings (::bindings ~state-sym)
-              (loop [~state-sym ~state-sym]
-                (case (int (::state ~state-sym))
-                  ~@(mapcat
-                     (fn [[id blk]]
-                       `(~id
-                         (let [~@(concat (build-block-preamble index state-sym blk)
-                                         (build-block-body state-sym blk))
-                               ~state-sym ~(build-new-state index state-sym blk)]
-                           ~(emit-instruction (last blk) state-sym))))
-                     (:blocks machine))))))))))
+            ;;(with-bindings (aget ~state-sym ~BINDINGS-IDX))
+            (loop [~state-sym ~state-sym]
+              (case (int (aget ~state-sym ~STATE-IDX))
+                ~@(mapcat
+                   (fn [[id blk]]
+                     `(~id
+                       (let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                       (build-block-body state-sym blk))
+                             ~state-sym ~(build-new-state local-map index state-sym blk)]
+                         ~(emit-instruction (last blk) state-sym))))
+                   (:blocks machine)))))))))
 
 (defn finished?
   "Returns true if the machine is in a finished state"
-  [state]
-  (= (::state state) ::finished))
+  [^objects state-array]
+  (= (aget state-array STATE-IDX) ::finished))
 
 (defn- fn-handler
   [f]
@@ -646,9 +702,7 @@
          nil))))
 
 
-(defn state-machine [body]
+(defn state-machine [body num-user-params]
   (-> (parse-to-state-machine body)
       second
-      emit-state-machine))
-
-
+      (emit-state-machine num-user-params)))
