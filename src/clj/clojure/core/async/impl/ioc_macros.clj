@@ -635,29 +635,33 @@
         local-start-idx (+ num-user-params USER-START-IDX)
         state-arr-size (+ local-start-idx (count-persistent-values index))
         local-map (atom {::next-idx local-start-idx})]
-    `(let [bindings# (get-thread-bindings)]
+    `(let [bindings# (clojure.lang.Var/getThreadBindingFrame)]
        (fn state-machine#
          ([] (aset-all! ^objects (make-array Object ~state-arr-size)
                         ~FN-IDX state-machine#
                         ~BINDINGS-IDX bindings#
                         ~STATE-IDX ~(:start-block machine)))
          ([~state-sym]
-            (with-bindings (aget ~state-sym ~BINDINGS-IDX)
-              (loop [~state-sym ~state-sym]
-                (case (int (aget ~state-sym ~STATE-IDX))
-                  ~@(mapcat
-                     (fn [[id blk]]
-                       `(~id
-                         (let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                         (build-block-body state-sym blk))
-                               ~state-sym ~(build-new-state local-map index state-sym blk)]
-                           ~(emit-instruction (last blk) state-sym))))
-                     (:blocks machine))))))))))
+            (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)]
+              (try
+                (clojure.lang.Var/resetThreadBindingFrame (aget ~state-sym ~BINDINGS-IDX))
+                (loop [~state-sym ~state-sym]
+                  (case (int (aget ~state-sym ~STATE-IDX))
+                    ~@(mapcat
+                       (fn [[id blk]]
+                         `(~id
+                           (let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                           (build-block-body state-sym blk))
+                                 ~state-sym ~(build-new-state local-map index state-sym blk)]
+                             ~(emit-instruction (last blk) state-sym))))
+                       (:blocks machine))))
+                (finally
+                  (clojure.lang.Var/resetThreadBindingFrame old-frame#)))))))))
 
 (defn finished?
   "Returns true if the machine is in a finished state"
   [^objects state-array]
-  (= (aget state-array STATE-IDX) ::finished))
+  (identical? (aget state-array STATE-IDX) ::finished))
 
 (defn- fn-handler
   [f]
