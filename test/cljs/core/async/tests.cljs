@@ -32,7 +32,7 @@
   (is (= :2 (remove! fb)))
 
   (is (= 0 (count fb)))
-  #_(assert (throws? (remove! fb))))
+  #_(is (helpers/throws? (remove! fb))))
 
 
 
