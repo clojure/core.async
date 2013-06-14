@@ -340,3 +340,58 @@
             ((ioc/async-chan-wrapper state#)))))
        c#)))
 
+(deftype MultiplexingReadPort
+    [read-ports]
+  impl/ReadPort
+  (take! [port handler]
+    (let [^Lock handler handler
+         commit-handler (fn []
+                          (.lock handler)
+                          (let [take-cb (and (impl/active? handler) (impl/commit handler))]
+                            (.unlock handler)
+                            take-cb))
+          fret (fn [[val _ :as args]]
+                 (let [take-cb (commit-handler)]
+                   (take-cb val)))
+          alt-res (do-alts fret read-ports {})]
+      (when alt-res
+        (fret @alt-res)))))
+
+(defn multiplex
+  "Returns a multiplexing read port which, when read from, produces a
+  value from one of ports.
+
+  If at read time only one port is available to be read from, the
+  multiplexing port will return that value. If multiple ports are
+  available to be read from, the multiplexing port will return one
+  value from a port chosen non-deterministicly. If no port is
+  available to be read from, parks execution until a value is
+  available."
+  [& ports]
+  (->MultiplexingReadPort ports))
+
+(defn- broadcast-write
+  [fret val port-set]
+  (if (empty? port-set)
+    (fret)
+    (let [clauses (map (fn [port] [port val]) port-set)
+          recur-step (fn [[_ port]] (broadcast-write fret val (dissoc port-set port)))]
+      (do-alts recur-step clauses {}))))
+
+(deftype BroadcastingWritePort
+    [write-ports mutex]
+  impl/WritePort
+  (put! [port val handler]
+    (let [fret (fn [_]
+                 ((impl/commit handler)))]
+      (broadcast-write fret val (set write-ports)))))
+
+(defn broadcast
+  "Returns a broadcasting write port which, when written to, writes
+  the value to each of ports.
+
+  Writes to the broadcasting port will park until the value is written
+  to each of the underlying ports. For this reason, it is strongly
+  advised that each of the underlying ports support buffered writes."
+  [& ports]
+  (->BroadcastingWritePort ports))

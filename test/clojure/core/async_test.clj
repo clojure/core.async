@@ -110,3 +110,19 @@
                     [starting-thread @write-promise]))
       "When on-caller? requested, but no reader can consume the value,
       put!'s callback executes on a different thread."))
+
+(deftest multiplex-test
+  (is (apply = (let [even-chan (chan)
+                     odd-chan (chan)
+                     muxer (multiplex even-chan odd-chan)
+                     odds (filter odd? (range 10))
+                     evens (filter even? (range 10))
+                     odd-pusher (doto (Thread. #(doseq [odd odds]
+                                                  (>!! odd-chan odd)))
+                                  (.start))
+                     even-pusher (doto (Thread. #(doseq [even evens]
+                                                   (>!! even-chan even)))
+                                   (.start))
+                     expected (set (range 10))
+                     observed (set (for [_ (range 10)] (<!! muxer)))]
+                 [expected observed]))))
