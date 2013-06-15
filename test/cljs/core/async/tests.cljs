@@ -1,19 +1,20 @@
 (ns cljs.core.async.tests
-  (:require [cljs.core.async.impl.dispatch :as dispatch]
+  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan]]
+            [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.protocols :refer [full? add! remove!]]))
 
-#_(dispatch/run (fn [] (assert (= 1 2))))
 
 (def asserts (atom 0))
 
 (defn is [x]
   (if x
-    (swap! asserts inc)))
+    (swap! asserts inc)
+    (assert x "FAIL")))
 
 (.log js/console "starting tests...")
 
-(let [fb (buff/fixed-buffer 2)]
+(let [fb (buffer 2)]
   (is (= 0 (count fb)))
 
   (add! fb :1)
@@ -36,7 +37,7 @@
 
 
 
-(let [fb (buff/dropping-buffer 2)]
+(let [fb (dropping-buffer 2)]
   (is (= 0 (count fb)))
 
   (add! fb :1)
@@ -46,7 +47,8 @@
   (is (= 2 (count fb)))
 
   (is (not (full? fb)))
-  #_(is (not (throws? (add! fb :3))))
+  (add! fb :3)
+
   (is (= 2 (count fb)))
 
   (is (= :1 (remove! fb)))
@@ -60,7 +62,7 @@
 
 
 
-(let [fb (buff/sliding-buffer 2)]
+(let [fb (sliding-buffer 2)]
   (is (= 0 (count fb)))
 
   (add! fb :1)
@@ -70,7 +72,8 @@
   (is (= 2 (count fb)))
 
   (is (not (full? fb)))
-  #_(is (not (throws? (add! fb :3))))
+  (add! fb :3)
+
   (is (= 2 (count fb)))
   
   (is (= :2 (remove! fb)))
@@ -83,4 +86,13 @@
   #_(is (throws? (remove! fb))))
 
 
-(.log js/console (str  "..done " @asserts " asserts"))
+(let [c (chan 1)]
+  (put! c 42 #(is true) true)
+  (take! c #(is (= 42 %)) true))
+
+(let [c (chan)]
+  (put! c 42 #(is true) true)
+  (take! c #(is (= 42 %)) true))
+
+(js/setTimeout
+ (fn [] (.log js/console (str  "..done " @asserts " asserts")) 1000))

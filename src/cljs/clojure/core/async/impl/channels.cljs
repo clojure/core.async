@@ -19,20 +19,24 @@
 (defprotocol MMC
   (cleanup [_]))
 
-(defn cleanup-array [arr]
-  (loop [idx 0]
-    (when (< idx (.-length arr))
-      (let [itm (aget arr idx)]
-        (if (impl/active? itm)
-          (recur (inc idx))
-          (do (.splice arr idx 1)
-              (recur idx)))))))
-
 (deftype ManyToManyChannel [takes puts buf closed]
   MMC
   (cleanup [_]
-    (cleanup-array takes)
-    (cleanup-array puts))
+    (loop [idx 0]
+      (when (< idx (.-length puts))
+        (let [[itm val] (aget puts idx)]
+          (if (impl/active? itm)
+            (recur (inc idx))
+            (do (.splice puts idx 1)
+                (recur idx))))))
+
+    (loop [idx 0]
+      (when (< idx (.-length takes))
+        (let [itm (aget takes idx)]
+          (if (impl/active? itm)
+            (recur (inc idx))
+            (do (.splice takes idx 1)
+                (recur idx)))))))
 
   impl/WritePort
   (put! [this val handler]
@@ -58,7 +62,7 @@
                 (do (impl/add! buf val)
                     (box nil))
                 nil))
-            (.shift puts [handler val]))))))
+            (.unshift puts [handler val]))))))
 
   impl/ReadPort
   (take! [this handler]
@@ -69,7 +73,7 @@
         nil)
       (let [[take-cb put-cb val] (loop [put-idx 0]
                                    (when (< put-idx (.-length puts))
-                                     (let [putter (aget puts put-idx)]
+                                     (let [[putter val] (aget puts put-idx)]
                                        (if-let [ret (when (and (impl/active? handler) 
                                                                (impl/active? putter))
                                                       [(impl/commit handler) 
@@ -85,7 +89,7 @@
             (if-let [take-cb (and (impl/active? handler) (impl/commit handler))]
               (box nil)
               nil)
-            (do (.shift takes [handler])
+            (do (.unshift takes [handler])
                 nil))))))
   impl/Channel
   (close! [this]
