@@ -16,7 +16,8 @@
   :cljsbuild
   {:builds
    [{:id "simple"
-     :source-paths ["test/cljs/core/async"]
+     :source-paths ["test/cljs/core/async"
+                    "src/cljs"]
      :compiler {:optimizations :simple
                 :pretty-print true
                 :static-fns true

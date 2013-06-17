@@ -2,8 +2,8 @@
   (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan]]
             [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
-            [cljs.core.async.impl.protocols :refer [full? add! remove!]]))
-
+            [cljs.core.async.impl.protocols :refer [full? add! remove!]])
+  (:require-macros [cljs.core.async.macros :refer [runner]]))
 
 (def asserts (atom 0))
 
@@ -96,3 +96,11 @@
 
 (js/setTimeout
  (fn [] (.log js/console (str  "..done " @asserts " asserts")) 1000))
+
+
+(assert (= 42
+           (runner (pause 42)
+                   (if (= 1 2)
+                     1
+                     2)
+                   42)))
