@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]]
   :warn-on-reflection true
   :source-paths ["src/clj"]
-  :jvm-opts ["-Xmx1g" "-server"]
+  :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :java-source-paths ["src/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
