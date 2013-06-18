@@ -8,7 +8,7 @@
   :warn-on-reflection true
   :source-paths ["src/clj"]
   :test-paths ["test/clojure"]
-  :jvm-opts ["-Xmx1g" "-server"]
+  :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :java-source-paths ["src/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
