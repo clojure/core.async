@@ -1,6 +1,6 @@
 (ns clojure.core.async.ioc-macros-test
   (:require [clojure.core.async.impl.ioc-macros :as ioc]
-            [clojure.core.async :refer :all]
+            [clojure.core.async :refer :all :as async]
             [clojure.test :refer :all]))
 
 (defn runner-wrapper
@@ -17,7 +17,8 @@
   only really useful for testing."
   [& body]
   (binding [ioc/*symbol-translations* '{pause clojure.core.async.ioc-macros/pause
-                                        case case}]
+                                        case case}
+            ioc/*local-env* &env]
     `(runner-wrapper ~(ioc/state-machine body 0))))
 
 (deftest runner-tests
@@ -205,3 +206,26 @@
                                         (identity-chan :three) ([v] v))]
                             (recur (conj acc label) (inc cnt))))
                         acc))))))))
+
+(deftest resolution-tests
+  (let [<! (constantly 42)]
+    (is (= 42 (<!! (go (<! (identity-chan 0)))))
+        "symbol translations do not apply to locals outside go"))
+
+  (is (= 42 (<!! (go (let [<! (constantly 42)]
+                       (<! (identity-chan 0))))))
+      "symbol translations do not apply to locals inside go")
+
+  (let [for vector x 3]
+    (is (= [[3 [0 1]] 3]
+           (<!! (go (for [x (range 2)] x))))
+        "locals outside go are protected from macroexpansion"))
+
+  (is (= [[3 [0 1]] 3]
+         (<!! (go (let [for vector x 3]
+                    (for [x (range 2)] x)))))
+      "locals inside go are protected from macroexpansion")
+
+  (let [c (identity-chan 42)]
+    (is (= [42 c] (<!! (go (async/alts! [c]))))
+        "symbol translations apply to resolved symbols")))

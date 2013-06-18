@@ -17,6 +17,7 @@
   (:import [java.util.concurrent.locks Lock]))
 
 (def ^:dynamic *symbol-translations* {})
+(def ^:dynamic *local-env* nil)
 
 (defonce ^:private ^java.util.concurrent.atomic.AtomicLong block-id-gen (java.util.concurrent.atomic.AtomicLong.))
 
@@ -318,13 +319,30 @@
                           (vector? x) :vector
                           :else :default)))
 
-;; macroexpand forms before translation
 (defn item-to-ssa [x]
   (-item-to-ssa x))
 
+(def specials (into #{} (keys clojure.lang.Compiler/specials)))
+
+(defn var-name [^clojure.lang.Var var]
+  (symbol (name (ns-name (.ns var)))
+          (name (.sym var))))
+
+(defn symbol-translation [x]
+  (if (contains? *local-env* x)
+    nil
+    (if (specials x)
+      x
+      (if-let [unqualified-translation (*symbol-translations* x)]
+        unqualified-translation
+        (if-let [var (resolve *local-env* x)]
+          (let [resolved-sym (var-name var)]
+            (*symbol-translations* resolved-sym resolved-sym))
+          x)))))
+
 ;; given an sexpr, dispatch on the first item 
 (defmulti sexpr-to-ssa (fn [[x & _]]
-                         (get *symbol-translations* x x)))
+                         (symbol-translation x)))
 
 
 (defmethod sexpr-to-ssa :default
@@ -480,7 +498,7 @@
     val-id (add-instruction (->Const ::value))]
    val-id))
 
-(defmethod sexpr-to-ssa '<!
+(defmethod sexpr-to-ssa 'clojure.core.async/<!
   [[_ chan]]
   (gen-plan
    [next-blk (add-block)
@@ -490,7 +508,7 @@
     val-id (add-instruction (->Const ::value))]
    val-id))
 
-(defmethod sexpr-to-ssa '>!
+(defmethod sexpr-to-ssa 'clojure.core.async/>!
   [[_ chan expr]]
   (gen-plan
    [next-blk (add-block)
@@ -502,15 +520,36 @@
    val-id))
 
 
+(defn expand-1 [env form]
+  (if (and (seq? form) (symbol? (first form)))
+    (let [[op & args] form]
+      (if-let [var (resolve env op)]
+        (if (:macro (meta var))
+          (apply var env form args)
+          (with-meta (cons (var-name var) args) (meta form)))
+        form))
+    (macroexpand-1 form)))
+
+(defn expand [env form]
+  (let [form' (expand-1 env form)]
+    (if (not= form form')
+      (recur env form')
+      form')))
 
 (defmethod -item-to-ssa :list
   [lst]
-  (if (*symbol-translations* (first lst))
-    (sexpr-to-ssa lst)
-    (let [result (macroexpand lst)]
-      (if (seq? result)
-        (sexpr-to-ssa result)
-        (item-to-ssa result)))))
+  (fn [p]
+    (let [[locals p] ((get-binding :locals) p)
+          env (merge *local-env* locals)]
+      (binding [*local-env* env]
+        (if (and (*symbol-translations* (first lst))
+                 (not (contains? env (first lst))))
+          ((sexpr-to-ssa lst) p)
+          (let [result (expand env lst)]
+            ((if (seq? result)
+               (sexpr-to-ssa result)
+               (item-to-ssa result))
+             p)))))))
 
 (defmethod -item-to-ssa :default
   [x]

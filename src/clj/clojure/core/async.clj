@@ -330,7 +330,8 @@
   [& body]
   (binding [ioc/*symbol-translations* '{alts! clojure.core.async.impl.ioc-alt/alts!
                                         clojure.core.async/alts! clojure.core.async.impl.ioc-alt/alts!
-                                        case case}]
+                                        case case}
+            ioc/*local-env* &env]
     `(let [c# (chan 1)]
        (dispatch/run
         (fn []
