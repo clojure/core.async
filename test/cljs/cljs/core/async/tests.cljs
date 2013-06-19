@@ -134,12 +134,12 @@
            (h/runner (let [x 1 y 2]
                        (+ x y))))))
   
-  #_(h/testing "vector destructuring"
+  (h/testing "vector destructuring"
     (h/is= 3
          (h/runner (let [[x y] [1 2]]
                      (+ x y)))))
 
-  #_(h/testing "hash-map destructuring"
+  (h/testing "hash-map destructuring"
     (is (= 3
            (h/runner (let [{:keys [x y] x2 :x y2 :y :as foo} {:x 1 :y 2}]
                        (assert (and foo (pause x) y x2 y2 foo))
@@ -160,7 +160,7 @@
            (h/runner [(pause 1)
                       (pause 2)
                       (pause 3)]))))
-  #_(h/testing "dotimes"
+  (h/testing "dotimes"
       (is (= 42 (h/runner
                  (dotimes [x 10]
                    (pause x))

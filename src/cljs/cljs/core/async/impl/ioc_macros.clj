@@ -17,6 +17,12 @@
             [cljs.analyzer :as cljs])
   (:import [java.util.concurrent.locks Lock]))
 
+(defn debug [x]
+  (binding [*out* *err*]
+    (pprint x))
+  x)
+
+
 (def ^:dynamic *symbol-translations* {})
 (def ^:dynamic *local-env* nil)
 
@@ -362,7 +368,7 @@
 
 ;; NOTE: CLJS uses let and loop instead of let* and loop*
 
-(defmethod sexpr-to-ssa 'let
+(defmethod sexpr-to-ssa 'let*
   [[_ binds & body]]
   (let [parted (partition 2 binds)]
     (gen-plan
@@ -373,7 +379,7 @@
                   (range (count parted))))]
      (last body-ids))))
 
-(defmethod sexpr-to-ssa 'loop
+(defmethod sexpr-to-ssa 'loop*
   [[_ locals & body]]
   (let [parted (partition 2 locals)
         syms (map first parted)
@@ -481,8 +487,7 @@
     _ (set-block final-blk)
     val-id (add-instruction (->Const ::value))]
    val-id))
-
-(defmethod sexpr-to-ssa 'fn
+(defmethod sexpr-to-ssa 'fn*
   [& fn-expr]
   ;; For fn expressions we just want to record the expression as well
   ;; as a list of all known renamed locals
@@ -524,14 +529,9 @@
 
 
 (defn expand-1 [env form]
-  (if (and (seq? form) (symbol? (first form)))
-    (let [[op & args] form]
-      (if-let [var (resolve env op)]
-        (if (:macro (meta var))
-          (apply var env form args)
-          (with-meta (cons (var-name var) args) (meta form)))
-        form))
-    (cljs/macroexpand-1 env form)))
+  (if (seq? form)
+    (cljs/macroexpand-1 env form)
+    form))
 
 (defn expand [env form]
   (let [form' (expand-1 env form)]
@@ -666,10 +666,6 @@
       `(aset-all! ~state-sym ~@results)
       state-sym)))
 
-(defn debug [x]
-  (binding [*out* *err*]
-    (pprint x))
-  x)
 
 (defn- emit-state-machine [machine num-user-params]
   (let [index (index-state-machine machine)
@@ -678,21 +674,21 @@
         local-start-idx (+ num-user-params USER-START-IDX)
         state-arr-size (+ local-start-idx (count-persistent-values index))
         local-map (atom {::next-idx local-start-idx})]
-    (debug `(fn state-machine#
-             ([] (aset-all! ^objects (make-array ~state-arr-size)
-                            ~FN-IDX state-machine#
-                            ~STATE-IDX ~(:start-block machine)))
-             ([~state-sym]
-                (loop [~state-sym ~state-sym]
-                  (case (aget ~state-sym ~STATE-IDX)
-                    ~@(mapcat
-                       (fn [[id blk]]
-                         `(~id
-                           (let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                           (build-block-body state-sym blk))
-                                 ~state-sym ~(build-new-state local-map index state-sym blk)]
-                             ~(emit-instruction (last blk) state-sym))))
-                       (:blocks machine)))))))))
+    `(fn state-machine#
+       ([] (aset-all! ^objects (make-array ~state-arr-size)
+                      ~FN-IDX state-machine#
+                      ~STATE-IDX ~(:start-block machine)))
+       ([~state-sym]
+          (loop [~state-sym ~state-sym]
+            (case (aget ~state-sym ~STATE-IDX)
+              ~@(mapcat
+                 (fn [[id blk]]
+                   `(~id
+                     (let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                     (build-block-body state-sym blk))
+                           ~state-sym ~(build-new-state local-map index state-sym blk)]
+                       ~(emit-instruction (last blk) state-sym))))
+                 (:blocks machine))))))))
 
 (defn finished?
   "Returns true if the machine is in a finished state"
