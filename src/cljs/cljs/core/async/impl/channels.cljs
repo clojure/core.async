@@ -89,7 +89,7 @@
             (if-let [take-cb (and (impl/active? handler) (impl/commit handler))]
               (box nil)
               nil)
-            (do (.unshift takes [handler])
+            (do (.unshift takes handler)
                 nil))))))
   impl/Channel
   (close! [this]

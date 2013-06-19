@@ -1,9 +1,10 @@
 (ns cljs.core.async.tests
-  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan]]
+  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close!]]
             [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.protocols :refer [full? add! remove!]])
-  (:require-macros [cljs.core.async.test-helpers :as h]))
+  (:require-macros [cljs.core.async.test-helpers :as h :refer [is=]]
+                   [cljs.core.async.macros :as m :refer [go]]))
 
 
 (def asserts (atom 0))
@@ -186,6 +187,19 @@
            (h/runner
             (case :baz
               :foo 44
-              :default)))))
-  
-  )
+              :default))))))
+
+(defn identity-chan
+  [x]
+  (let [c (chan 1)]
+    (go (>! c x)
+        (close! c))
+    c))
+
+(defn debug [x]
+  (.log js/console x)
+  x)
+
+(go (is= (debug (<! (identity-chan 42))) 42))
+
+
