@@ -8,7 +8,7 @@
 
 (ns clojure.core.async.impl.dispatch
   (:import [java.lang Runtime]
-           [java.util.concurrent Executors ThreadFactory ExecutorService]))
+           [java.util.concurrent Executors ThreadFactory Executor]))
 
 (set! *warn-on-reflection* true)
 
@@ -37,6 +37,5 @@
 (defn run
   "Runs fn0 in a thread pool thread"
   [^Runnable fn0]
-  (.submit ^ExecutorService the-executor fn0)
-  nil)
+  (.execute ^Executor the-executor fn0))
 
