@@ -14,7 +14,8 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch])
-  (:import [java.util.concurrent.locks Lock]))
+  (:import [java.util.concurrent.locks Lock]
+           [java.util.concurrent.atomic AtomicReferenceArray]))
 
 (def ^:dynamic *symbol-translations* {})
 (def ^:dynamic *local-env* nil)
@@ -28,8 +29,11 @@
 (def ^:const BINDINGS-IDX 4)
 (def ^:const USER-START-IDX 5)
 
-(defn aset-object [^objects arr idx ^Object o]
-  (aset arr idx o))
+(defn aset-object [^AtomicReferenceArray arr idx ^Object o]
+  (.set arr idx o))
+
+(defn aget-object [^AtomicReferenceArray arr idx]
+  (.get arr idx))
 
 (defmacro aset-all!
   [arr & more]
@@ -202,7 +206,7 @@
   (block-references [this] [])
   (emit-instruction [this state-sym]
     (if (= value ::value)
-      `[~(:id this) (aget ~state-sym ~VALUE-IDX)]
+      `[~(:id this) (aget-object ~state-sym ~VALUE-IDX)]
       `[~(:id this) ~value])))
 
 (defrecord Set [set-id value]
@@ -643,7 +647,7 @@
     (if (empty? args)
       []
       (mapcat (fn [sym]
-             `[~sym (aget ~state-sym ~(id-for-inst local-map sym))])
+             `[~sym (aget-object ~state-sym ~(id-for-inst local-map sym))])
               args))))
 
 (defn- build-block-body [state-sym blk]
@@ -676,16 +680,16 @@
         local-map (atom {::next-idx local-start-idx})]
     `(let [bindings# (clojure.lang.Var/getThreadBindingFrame)]
        (fn state-machine#
-         ([] (aset-all! ^objects (make-array Object ~state-arr-size)
+         ([] (aset-all! (AtomicReferenceArray. ~state-arr-size)
                         ~FN-IDX state-machine#
                         ~BINDINGS-IDX bindings#
                         ~STATE-IDX ~(:start-block machine)))
          ([~state-sym]
             (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)]
               (try
-                (clojure.lang.Var/resetThreadBindingFrame (aget ~state-sym ~BINDINGS-IDX))
+                (clojure.lang.Var/resetThreadBindingFrame (aget-object ~state-sym ~BINDINGS-IDX))
                 (loop [~state-sym ~state-sym]
-                  (case (int (aget ~state-sym ~STATE-IDX))
+                  (case (int (aget-object ~state-sym ~STATE-IDX))
                     ~@(mapcat
                        (fn [[id blk]]
                          `(~id
@@ -700,7 +704,7 @@
 (defn finished?
   "Returns true if the machine is in a finished state"
   [^objects state-array]
-  (identical? (aget state-array STATE-IDX) ::finished))
+  (identical? (aget-object state-array STATE-IDX) ::finished))
 
 (defn- fn-handler
   [f]
@@ -717,9 +721,9 @@
 (defn async-chan-wrapper
   "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. "
   ([^objects state]
-     (let [state ((aget state FN-IDX) state)
-           value (aget ^objects state VALUE-IDX)]
-       (case (aget ^objects state ACTION-IDX)
+     (let [state ((aget-object state FN-IDX) state)
+           value (aget-object state VALUE-IDX)]
+       (case (aget-object state ACTION-IDX)
          ::take!
          (when-let [cb (impl/take! value (fn-handler
                                           (fn [x]
@@ -736,7 +740,7 @@
              (recur (aset-all! state VALUE-IDX @cb))))
          
          ::return
-         (let [c (aget ^objects state USER-START-IDX)]
+         (let [c (aget-object state USER-START-IDX)]
            (when-not (nil? value)
              (impl/put! c value (fn-handler (fn [] nil))))
            (impl/close! c)

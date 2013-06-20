@@ -8,7 +8,7 @@
   [f]
   (loop [state (f)]
     (if (ioc/finished? state)
-      (aget ^objects state ioc/VALUE-IDX)
+      (ioc/aget-object state ioc/VALUE-IDX)
       (recur (f state)))))
 
 (defmacro runner
