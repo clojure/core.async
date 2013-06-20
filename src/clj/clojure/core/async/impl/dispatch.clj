@@ -21,3 +21,4 @@
   "Runs fn0 in a thread pool thread"
   [^Runnable task]
   (impl/exec *executor* task))
+

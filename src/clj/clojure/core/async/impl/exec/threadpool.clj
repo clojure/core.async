@@ -8,7 +8,7 @@
 
 (ns clojure.core.async.impl.exec.threadpool
   (:require [clojure.core.async.impl.protocols :as impl])
-  (:import [java.util.concurrent Executors ThreadFactory ExecutorService]
+  (:import [java.util.concurrent Executors ThreadFactory Executor]
            [clojure.jsr166y ForkJoinPool ForkJoinTask]))
 
 (set! *warn-on-reflection* true)
@@ -37,10 +37,9 @@
 
 (defn thread-pool-executor
   ([] (thread-pool-executor the-executor))
-  ([^ExecutorService executor-svc]
+  ([^Executor executor-svc]
      (reify impl/Executor
        (impl/exec [this r]
-         (.submit executor-svc ^Runnable r)
-         nil))))
+         (.execute executor-svc ^Runnable r)))))
 
 
