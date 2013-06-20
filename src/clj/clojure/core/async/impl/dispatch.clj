@@ -7,36 +7,17 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.core.async.impl.dispatch
-  (:import [java.lang Runtime]
-           [java.util.concurrent Executors ThreadFactory ExecutorService]))
+  (:require [clojure.core.async.impl.protocols :as impl]
+            [clojure.core.async.impl.exec.forkjoin :as fj]))
 
 (set! *warn-on-reflection* true)
 
-(defn counted-thread-factory
-  "Create a ThreadFactory that maintains a counter for naming Threads.
-     name-format specifies thread names - use %d to include counter
-     daemon is a flag for whether threads are daemons or not"
-  [name-format daemon]
-  (let [counter (atom 0)]
-    (reify
-      ThreadFactory
-      (newThread [this runnable]
-        (doto (Thread. runnable)
-          (.setName (format name-format (swap! counter inc)))
-          (.setDaemon daemon))))))
-
-(def processors
-  "Number of processors reported by Java"
-  (.availableProcessors (Runtime/getRuntime)))
-
-(defonce the-executor
-  (Executors/newFixedThreadPool
-   (+ 2 processors)
-   (counted-thread-factory "async-dispatch-%d" true)))
+;; Set default executor to be jsr166 ForkJoinPool
+;; Could also do something more interesting here based on JDK version
+;; or other capabilities to dynamically pick an executor
+(def ^:dynamic *executor* (fj/fork-join-executor))
 
 (defn run
   "Runs fn0 in a thread pool thread"
-  [^Runnable fn0]
-  (.submit ^ExecutorService the-executor fn0)
-  nil)
-
+  [^Runnable task]
+  (impl/exec *executor* task))

@@ -26,3 +26,6 @@
   (full? [b])
   (remove! [b])
   (add! [b itm]))
+
+(defprotocol Executor
+  (exec [e task] "return value is ignored"))
