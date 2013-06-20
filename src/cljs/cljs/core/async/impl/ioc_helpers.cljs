@@ -1,4 +1,6 @@
-(ns cljs.core.async.impl.ioc-helpers)
+(ns cljs.core.async.impl.ioc-helpers
+  (:require [cljs.core.async.impl.protocols :as impl])
+  (:require-macros [cljs.core.async.impl.ioc-macros :as ioc]))
 
 (def ^:const FN-IDX 0)
 (def ^:const STATE-IDX 1)
@@ -7,6 +9,13 @@
 (def ^:const BINDINGS-IDX 4)
 (def ^:const USER-START-IDX 5)
 
+(defn- fn-handler
+  [f]
+  (reify
+   impl/Handler
+   (active? [_] true)
+   (lock-id [_] 0)
+   (commit [_] f)))
 
 (defn finished?
   "Returns true if the machine is in a finished state"
@@ -21,5 +30,38 @@
     (if (cljs.core.async.impl.ioc-helpers/finished? state)
       (aget ^objects state VALUE-IDX)
       (recur (f state)))))
+
+
+(defn async-chan-wrapper
+  "State machine wrapper that uses the async library."
+  ([state]
+     (.log js/console (str "async chan wrapper"))
+     (let [state ((aget state FN-IDX) state)
+           value (aget state VALUE-IDX)]
+       (case (aget state ACTION-IDX)
+         :take!
+         (when-let [cb (impl/take! value (fn-handler
+                                          (fn [x]
+                                            (->> x
+                                                 (ioc/aset-all! state VALUE-IDX)
+                                                 async-chan-wrapper))))]
+           (recur (ioc/aset-all! state VALUE-IDX @cb)))
+         :put!
+         (let [[chan value] value]
+           (when-let [cb (impl/put! chan value (fn-handler (fn []
+                                                             (->> nil
+                                                                  (ioc/aset-all! state VALUE-IDX)
+                                                                  async-chan-wrapper))))]
+             (recur (ioc/aset-all! state VALUE-IDX @cb))))
+         
+         :return
+         (let [c (aget ^objects state USER-START-IDX)]
+           (when-not (nil? value)
+             (impl/put! c value (fn-handler (fn [] nil))))
+           (impl/close! c)
+           c)
+
+                                        ; Default case, return nil
+         nil))))
 
 

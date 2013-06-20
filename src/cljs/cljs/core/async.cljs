@@ -1,7 +1,8 @@
 (ns cljs.core.async
     (:require [cljs.core.async.impl.protocols :as impl]
               [cljs.core.async.impl.channels :as channels]
-              [cljs.core.async.impl.buffers :as buffers]))
+              [cljs.core.async.impl.buffers :as buffers]
+              [cljs.core.async.impl.ioc-helpers :as helpers]))
 
 
 
@@ -64,6 +65,10 @@
            (fn0)
            (dispatch/run fn0)))
        nil)))
+
+(defn close!
+  ([port]
+     (impl/close! port)))
 
 
 (def ^:const FN-IDX 0)

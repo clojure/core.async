@@ -268,7 +268,7 @@
   (emit-instruction [this state-sym]
     `(aset-all! ~state-sym
                 ~VALUE-IDX ~value
-                ~ACTION-IDX ::return
+                ~ACTION-IDX :return
                 ~STATE-IDX :finished)))
 
 (defrecord Put! [channel value block]
@@ -279,7 +279,7 @@
   (emit-instruction [this state-sym]
     `(aset-all! ~state-sym
                 ~VALUE-IDX [~channel ~value]
-                ~ACTION-IDX ::put!
+                ~ACTION-IDX :put!
                 ~STATE-IDX ~block)))
 
 (defrecord Take! [channel block]
@@ -290,7 +290,7 @@
   (emit-instruction [this state-sym]
     `(aset-all! ~state-sym
                 ~VALUE-IDX ~channel
-                ~ACTION-IDX ::take!
+                ~ACTION-IDX :take!
                 ~STATE-IDX ~block)))
 
 (defrecord Pause [value block]
@@ -506,7 +506,7 @@
     val-id (add-instruction (->Const ::value))]
    val-id))
 
-(defmethod sexpr-to-ssa 'clojure.core.async/<!
+(defmethod sexpr-to-ssa '<!
   [[_ chan]]
   (gen-plan
    [next-blk (add-block)
@@ -516,7 +516,7 @@
     val-id (add-instruction (->Const ::value))]
    val-id))
 
-(defmethod sexpr-to-ssa 'clojure.core.async/>!
+(defmethod sexpr-to-ssa '>!
   [[_ chan expr]]
   (gen-plan
    [next-blk (add-block)
@@ -689,55 +689,6 @@
                            ~state-sym ~(build-new-state local-map index state-sym blk)]
                        ~(emit-instruction (last blk) state-sym))))
                  (:blocks machine))))))))
-
-(defn finished?
-  "Returns true if the machine is in a finished state"
-  [^objects state-array]
-  (identical? (aget state-array STATE-IDX) :finished))
-
-(defn- fn-handler
-  [f]
-  (reify
-   Lock
-   (lock [_])
-   (unlock [_])
-   
-   impl/Handler
-   (active? [_] true)
-   (lock-id [_] 0)
-   (commit [_] f)))
-
-(defn async-chan-wrapper
-  "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. "
-  ([^objects state]
-     (let [state ((aget state FN-IDX) state)
-           value (aget ^objects state VALUE-IDX)]
-       (case (aget ^objects state ACTION-IDX)
-         ::take!
-         (when-let [cb (impl/take! value (fn-handler
-                                          (fn [x]
-                                            (->> x
-                                                 (aset-all! state VALUE-IDX)
-                                                 async-chan-wrapper))))]
-           (recur (aset-all! state VALUE-IDX @cb)))
-         ::put!
-         (let [[chan value] value]
-           (when-let [cb (impl/put! chan value (fn-handler (fn []
-                                                             (->> nil
-                                                                  (aset-all! state VALUE-IDX)
-                                                                  async-chan-wrapper))))]
-             (recur (aset-all! state VALUE-IDX @cb))))
-         
-         ::return
-         (let [c (aget ^objects state USER-START-IDX)]
-           (when-not (nil? value)
-             (impl/put! c value (fn-handler (fn [] nil))))
-           (impl/close! c)
-           c)
-
-                                        ; Default case, return nil
-         nil))))
-
 
 (defn state-machine [body num-user-params]
   (-> (parse-to-state-machine body)
