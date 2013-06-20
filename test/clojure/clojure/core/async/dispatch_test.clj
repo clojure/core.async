@@ -8,12 +8,12 @@
 
 (ns clojure.core.async.dispatch-test
   (:require [clojure.test :refer :all]
-            [clojure.core.async.impl.dispatch :as dispatch])
+            [clojure.core.async.impl.exec.threadpool :as tp])
   (:import [java.util.concurrent ThreadFactory]))
 
 (deftest test-counted-thread-factory
   (testing "Creates numbered threads"
-    (let [^ThreadFactory factory (dispatch/counted-thread-factory "foo-%d" true)
+    (let [^ThreadFactory factory (tp/counted-thread-factory "foo-%d" true)
           threads (repeatedly 3 #(.newThread factory (constantly nil)))]
       (is (= ["foo-1" "foo-2" "foo-3"] (map #(.getName ^Thread %) threads))))))
 
