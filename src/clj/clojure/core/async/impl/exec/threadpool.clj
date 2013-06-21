@@ -8,8 +8,7 @@
 
 (ns clojure.core.async.impl.exec.threadpool
   (:require [clojure.core.async.impl.protocols :as impl])
-  (:import [java.util.concurrent Executors ThreadFactory Executor]
-           [clojure.jsr166y ForkJoinPool ForkJoinTask]))
+  (:import [java.util.concurrent Executors ThreadFactory Executor]))
 
 (set! *warn-on-reflection* true)
 
