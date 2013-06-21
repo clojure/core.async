@@ -363,7 +363,7 @@
                 (let [ret (try (f)
                                (catch Throwable t
                                  nil))]
-                  (when ret
+                  (when-not (nil? ret)
                     (>!! c ret))
                   (close! c))))
     c))
