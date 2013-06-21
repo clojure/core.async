@@ -85,7 +85,8 @@
                  (do (.unlock mutex)
                      nil))))
            (do
-             (.add puts [handler val])
+             (when (impl/active? handler)
+               (.add puts [handler val]))
              (.unlock mutex)
              nil))))))
   
@@ -103,8 +104,22 @@
      (if (and buf (pos? (count buf)))
        (do
          (if-let [take-cb (commit-handler)]
-           (let [val (impl/remove! buf)]
+           (let [val (impl/remove! buf)
+                 iter (.iterator puts)
+                 cb (when (.hasNext iter)
+                      (loop [[^Lock putter val] (.next iter)]
+                        (.lock putter)
+                        (let [cb (and (impl/active? putter) (impl/commit putter))]
+                          (.unlock putter)
+                          (.remove iter)
+                          (if cb
+                            (do (impl/add! buf val)
+                                cb)
+                            (when (.hasNext iter)
+                              (recur (.next iter)))))))]
              (.unlock mutex)
+             (when cb
+               (dispatch/run cb))
              (box val))
            (do (.unlock mutex)
                nil)))
@@ -123,8 +138,10 @@
                      (do
                        (.remove iter)
                        ret)
-                     (when (.hasNext iter)
-                       (recur (.next iter)))))))]
+                     (when-not (impl/active? putter)
+                       (.remove iter)
+                       (when (.hasNext iter)
+                         (recur (.next iter))))))))]
          (if (and put-cb take-cb)
            (do
              (.unlock mutex)
@@ -161,7 +178,7 @@
                (when take-cb
                  (dispatch/run (fn [] (take-cb nil))))
                (when (.hasNext iter)
-                   (recur (.next iter)))))))
+                 (recur (.next iter)))))))
        (.unlock mutex)
        nil))))
 
