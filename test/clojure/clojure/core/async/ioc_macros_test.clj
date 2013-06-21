@@ -108,7 +108,18 @@
            (runner
             (case :baz
               :foo 44
-              :default))))))
+              :default)))))
+
+  (testing "try"
+    (is (= 42
+           (runner
+            (try 42
+                 (catch Throwable ex ex)))))
+    (is (= 42
+           (runner
+            (try
+              (assert false)
+              (catch Throwable ex 42)))))))
 
 
 
