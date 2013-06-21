@@ -110,3 +110,12 @@
                     [starting-thread @write-promise]))
       "When on-caller? requested, but no reader can consume the value,
       put!'s callback executes on a different thread."))
+
+(deftest puts-fulfill-when-buffer-available
+  (is (= :proceeded
+         (let [c (chan 1)
+               p (promise)]
+           (>!! c :full)  ;; fill up the channel
+           (put! c :enqueues #(deliver p :proceeded))  ;; enqueue a put
+           (<!! c)        ;; make room in the buffer
+           (deref p 250 :timeout)))))
