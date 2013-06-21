@@ -338,6 +338,6 @@
           (let [f# ~(ioc/state-machine body 1)
                 state# (-> (f#)
                            (ioc/aset-all! ioc/USER-START-IDX c#))]
-            ((ioc/async-chan-wrapper state#)))))
+            (ioc/async-chan-wrapper state#))))
        c#)))
 
