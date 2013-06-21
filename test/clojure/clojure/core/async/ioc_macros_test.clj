@@ -150,7 +150,14 @@
 
   (testing "nil result of go"
     (is (= nil
-           (<!! (go nil))))))
+           (<!! (go nil)))))
+
+  (testing "can get from a catch"
+    (let [c (identity-chan 42)]
+      (is (= 42
+             (<!! (go (try
+                        (assert false)
+                        (catch Throwable ex (<! c))))))))))
 
 (deftest enqueued-chan-ops
   (testing "enqueued channel puts re-enter async properly"
