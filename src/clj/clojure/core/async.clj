@@ -17,7 +17,8 @@
             [clojure.core.async.impl.mutex :as mutex]
             )
   (:import [clojure.core.async ThreadLocalRandom]
-           [java.util.concurrent.locks Lock]))
+           [java.util.concurrent.locks Lock]
+           [java.util.concurrent Executors Executor ThreadFactory]))
 
 (set! *warn-on-reflection* true)
 
@@ -341,3 +342,35 @@
             ((ioc/async-chan-wrapper state#)))))
        c#)))
 
+(defonce ^:private ^Executor thread-macro-executor
+  (let [counter (atom 0)
+        name-format "async-thread-macro-%d"]
+    (Executors/newCachedThreadPool
+     (reify
+       ThreadFactory
+       (newThread [this runnable]
+         (doto (Thread. runnable)
+           (.setName (format name-format (swap! counter inc)))))))))
+
+(defn thread-call
+  "Executes f in another thread, returning immediately to the calling
+  thread. Returns a channel which will receive the result of calling
+  f when completed."
+  [f]
+  (let [c (chan 1)]
+    (.execute thread-macro-executor
+              (fn []
+                (let [ret (try (f)
+                               (catch Throwable t
+                                 nil))]
+                  (if ret
+                    (put! c ret #(close! c))
+                    (close! c)))))
+    c))
+
+(defmacro thread
+  "Synchronously executes the body in another thread, returning
+  immediately to the calling thread. Returns a channel which will
+  receive the result of the body when completed."
+  [& body]
+  `(thread-call (fn [] ~@body)))
