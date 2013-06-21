@@ -28,4 +28,4 @@
   (add! [b itm]))
 
 (defprotocol Executor
-  (exec [e task] "return value is ignored"))
+  (exec [e runnable] "execute runnable asynchronously"))
