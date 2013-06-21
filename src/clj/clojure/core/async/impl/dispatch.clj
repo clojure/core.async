@@ -7,32 +7,16 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.core.async.impl.dispatch
+  (:require [clojure.core.async.impl.concurrent :as conc])
   (:import [java.lang Runtime]
-           [java.util.concurrent Executors ThreadFactory Executor]))
+           [java.util.concurrent Executors Executor]))
 
 (set! *warn-on-reflection* true)
 
-(defn counted-thread-factory
-  "Create a ThreadFactory that maintains a counter for naming Threads.
-     name-format specifies thread names - use %d to include counter
-     daemon is a flag for whether threads are daemons or not"
-  [name-format daemon]
-  (let [counter (atom 0)]
-    (reify
-      ThreadFactory
-      (newThread [this runnable]
-        (doto (Thread. runnable)
-          (.setName (format name-format (swap! counter inc)))
-          (.setDaemon daemon))))))
-
-(def processors
-  "Number of processors reported by Java"
-  (.availableProcessors (Runtime/getRuntime)))
-
 (defonce the-executor
   (Executors/newFixedThreadPool
-   (+ 2 processors)
-   (counted-thread-factory "async-dispatch-%d" true)))
+   (+ 2 conc/processors)
+   (conc/counted-thread-factory "async-dispatch-%d" true)))
 
 (defn run
   "Runs fn0 in a thread pool thread"

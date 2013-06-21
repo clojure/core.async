@@ -15,10 +15,11 @@
             [clojure.core.async.impl.ioc-macros :as ioc]
             [clojure.core.async.impl.ioc-alt]
             [clojure.core.async.impl.mutex :as mutex]
+            [clojure.core.async.impl.concurrent :as conc]
             )
   (:import [clojure.core.async ThreadLocalRandom]
            [java.util.concurrent.locks Lock]
-           [java.util.concurrent Executors Executor ThreadFactory]))
+           [java.util.concurrent Executors Executor]))
 
 (set! *warn-on-reflection* true)
 
@@ -345,14 +346,7 @@
        c#)))
 
 (defonce ^:private ^Executor thread-macro-executor
-  (let [counter (atom 0)
-        name-format "async-thread-macro-%d"]
-    (Executors/newCachedThreadPool
-     (reify
-       ThreadFactory
-       (newThread [this runnable]
-         (doto (Thread. runnable)
-           (.setName (format name-format (swap! counter inc)))))))))
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
