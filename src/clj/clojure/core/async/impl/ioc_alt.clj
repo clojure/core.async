@@ -16,7 +16,7 @@
                           (aset-all! ~state-sym ~VALUE-IDX val# ~STATE-IDX ~cont-block)))
                            ~ports
                            ~opts)]
-         (recur (aset-all! ~state-sym ~VALUE-IDX @cb# ~STATE-IDX ~cont-block))))))
+         (aset-all! ~state-sym ~VALUE-IDX @cb# ~STATE-IDX ~cont-block ~ACTION-IDX ::m/recur)))))
 
 
 (defmethod sexpr-to-ssa 'clojure.core.async.impl.ioc-alt/alts!

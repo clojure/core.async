@@ -8,7 +8,7 @@
   [f]
   (loop [state (f)]
     (if (ioc/finished? state)
-      (aget ^objects state ioc/VALUE-IDX)
+      (ioc/aget-object state ioc/VALUE-IDX)
       (recur (f state)))))
 
 (defmacro runner
@@ -108,7 +108,34 @@
            (runner
             (case :baz
               :foo 44
-              :default))))))
+              :default)))))
+
+  (testing "try"
+    (is (= 42
+           (runner
+            (try 42
+                 (catch Throwable ex ex)))))
+    (is (= 42
+           (runner
+            (try
+              (assert false)
+              (catch Throwable ex 42)))))
+
+    (let [a (atom false)
+          v (runner
+             (try
+               true
+               (catch Throwable ex false)
+               (finally (pause (reset! a true)))))]
+      (is (and @a v)))
+
+    (let [a (atom false)
+          v (runner
+             (try
+               (assert false)
+               (catch Throwable ex true)
+               (finally (reset! a true))))]
+      (is (and @a v)))))
 
 
 
@@ -139,7 +166,14 @@
 
   (testing "nil result of go"
     (is (= nil
-           (<!! (go nil))))))
+           (<!! (go nil)))))
+
+  (testing "can get from a catch"
+    (let [c (identity-chan 42)]
+      (is (= 42
+             (<!! (go (try
+                        (assert false)
+                        (catch Throwable ex (<! c))))))))))
 
 (deftest enqueued-chan-ops
   (testing "enqueued channel puts re-enter async properly"

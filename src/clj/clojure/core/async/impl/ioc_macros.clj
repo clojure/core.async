@@ -14,7 +14,13 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch])
-  (:import [java.util.concurrent.locks Lock]))
+  (:import [java.util.concurrent.locks Lock]
+           [java.util.concurrent.atomic AtomicReferenceArray]))
+
+(defn debug [x]
+  (pprint x)
+  x)
+
 
 (def ^:dynamic *symbol-translations* {})
 (def ^:dynamic *local-env* nil)
@@ -28,8 +34,11 @@
 (def ^:const BINDINGS-IDX 4)
 (def ^:const USER-START-IDX 5)
 
-(defn aset-object [^objects arr idx ^Object o]
-  (aset arr idx o))
+(defn aset-object [^AtomicReferenceArray arr idx ^Object o]
+  (.set arr idx o))
+
+(defn aget-object [^AtomicReferenceArray arr idx]
+  (.get arr idx))
 
 (defmacro aset-all!
   [arr & more]
@@ -161,6 +170,8 @@
     (gen-plan
      [cur-blk (get-block)
       _ (assoc-in-plan [:blocks blk-id] [])
+      catches (get-binding :catch)
+      _ (assoc-in-plan [:block-catches blk-id] catches)
       _ (if-not cur-blk
           (assoc-in-plan [:start-block] blk-id)
           (no-op))]
@@ -202,7 +213,7 @@
   (block-references [this] [])
   (emit-instruction [this state-sym]
     (if (= value ::value)
-      `[~(:id this) (aget ~state-sym ~VALUE-IDX)]
+      `[~(:id this) (aget-object ~state-sym ~VALUE-IDX)]
       `[~(:id this) ~value])))
 
 (defrecord Set [set-id value]
@@ -229,11 +240,12 @@
   (emit-instruction [this state-sym]
     `(case ~val-id
        ~@(concat (mapcat (fn [test blk]
-                           `[~test (recur (aset-all! ~state-sym
-                                                     ~STATE-IDX ~blk))])
+                           `[~test (aset-all! ~state-sym
+                                              ~ACTION-IDX ::recur
+                                              ~STATE-IDX ~blk)])
                          test-vals jmp-blocks)
                  (when default-block
-                   `[(recur (aset-all! ~state-sym ~STATE-IDX ~default-block))])))))
+                   `[(aset-all! ~state-sym ~STATE-IDX ~default-block ~ACTION-IDX ::recur)])))))
 
 (defrecord Fn [fn-expr local-names local-refs]
   IInstruction
@@ -251,7 +263,7 @@
   (writes-to [this] [])
   (block-references [this] [block])
   (emit-instruction [this state-sym]
-    `(recur (aset-all! ~state-sym ~VALUE-IDX ~value ~STATE-IDX ~block))))
+    `(aset-all! ~state-sym ~VALUE-IDX ~value ~STATE-IDX ~block ~ACTION-IDX ::recur)))
 
 (defrecord Return [value]
   IInstruction
@@ -304,10 +316,12 @@
   (block-references [this] [then-block else-block])
   (emit-instruction [this state-sym]
     `(if ~test
-       (recur (aset-all! ~state-sym
-                         ~STATE-IDX ~then-block))
-       (recur (aset-all! ~state-sym
-                         ~STATE-IDX ~else-block)))))
+       (aset-all! ~state-sym
+                  ~ACTION-IDX ::recur
+                  ~STATE-IDX ~then-block)
+       (aset-all! ~state-sym
+                  ~ACTION-IDX ::recur
+                  ~STATE-IDX ~else-block))))
 
 ;; Dispatch clojure forms based on data type
 (defmulti -item-to-ssa (fn [x]
@@ -395,7 +409,6 @@
       _ (if (not= (last body-ids) ::terminated)
           (add-instruction (->Jmp (last body-ids) final-blk))
           (no-op))
-
       _ (set-block final-blk)
       ret-id (add-instruction (->Const ::value))]
      ret-id)))
@@ -436,6 +449,58 @@
       _ (set-block end-blk)
       ret-id (add-instruction (->Const ::value))]
      ret-id)))
+
+(defmethod sexpr-to-ssa 'try
+  [[_ & body]]
+  (let [finally-fn (every-pred seq? (comp (partial = 'finally) first))
+        catch-fn (every-pred seq? (comp (partial = 'catch) first))
+        finally (next (first (filter finally-fn body)))
+        body (remove finally-fn body)
+        catch (next (first (filter catch-fn body)))
+        [ex ex-bind & catch-body] catch
+        body (remove catch-fn body)]
+    (gen-plan
+     [end-blk (add-block)
+      finally-blk (if finally
+                    (gen-plan
+                     [cur-blk (get-block)
+                      blk (add-block)
+                      _ (set-block blk)
+                      value-id (add-instruction (->Const ::value))
+                      _ (all (map item-to-ssa finally))
+                      _ (add-instruction (->Jmp value-id end-blk))
+                      _ (set-block cur-blk)]
+                     blk)
+                    (no-op))
+      catch-blk (if catch
+                  (gen-plan
+                   [cur-blk (get-block)
+                    blk (add-block)
+                    _ (set-block blk)
+                    ex-id (add-instruction (->Const ::value))
+                    _ (push-alter-binding :locals assoc ex-bind ex-id)
+                    ids (all (map item-to-ssa catch-body))
+                    _ (add-instruction (->Jmp (last ids) (if finally-blk
+                                                           finally-blk
+                                                           end-blk)))
+                    _ (pop-binding :locals)
+                    _ (set-block cur-blk)
+                    _ (push-alter-binding :catch (fnil conj []) [ex blk])]
+                   blk)
+                  (no-op))
+      body-blk (add-block)
+      _ (add-instruction (->Jmp nil body-blk))
+      _ (set-block body-blk)
+      ids (all (map item-to-ssa body))
+      _ (if catch
+          (pop-binding :catch)
+          (no-op))
+      _ (add-instruction (->Jmp (last ids) (if finally-blk
+                                             finally-blk
+                                             end-blk)))
+      _ (set-block end-blk)
+      ret (add-instruction (->Const ::value))]
+     ret)))
 
 (defmethod sexpr-to-ssa 'recur
   [[_ & vals]]
@@ -643,7 +708,7 @@
     (if (empty? args)
       []
       (mapcat (fn [sym]
-             `[~sym (aget ~state-sym ~(id-for-inst local-map sym))])
+             `[~sym (aget-object ~state-sym ~(id-for-inst local-map sym))])
               args))))
 
 (defn- build-block-body [state-sym blk]
@@ -663,9 +728,16 @@
       `(aset-all! ~state-sym ~@results)
       state-sym)))
 
-(defn debug [x]
-  (pprint x)
-  x)
+(defn- wrap-with-tries [body state-sym tries]
+  (if tries
+    (-> (reduce
+         (fn [acc [ex blk]]
+           `(try
+              ~acc
+              (catch ~ex ex# (aset-all! ~state-sym ~STATE-IDX ~blk ~ACTION-IDX ::recur ~VALUE-IDX ex#))))
+         body
+         tries))
+    body))
 
 (defn- emit-state-machine [machine num-user-params]
   (let [index (index-state-machine machine)
@@ -673,34 +745,36 @@
                     {:tag 'objects})
         local-start-idx (+ num-user-params USER-START-IDX)
         state-arr-size (+ local-start-idx (count-persistent-values index))
-        local-map (atom {::next-idx local-start-idx})]
-    `(let [bindings# (clojure.lang.Var/getThreadBindingFrame)]
-       (fn state-machine#
-         ([] (aset-all! ^objects (make-array Object ~state-arr-size)
-                        ~FN-IDX state-machine#
-                        ~BINDINGS-IDX bindings#
-                        ~STATE-IDX ~(:start-block machine)))
-         ([~state-sym]
-            (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)]
-              (try
-                (clojure.lang.Var/resetThreadBindingFrame (aget ~state-sym ~BINDINGS-IDX))
-                (loop [~state-sym ~state-sym]
-                  (case (int (aget ~state-sym ~STATE-IDX))
-                    ~@(mapcat
-                       (fn [[id blk]]
-                         `(~id
-                           (let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                           (build-block-body state-sym blk))
-                                 ~state-sym ~(build-new-state local-map index state-sym blk)]
-                             ~(emit-instruction (last blk) state-sym))))
-                       (:blocks machine))))
-                (finally
-                  (clojure.lang.Var/resetThreadBindingFrame old-frame#)))))))))
+        local-map (atom {::next-idx local-start-idx})
+        block-catches (:block-catches machine)]
+    `(fn state-machine#
+       ([] (aset-all! (AtomicReferenceArray. ~state-arr-size)
+                      ~FN-IDX state-machine#
+                      ~STATE-IDX ~(:start-block machine)))
+       ([~state-sym]
+          (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)]
+            (try
+              (clojure.lang.Var/resetThreadBindingFrame (aget-object ~state-sym ~BINDINGS-IDX))
+              (loop []
+                (case (int (aget-object ~state-sym ~STATE-IDX))
+                  ~@(mapcat
+                     (fn [[id blk]]
+                       [id (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                                (build-block-body state-sym blk))
+                                      ~state-sym ~(build-new-state local-map index state-sym blk)]
+                                  ~(emit-instruction (last blk) state-sym))
+                               (wrap-with-tries state-sym (get block-catches id)))])
+                     (:blocks machine)))
+                (if (identical? (aget-object ~state-sym ~ACTION-IDX) ::recur)
+                  (recur)
+                  ~state-sym))
+              (finally
+                (clojure.lang.Var/resetThreadBindingFrame old-frame#))))))))
 
 (defn finished?
   "Returns true if the machine is in a finished state"
   [^objects state-array]
-  (identical? (aget state-array STATE-IDX) ::finished))
+  (identical? (aget-object state-array STATE-IDX) ::finished))
 
 (defn- fn-handler
   [f]
@@ -716,10 +790,10 @@
 
 (defn async-chan-wrapper
   "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. "
-  ([^objects state]
-     (let [state ((aget state FN-IDX) state)
-           value (aget ^objects state VALUE-IDX)]
-       (case (aget ^objects state ACTION-IDX)
+  ([^AtomicReferenceArray state]
+     (let [state ((aget-object state FN-IDX) state)
+           value (aget-object state VALUE-IDX)]
+       (case (aget-object state ACTION-IDX)
          ::take!
          (when-let [cb (impl/take! value (fn-handler
                                           (fn [x]
@@ -736,7 +810,7 @@
              (recur (aset-all! state VALUE-IDX @cb))))
          
          ::return
-         (let [c (aget ^objects state USER-START-IDX)]
+         (let [c (aget-object state USER-START-IDX)]
            (when-not (nil? value)
              (impl/put! c value (fn-handler (fn [] nil))))
            (impl/close! c)
