@@ -119,7 +119,23 @@
            (runner
             (try
               (assert false)
-              (catch Throwable ex 42)))))))
+              (catch Throwable ex 42)))))
+
+    (let [a (atom false)
+          v (runner
+             (try
+               true
+               (catch Throwable ex false)
+               (finally (pause (reset! a true)))))]
+      (is (and @a v)))
+
+    (let [a (atom false)
+          v (runner
+             (try
+               (assert false)
+               (catch Throwable ex true)
+               (finally (reset! a true))))]
+      (is (and @a v)))))
 
 
 

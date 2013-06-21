@@ -454,13 +454,24 @@
   [[_ & body]]
   (let [finally-fn (every-pred seq? (comp (partial = 'finally) first))
         catch-fn (every-pred seq? (comp (partial = 'catch) first))
-        finally (next (filter finally-fn body))
+        finally (next (first (filter finally-fn body)))
         body (remove finally-fn body)
         catch (next (first (filter catch-fn body)))
         [ex ex-bind & catch-body] catch
         body (remove catch-fn body)]
     (gen-plan
      [end-blk (add-block)
+      finally-blk (if finally
+                    (gen-plan
+                     [cur-blk (get-block)
+                      blk (add-block)
+                      _ (set-block blk)
+                      value-id (add-instruction (->Const ::value))
+                      _ (all (map item-to-ssa finally))
+                      _ (add-instruction (->Jmp value-id end-blk))
+                      _ (set-block cur-blk)]
+                     blk)
+                    (no-op))
       catch-blk (if catch
                   (gen-plan
                    [cur-blk (get-block)
@@ -469,7 +480,9 @@
                     ex-id (add-instruction (->Const ::value))
                     _ (push-alter-binding :locals assoc ex-bind ex-id)
                     ids (all (map item-to-ssa catch-body))
-                    _ (add-instruction (->Jmp (last ids) end-blk))
+                    _ (add-instruction (->Jmp (last ids) (if finally-blk
+                                                           finally-blk
+                                                           end-blk)))
                     _ (pop-binding :locals)
                     _ (set-block cur-blk)
                     _ (push-alter-binding :catch (fnil conj []) [ex blk])]
@@ -482,7 +495,9 @@
       _ (if catch
           (pop-binding :catch)
           (no-op))
-      _ (add-instruction (->Jmp (last ids) end-blk))
+      _ (add-instruction (->Jmp (last ids) (if finally-blk
+                                             finally-blk
+                                             end-blk)))
       _ (set-block end-blk)
       ret (add-instruction (->Const ::value))]
      ret)))
