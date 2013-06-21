@@ -369,8 +369,8 @@
     c))
 
 (defmacro thread
-  "Synchronously executes the body in another thread, returning
-  immediately to the calling thread. Returns a channel which will
-  receive the result of the body when completed."
+  "Executes the body in another thread, returning immediately to the
+  calling thread. Returns a channel which will receive the result of
+  the body when completed."
   [& body]
   `(thread-call (fn [] ~@body)))
