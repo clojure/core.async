@@ -747,31 +747,29 @@
         state-arr-size (+ local-start-idx (count-persistent-values index))
         local-map (atom {::next-idx local-start-idx})
         block-catches (:block-catches machine)]
-    `(let [bindings# (clojure.lang.Var/getThreadBindingFrame)]
-       (fn state-machine#
-         ([] (aset-all! (AtomicReferenceArray. ~state-arr-size)
-                        ~FN-IDX state-machine#
-                        ~BINDINGS-IDX bindings#
-                        ~STATE-IDX ~(:start-block machine)))
-         ([~state-sym]
-            (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)]
-              (try
-                (clojure.lang.Var/resetThreadBindingFrame (aget-object ~state-sym ~BINDINGS-IDX))
-                (loop []
-                  (case (int (aget-object ~state-sym ~STATE-IDX))
-                    ~@(mapcat
-                       (fn [[id blk]]
-                         [id (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                                  (build-block-body state-sym blk))
-                                        ~state-sym ~(build-new-state local-map index state-sym blk)]
-                                    ~(emit-instruction (last blk) state-sym))
-                                 (wrap-with-tries state-sym (get block-catches id)))])
-                       (:blocks machine)))
-                  (if (identical? (aget-object ~state-sym ~ACTION-IDX) ::recur)
-                    (recur)
-                    ~state-sym))
-                (finally
-                  (clojure.lang.Var/resetThreadBindingFrame old-frame#)))))))))
+    `(fn state-machine#
+       ([] (aset-all! (AtomicReferenceArray. ~state-arr-size)
+                      ~FN-IDX state-machine#
+                      ~STATE-IDX ~(:start-block machine)))
+       ([~state-sym]
+          (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)]
+            (try
+              (clojure.lang.Var/resetThreadBindingFrame (aget-object ~state-sym ~BINDINGS-IDX))
+              (loop []
+                (case (int (aget-object ~state-sym ~STATE-IDX))
+                  ~@(mapcat
+                     (fn [[id blk]]
+                       [id (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                                (build-block-body state-sym blk))
+                                      ~state-sym ~(build-new-state local-map index state-sym blk)]
+                                  ~(emit-instruction (last blk) state-sym))
+                               (wrap-with-tries state-sym (get block-catches id)))])
+                     (:blocks machine)))
+                (if (identical? (aget-object ~state-sym ~ACTION-IDX) ::recur)
+                  (recur)
+                  ~state-sym))
+              (finally
+                (clojure.lang.Var/resetThreadBindingFrame old-frame#))))))))
 
 (defn finished?
   "Returns true if the machine is in a finished state"

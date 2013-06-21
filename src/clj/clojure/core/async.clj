@@ -332,12 +332,14 @@
                                         clojure.core.async/alts! clojure.core.async.impl.ioc-alt/alts!
                                         case case}
             ioc/*local-env* &env]
-    `(let [c# (chan 1)]
+    `(let [c# (chan 1)
+           captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
        (dispatch/run
         (fn []
           (let [f# ~(ioc/state-machine body 1)
                 state# (-> (f#)
-                           (ioc/aset-all! ioc/USER-START-IDX c#))]
+                           (ioc/aset-all! ioc/USER-START-IDX c#
+                                          ioc/BINDINGS-IDX captured-bindings#))]
             (ioc/async-chan-wrapper state#))))
        c#)))
 
