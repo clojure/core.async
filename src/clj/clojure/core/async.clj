@@ -363,9 +363,9 @@
                 (let [ret (try (f)
                                (catch Throwable t
                                  nil))]
-                  (if ret
-                    (put! c ret #(close! c))
-                    (close! c)))))
+                  (when ret
+                    (>!! c ret))
+                  (close! c))))
     c))
 
 (defmacro thread
