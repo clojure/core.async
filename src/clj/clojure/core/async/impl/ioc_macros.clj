@@ -792,7 +792,7 @@
 
 (defn async-chan-wrapper
   "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. "
-  ([^objects state]
+  ([^AtomicReferenceArray state]
      (let [state ((aget-object state FN-IDX) state)
            value (aget-object state VALUE-IDX)]
        (case (aget-object state ACTION-IDX)
