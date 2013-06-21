@@ -8,7 +8,7 @@
 
 (ns clojure.core.async.impl.exec.forkjoin
   (:require [clojure.core.async.impl.protocols :as impl])
-  (:import [clojure.jsr166y ForkJoinPool ForkJoinTask]))
+  (:import [java.util.concurrent ForkJoinPool ForkJoinTask]))
 
 (set! *warn-on-reflection* true)
 
