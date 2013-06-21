@@ -13,7 +13,7 @@
 
 
 (defn box [val]
-  (reify cljs.core.IDeref
+  (reify cljs.core/IDeref
     (-deref [_] val)))
 
 (defprotocol MMC
