@@ -17,7 +17,8 @@
             [clojure.core.async.impl.mutex :as mutex]
             )
   (:import [clojure.core.async ThreadLocalRandom]
-           [java.util.concurrent.locks Lock]))
+           [java.util.concurrent.locks Lock]
+           [java.util.concurrent Executors Executor ThreadFactory]))
 
 (set! *warn-on-reflection* true)
 
@@ -330,12 +331,48 @@
   [& body]
   (binding [ioc/*symbol-translations* '{alts! clojure.core.async.impl.ioc-alt/alts!
                                         clojure.core.async/alts! clojure.core.async.impl.ioc-alt/alts!
-                                        case case}]
-    `(let [c# (chan 1)]
+                                        case case}
+            ioc/*local-env* &env]
+    `(let [c# (chan 1)
+           captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
        (dispatch/run
         (fn []
           (let [f# ~(ioc/state-machine body 1)
                 state# (-> (f#)
-                           (ioc/aset-all! ioc/USER-START-IDX c#))]
-            ((ioc/async-chan-wrapper state#)))))
+                           (ioc/aset-all! ioc/USER-START-IDX c#
+                                          ioc/BINDINGS-IDX captured-bindings#))]
+            (ioc/async-chan-wrapper state#))))
        c#)))
+
+(defonce ^:private ^Executor thread-macro-executor
+  (let [counter (atom 0)
+        name-format "async-thread-macro-%d"]
+    (Executors/newCachedThreadPool
+     (reify
+       ThreadFactory
+       (newThread [this runnable]
+         (doto (Thread. runnable)
+           (.setName (format name-format (swap! counter inc)))))))))
+
+(defn thread-call
+  "Executes f in another thread, returning immediately to the calling
+  thread. Returns a channel which will receive the result of calling
+  f when completed."
+  [f]
+  (let [c (chan 1)]
+    (.execute thread-macro-executor
+              (fn []
+                (let [ret (try (f)
+                               (catch Throwable t
+                                 nil))]
+                  (when-not (nil? ret)
+                    (>!! c ret))
+                  (close! c))))
+    c))
+
+(defmacro thread
+  "Executes the body in another thread, returning immediately to the
+  calling thread. Returns a channel which will receive the result of
+  the body when completed."
+  [& body]
+  `(thread-call (fn [] ~@body)))

@@ -7,7 +7,8 @@
   :dependencies [[org.clojure/clojure "1.5.1"]]
   :warn-on-reflection true
   :source-paths ["src/clj"]
-  :jvm-opts ["-Xmx1g" "-server"]
+  :test-paths ["test/clojure"]
+  :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :java-source-paths ["src/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
@@ -16,13 +17,13 @@
   :cljsbuild
   {:builds
    [{:id "simple"
-     :source-paths ["test/cljs/core/async"]
+     :source-paths ["test/cljs" "src/cljs"]
      :compiler {:optimizations :simple
                 :pretty-print true
                 :static-fns true
                 :output-to "tests.js"}}
     {:id "adv"
-     :source-paths ["test/cljs/core/async"]
+     :source-paths ["test/cljs" "src/cljs"]
      :compiler {:optimizations :advanced
                 :pretty-print true
                 :output-to "tests.js"}}]})
