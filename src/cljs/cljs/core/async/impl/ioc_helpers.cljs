@@ -35,8 +35,8 @@
 (defn async-chan-wrapper
   "State machine wrapper that uses the async library."
   ([state]
-     (.log js/console (str "async chan wrapper"))
      (let [state ((aget state FN-IDX) state)
+           _ (assert state)
            value (aget state VALUE-IDX)]
        (case (aget state ACTION-IDX)
          :take!
@@ -55,7 +55,7 @@
              (recur (ioc/aset-all! state VALUE-IDX @cb))))
          
          :return
-         (let [c (aget ^objects state USER-START-IDX)]
+         (let [c (aget state USER-START-IDX)]
            (when-not (nil? value)
              (impl/put! c value (fn-handler (fn [] nil))))
            (impl/close! c)

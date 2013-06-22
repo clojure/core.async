@@ -688,7 +688,8 @@
                                      (build-block-body state-sym blk))
                            ~state-sym ~(build-new-state local-map index state-sym blk)]
                        ~(emit-instruction (last blk) state-sym))))
-                 (:blocks machine))))))))
+                 (:blocks machine))))
+          ~state-sym))))
 
 (defn state-machine [body num-user-params]
   (-> (parse-to-state-machine body)
@@ -709,7 +710,7 @@
     (let [[ports opts] ids]
       `(when-let [cb# (cljs.core.async/do-alts
                        (fn [val#]
-                         (cljs.core.async.imp.ioc-helpers/async-chan-wrapper
+                         (cljs.core.async.impl.ioc-helpers/async-chan-wrapper
                           (aset-all! ~state-sym ~VALUE-IDX val# ~STATE-IDX ~cont-block)))
                            ~ports
                            ~opts)]
