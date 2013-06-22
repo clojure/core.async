@@ -25,6 +25,7 @@
   (:require [clojure.core.async :as async]
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.mutex :as mutex]
+            [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.channels :as channels])
   (:import [java.util HashSet Set Collection]
            [java.util.concurrent.locks Lock]))
@@ -49,8 +50,8 @@
                            (.remove read-ports alt-port)
                            (.unlock mutex)
                            (impl/take! this handler))
-                       (let [take-cb (commit-handler)]
-                         (take-cb val))))
+                       (when-let [take-cb (commit-handler)]
+                         (dispatch/run #(take-cb val)))))
               current-ports (seq read-ports)]
           (if-let [alt-res (async/do-alts fret current-ports {})]
             (let [[val alt-port] @alt-res]
@@ -59,8 +60,10 @@
                     (.unlock mutex)
                     (recur handler))
                 (do (.unlock mutex)
-                    (channels/box val))))
-            (do (.unlock mutex)
+                    (when-let [take-cb (commit-handler)]
+                      (dispatch/run #(take-cb val))))))
+            (do
+              (.unlock mutex)
                 nil)))))))
 
 (defn multiplex
