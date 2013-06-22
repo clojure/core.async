@@ -10,7 +10,6 @@
   :test-paths ["test/clojure"]
   :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :java-source-paths ["src/java"]
-  :javac-options ["-XDignore.symbol.file"]
   :profiles {:dev {:source-paths ["examples"]}}
 
   :plugins [[lein-cljsbuild "0.3.0"]]

@@ -22,14 +22,13 @@
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (binding [ioc/*symbol-translations* '{alts! cljs.core.async.impl.ioc-alt/alts!
-                                        cljs.core.async/alts! clojure.core.async.impl.ioc-alt/alts!
+  (binding [ioc/*symbol-translations* '{alts! alts!
                                         case case}
             ioc/*local-env* &env]
     `(let [c# (cljs.core.async/chan 1)]
        (cljs.core.async.impl.dispatch/run
         (fn []
-          (let [f# ~(ioc/debug (ioc/state-machine body 1))
+          (let [f# ~(ioc/state-machine body 1)
                 state# (-> (f#)
                            (ioc/aset-all! cljs.core.async.impl.ioc-helpers/USER-START-IDX c#))]
             (cljs.core.async.impl/ioc-helpers/async-chan-wrapper state#))))

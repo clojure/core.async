@@ -18,7 +18,7 @@
   (add! [this itm]
     (assert (not (impl/full? this)) "Can't add to a full buffer")
     (.unshift buf itm))
-  cljs.core.ICounted
+  cljs.core/ICounted
   (-count [this]
     (.-length buf)))
 
@@ -35,7 +35,7 @@
   (add! [this itm]
     (when-not (= (.-length buf) n)
       (.unshift buf itm)))
-  cljs.core.ICounted
+  cljs.core/ICounted
   (-count [this]
     (.-length buf)))
 
@@ -52,7 +52,7 @@
     (when (= (.-length buf) n)
       (impl/remove! this))
     (.unshift buf itm))
-  cljs.core.ICounted
+  cljs.core/ICounted
   (-count [this]
     (.-length buf)))
 

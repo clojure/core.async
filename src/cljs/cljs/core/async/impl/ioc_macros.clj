@@ -694,3 +694,34 @@
   (-> (parse-to-state-machine body)
       second
       (emit-state-machine num-user-params)))
+
+
+
+;; alts! support
+
+
+(defrecord Park [ids cont-block]
+  IInstruction
+  (reads-from [this] ids)
+  (writes-to [this] [])
+  (block-references [this] [])
+  (emit-instruction [this state-sym]
+    (let [[ports opts] ids]
+      `(when-let [cb# (cljs.core.async/do-alts
+                       (fn [val#]
+                         (cljs.core.async.imp.ioc-helpers/async-chan-wrapper
+                          (aset-all! ~state-sym ~VALUE-IDX val# ~STATE-IDX ~cont-block)))
+                           ~ports
+                           ~opts)]
+         (recur (aset-all! ~state-sym ~VALUE-IDX @cb# ~STATE-IDX ~cont-block))))))
+
+
+(defmethod sexpr-to-ssa 'alts!
+  [[_ ports & {:as args}]]
+  (gen-plan
+   [ids (all (map item-to-ssa [ports args]))
+    cont-block (add-block)
+    park-id (add-instruction (->Park ids cont-block))
+    _ (set-block cont-block)
+    ret-id (add-instruction (->Const ::value))]
+   ret-id))

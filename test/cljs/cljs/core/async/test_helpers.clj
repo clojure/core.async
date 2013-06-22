@@ -14,17 +14,19 @@
 (defmacro deftest
   [nm & body]
   `(do (.log js/console (str "Testing: " ~(str nm) "..."))
-       ~@body
-       (.log js/console (str "done"))))
+       ~@body))
 
 (defmacro testing
   [nm & body]
-    `(do (.log js/console (str "    Testing: " ~nm "..."))
-       ~@body
-       (.log js/console (str "done"))))
+    `(do (.log js/console (str "    " ~nm "..."))
+       ~@body))
 
 (defmacro is=
   [a b]
   `(let [a# ~a
          b# ~b]
      (assert (= a# b#) (str a# " != " b#))))
+
+(defmacro is
+  [a]
+  `(assert ~a))

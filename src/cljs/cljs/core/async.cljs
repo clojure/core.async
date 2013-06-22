@@ -71,25 +71,60 @@
      (impl/close! port)))
 
 
-(def ^:const FN-IDX 0)
-(def ^:const STATE-IDX 1)
-(def ^:const VALUE-IDX 2)
-(def ^:const ACTION-IDX 3)
-(def ^:const BINDINGS-IDX 4)
-(def ^:const USER-START-IDX 5)
+(defn- random-array
+  [n]
+  (let [a (make-array n)]
+    (loop [i 1]
+      (if (= i n)
+        a
+        (do
+          (let [j (rand-int i)]
+            (aset a i (aget a j))
+            (aset a j i)
+            (recur (inc i))))))))
 
-(defn finished?
-  "Returns true if the machine is in a finished state"
-  [state-array]
-  (identical? (aget state-array STATE-IDX) :cljs.core.async.impl.ioc-macros/finished))
+(defn- alt-flag []
+  (let [flag (atom true)]
+    (reify
+      impl/Handler
+      (active? [_] @flag)
+      (commit [_]
+        (reset! flag nil)
+        true))))
+
+(defn- alt-handler [flag cb]
+  (reify
+    impl/Handler
+    (active? [_] (impl/active? flag))
+    (commit [_]
+      (impl/commit flag)
+      cb)))
+
+(defn do-alts
+  "returns derefable [val port] if immediate, nil if enqueued"
+  [fret ports opts]
+  (let [flag (alt-flag)
+        n (count ports)
+        idxs (random-array n)
+        priority (:priority opts)
+        ret
+        (loop [i 0]
+          (when (< i n)
+            (let [idx (if priority i (aget idxs i))
+                  port (nth ports idx)
+                  wport (when (vector? port) (port 0))
+                  vbox (if wport
+                         (let [val (port 1)]
+                           (impl/put! wport val (alt-handler flag #(fret [nil wport]))))
+                         (impl/take! port (alt-handler flag #(fret [% port]))))]
+              (if vbox
+                (channels/box [@vbox (or wport port)])
+                (recur (inc i))))))]
+    (or
+     ret
+     (when (contains? opts :default)
+       (when-let [got (and (impl/active? flag) (impl/commit flag))]
+         (channels/box [(:default opts) :default]))))))
 
 
-
-(defn runner-wrapper
-  "Simple wrapper that runs the state machine to completion"
-  [f]
-  (loop [state (f)]
-    (if (finished? state)
-      (aget state VALUE-IDX)
-      (recur (f state)))))
 
