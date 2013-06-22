@@ -458,7 +458,6 @@
         finally (next (first (filter finally-fn body)))
         body (remove finally-fn body)
         catch (next (first (filter catch-fn body)))
-        _ (debug catch)
         [ex ex-bind & catch-body] catch
         body (remove catch-fn body)]
     (gen-plan
@@ -743,7 +742,6 @@
         state-arr-size (+ local-start-idx (count-persistent-values index))
         local-map (atom {::next-idx local-start-idx})
         block-catches (:block-catches machine)]
-    (debug block-catches)
     `(fn state-machine#
        ([] (aset-all! ^objects (make-array ~state-arr-size)
                       ~FN-IDX state-machine#
