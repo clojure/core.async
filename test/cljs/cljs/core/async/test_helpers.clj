@@ -7,7 +7,8 @@
   only really useful for testing."
   [& body]
   (binding [ioc/*symbol-translations* '{pause clojure.core.async.ioc-macros/pause
-                                        case case}
+                                        case case
+                                        try try}
             ioc/*local-env* &env]
     `(cljs.core.async.impl.ioc-helpers/runner-wrapper ~(ioc/state-machine body 0))))
 

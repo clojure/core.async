@@ -168,6 +168,8 @@
     (gen-plan
      [cur-blk (get-block)
       _ (assoc-in-plan [:blocks blk-id] [])
+      catches (get-binding :catch)
+      _ (assoc-in-plan [:block-catches blk-id] catches)      
       _ (if-not cur-blk
           (assoc-in-plan [:start-block] blk-id)
           (no-op))]
@@ -236,11 +238,12 @@
   (emit-instruction [this state-sym]
     `(case ~val-id
        ~@(concat (mapcat (fn [test blk]
-                           `[~test (recur (aset-all! ~state-sym
-                                                     ~STATE-IDX ~blk))])
+                           `[~test (aset-all! ~state-sym
+                                              ~STATE-IDX ~blk
+                                              ~ACTION-IDX :recur)])
                          test-vals jmp-blocks)
                  (when default-block
-                   `[(recur (aset-all! ~state-sym ~STATE-IDX ~default-block))])))))
+                   `[(aset-all! ~state-sym ~STATE-IDX ~default-block ~ACTION-IDX :recur)])))))
 
 (defrecord Fn [fn-expr local-names local-refs]
   IInstruction
@@ -258,7 +261,7 @@
   (writes-to [this] [])
   (block-references [this] [block])
   (emit-instruction [this state-sym]
-    `(recur (aset-all! ~state-sym ~VALUE-IDX ~value ~STATE-IDX ~block))))
+    `(aset-all! ~state-sym ~VALUE-IDX ~value ~STATE-IDX ~block ~ACTION-IDX :recur)))
 
 (defrecord Return [value]
   IInstruction
@@ -311,10 +314,12 @@
   (block-references [this] [then-block else-block])
   (emit-instruction [this state-sym]
     `(if ~test
-       (recur (aset-all! ~state-sym
-                         ~STATE-IDX ~then-block))
-       (recur (aset-all! ~state-sym
-                         ~STATE-IDX ~else-block)))))
+       (aset-all! ~state-sym
+                  ~STATE-IDX ~then-block
+                  ~ACTION-IDX :recur)
+       (aset-all! ~state-sym
+                  ~STATE-IDX ~else-block
+                  ~ACTION-IDX :recur))))
 
 ;; Dispatch clojure forms based on data type
 (defmulti -item-to-ssa (fn [x]
@@ -445,6 +450,59 @@
       _ (set-block end-blk)
       ret-id (add-instruction (->Const ::value))]
      ret-id)))
+
+(defmethod sexpr-to-ssa 'try
+  [[_ & body]]
+  (let [finally-fn (every-pred seq? (comp (partial = 'finally) first))
+        catch-fn (every-pred seq? (comp (partial = 'catch) first))
+        finally (next (first (filter finally-fn body)))
+        body (remove finally-fn body)
+        catch (next (first (filter catch-fn body)))
+        _ (debug catch)
+        [ex ex-bind & catch-body] catch
+        body (remove catch-fn body)]
+    (gen-plan
+     [end-blk (add-block)
+      finally-blk (if finally
+                    (gen-plan
+                     [cur-blk (get-block)
+                      blk (add-block)
+                      _ (set-block blk)
+                      value-id (add-instruction (->Const ::value))
+                      _ (all (map item-to-ssa finally))
+                      _ (add-instruction (->Jmp value-id end-blk))
+                      _ (set-block cur-blk)]
+                     blk)
+                    (no-op))
+      catch-blk (if catch
+                  (gen-plan
+                   [cur-blk (get-block)
+                    blk (add-block)
+                    _ (set-block blk)
+                    ex-id (add-instruction (->Const ::value))
+                    _ (push-alter-binding :locals assoc ex-bind ex-id)
+                    ids (all (map item-to-ssa catch-body))
+                    _ (add-instruction (->Jmp (last ids) (if finally-blk
+                                                           finally-blk
+                                                           end-blk)))
+                    _ (pop-binding :locals)
+                    _ (set-block cur-blk)
+                    _ (push-alter-binding :catch (fnil conj []) [ex blk])]
+                   blk)
+                  (no-op))
+      body-blk (add-block)
+      _ (add-instruction (->Jmp nil body-blk))
+      _ (set-block body-blk)
+      ids (all (map item-to-ssa body))
+      _ (if catch
+          (pop-binding :catch)
+          (no-op))
+      _ (add-instruction (->Jmp (last ids) (if finally-blk
+                                             finally-blk
+                                             end-blk)))
+      _ (set-block end-blk)
+      ret (add-instruction (->Const ::value))]
+     ret)))
 
 (defmethod sexpr-to-ssa 'recur
   [[_ & vals]]
@@ -666,6 +724,16 @@
       `(aset-all! ~state-sym ~@results)
       state-sym)))
 
+(defn- wrap-with-tries [body state-sym tries]
+  (if tries
+    (-> (reduce
+         (fn [acc [ex blk]]
+           `(try
+              ~acc
+              (catch ~ex ex# (aset-all! ~state-sym ~STATE-IDX ~blk ~ACTION-IDX :recur ~VALUE-IDX ex#))))
+         body
+         tries))
+    body))
 
 (defn- emit-state-machine [machine num-user-params]
   (let [index (index-state-machine machine)
@@ -673,22 +741,27 @@
                     {:tag 'objects})
         local-start-idx (+ num-user-params USER-START-IDX)
         state-arr-size (+ local-start-idx (count-persistent-values index))
-        local-map (atom {::next-idx local-start-idx})]
+        local-map (atom {::next-idx local-start-idx})
+        block-catches (:block-catches machine)]
+    (debug block-catches)
     `(fn state-machine#
        ([] (aset-all! ^objects (make-array ~state-arr-size)
                       ~FN-IDX state-machine#
                       ~STATE-IDX ~(:start-block machine)))
        ([~state-sym]
-          (loop [~state-sym ~state-sym]
-            (case (aget ~state-sym ~STATE-IDX)
+          (loop []
+            (case (int (aget ~state-sym ~STATE-IDX))
               ~@(mapcat
                  (fn [[id blk]]
-                   `(~id
-                     (let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                     (build-block-body state-sym blk))
-                           ~state-sym ~(build-new-state local-map index state-sym blk)]
-                       ~(emit-instruction (last blk) state-sym))))
-                 (:blocks machine))))
+                   [id (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                            (build-block-body state-sym blk))
+                                  ~state-sym ~(build-new-state local-map index state-sym blk)]
+                              ~(emit-instruction (last blk) state-sym))
+                           (wrap-with-tries state-sym (get block-catches id)))])
+                 (:blocks machine)))
+            (if (identical? (aget ~state-sym ~ACTION-IDX) :recur)
+              (recur)
+              ~state-sym))
           ~state-sym))))
 
 (defn state-machine [body num-user-params]
@@ -714,7 +787,7 @@
                           (aset-all! ~state-sym ~VALUE-IDX val# ~STATE-IDX ~cont-block)))
                            ~ports
                            ~opts)]
-         (recur (aset-all! ~state-sym ~VALUE-IDX @cb# ~STATE-IDX ~cont-block))))))
+         (aset-all! ~state-sym ~VALUE-IDX @cb# ~STATE-IDX ~cont-block ~ACTION-IDX :recur)))))
 
 
 (defmethod sexpr-to-ssa 'alts!
