@@ -53,12 +53,6 @@
 
 ;; State monad stuff, used only in SSA construction
 
-(defn- with-bind [id expr psym body]
-  `(fn [~psym]
-     (let [[~id ~psym] ( ~expr ~psym)]
-       (assert ~psym "Nill plan")
-       ~body)))
-
 (defmacro gen-plan
   "Allows a user to define a state monad binding plan.
 
@@ -69,14 +63,14 @@
   [binds id-expr]
   (let [binds (partition 2 binds)
         psym (gensym "plan_")
-        f (reduce
-           (fn [acc [id expr]]
-             `(~(with-bind id expr psym acc)
-               ~psym))
-           `[~id-expr ~psym]
-           (reverse binds))]
+        forms (reduce
+               (fn [acc [id expr]]
+                 (concat acc `[[~id ~psym] (~expr ~psym)]))
+               []
+               binds)]
     `(fn [~psym]
-       ~f)))
+       (let [~@forms]
+         [~id-expr ~psym]))))
 
 (defn get-plan
   "Returns the final [id state] from a plan. "
