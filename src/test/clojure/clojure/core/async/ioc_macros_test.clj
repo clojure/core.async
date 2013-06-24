@@ -22,6 +22,9 @@
     `(runner-wrapper ~(ioc/state-machine body 0))))
 
 (deftest runner-tests
+  (testing "fn as first arg in sexpr"
+    (is (= 42
+           (runner ((fn [] 42))))))
   (testing "do blocks"
     (is (= 42
            (runner (do (pause 42)))))

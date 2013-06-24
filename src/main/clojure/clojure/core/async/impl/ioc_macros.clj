@@ -343,7 +343,7 @@
       x
       (if-let [unqualified-translation (*symbol-translations* x)]
         unqualified-translation
-        (if-let [var (resolve *local-env* x)]
+        (if-let [var (and (symbol? x) (resolve *local-env* x))]
           (let [resolved-sym (var-name var)]
             (*symbol-translations* resolved-sym resolved-sym))
           x)))))
