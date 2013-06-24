@@ -1,0 +1,1842 @@
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+    <title>clojure.core.async - Facilities for async programming and communication 0.1.0 API documentation</title>
+    <link href="static/favicon.png" rel="icon" />
+    <link href="static/favicon.png" rel="shortcut icon" />
+    <link media="all" type="text/css" href="static/clojure.css" rel="stylesheet" />
+    <link media="all" type="text/css" href="static/wiki.css" rel="stylesheet" />
+    <link media="all" type="text/css" href="static/internal.css" rel="stylesheet" />
+    <style>.menuWrapper{height: 36px;}</style>
+  </head>
+<!--
+This document was auto-generated from the source by the clojure autodoc system.
+To report errors or ask questions about the overall documentation structure, formatting,
+etc., contact Tom Faulhaber (google mail name: tomfaulhaber).
+For errors in the documentation of a particular namespace, contact the author of that
+namespace.
+-->
+  <body>
+    <div id="AllContentContainer">
+      <div id="Header">
+	<a id="Logo" href="index.html"><img alt="Clojure" height="100" width="100" src="static/clojure-icon.gif" /></a>
+	<h1><a title="page header title" id="page-header" href="index.html">core.async API Reference</a></h1>
+      </div>
+      <div id="leftcolumn"><div style="text-align: center;"></div>
+<div class="menu">
+  <div class="WikiCustomNav WikiElement wiki">
+    <span class="toc-header"><span id="project-name">Facilities for async programming and communication</span> <span id="version">0.1.0</span> API</span><br />
+    <ul>
+      <li><a class="wiki_link" href="index.html">Overview</a></li>
+      <li><a class="wiki_link" href="api-index.html">API Index</a></li>
+    </ul>
+    
+    
+    <a href="http://clojure.org" class="wiki_link">Clojure Home</a>
+  </div>
+</div>
+</div>
+      <div id="rightcolumn">
+	<div id="Content">
+	  <div class="contentBox"><div class="innerContentBox">
+              <div id="content_view" class="wiki wikiPage">
+                <div id="right-sidebar"><div id="toc">
+  <h1 class="nopad">Table of Contents</h1>
+  <div style="margin-left: 1em;" class="toc-section">
+    <a href="#toc0" style="margin-top: 3px;">Overview</a>
+    
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#" style="margin-top: 3px;"></a>
+    
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#" style="margin-top: 3px;"></a>
+    
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#var-section" style="margin-top: 3px;">Vars and Functions</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/&lt;!">&lt;!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/&lt;!!">&lt;!!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/&gt;!">&gt;!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/&gt;!!">&gt;!!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/alt!">alt!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/alt!!">alt!!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/alts!">alts!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/alts!!">alts!!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/buffer">buffer</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/chan">chan</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/close!">close!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/do-alts">do-alts</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/dropping-buffer">dropping-buffer</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/go">go</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/put!">put!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/sliding-buffer">sliding-buffer</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/take!">take!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/thread">thread</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/thread-call">thread-call</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/timeout">timeout</a>
+      
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.impl.buffers" style="margin-top: 3px;">clojure.core.async.impl.buffers</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.buffers/DroppingBuffer">DroppingBuffer</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.buffers/FixedBuffer">FixedBuffer</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.buffers/SlidingBuffer">SlidingBuffer</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.buffers/-&gt;DroppingBuffer">-&gt;DroppingBuffer</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.buffers/-&gt;FixedBuffer">-&gt;FixedBuffer</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.buffers/-&gt;SlidingBuffer">-&gt;SlidingBuffer</a>
+      
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.impl.channels" style="margin-top: 3px;">clojure.core.async.impl.channels</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.channels/ManyToManyChannel">ManyToManyChannel</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.channels/-&gt;ManyToManyChannel">-&gt;ManyToManyChannel</a>
+      
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.impl.concurrent" style="margin-top: 3px;">clojure.core.async.impl.concurrent</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.concurrent/counted-thread-factory">counted-thread-factory</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.concurrent/processors">processors</a>
+      
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.impl.dispatch" style="margin-top: 3px;">clojure.core.async.impl.dispatch</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.dispatch/run">run</a>
+      
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.impl.ioc-alt" style="margin-top: 3px;">clojure.core.async.impl.ioc-alt</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-alt/Park">Park</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-alt/-&gt;Park">-&gt;Park</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-alt/map-&gt;Park">map-&gt;Park</a>
+      
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.impl.ioc-macros" style="margin-top: 3px;">clojure.core.async.impl.ioc-macros</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a>
+      <div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.ioc-macros/block-references">block-references</a>
+      </div><div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.ioc-macros/emit-instruction">emit-instruction</a>
+      </div><div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.ioc-macros/reads-from">reads-from</a>
+      </div><div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.ioc-macros/writes-to">writes-to</a>
+      </div>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Call">Call</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Case">Case</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/CondBr">CondBr</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Const">Const</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Fn">Fn</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Jmp">Jmp</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Pause">Pause</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Put!">Put!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Return">Return</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Set">Set</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/Take!">Take!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Call">-&gt;Call</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Case">-&gt;Case</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;CondBr">-&gt;CondBr</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Const">-&gt;Const</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Fn">-&gt;Fn</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Jmp">-&gt;Jmp</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Pause">-&gt;Pause</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Put!">-&gt;Put!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Return">-&gt;Return</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Set">-&gt;Set</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/-&gt;Take!">-&gt;Take!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/add-block">add-block</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/add-instruction">add-instruction</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/all">all</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/assoc-in-plan">assoc-in-plan</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/async-chan-wrapper">async-chan-wrapper</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/finished?">finished?</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/gen-plan">gen-plan</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/get-binding">get-binding</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/get-block">get-block</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/get-in-plan">get-in-plan</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/get-plan">get-plan</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Call">map-&gt;Call</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Case">map-&gt;Case</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;CondBr">map-&gt;CondBr</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Const">map-&gt;Const</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Fn">map-&gt;Fn</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Jmp">map-&gt;Jmp</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Pause">map-&gt;Pause</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Put!">map-&gt;Put!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Return">map-&gt;Return</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Set">map-&gt;Set</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/map-&gt;Take!">map-&gt;Take!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/no-op">no-op</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/parse-to-state-machine">parse-to-state-machine</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/persistent-value?">persistent-value?</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/pop-binding">pop-binding</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/push-alter-binding">push-alter-binding</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/push-binding">push-binding</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/set-block">set-block</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.ioc-macros/update-in-plan">update-in-plan</a>
+      
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.impl.protocols" style="margin-top: 3px;">clojure.core.async.impl.protocols</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.protocols/Handler">Handler</a>
+      <div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.protocols/active?">active?</a>
+      </div><div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.protocols/commit">commit</a>
+      </div><div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.protocols/lock-id">lock-id</a>
+      </div>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.protocols/ReadPort">ReadPort</a>
+      <div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.protocols/take!">take!</a>
+      </div>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.protocols/WritePort">WritePort</a>
+      <div style="margin-left: 1em;" class="toc-subentry">
+        <a class="toc-subentry-anchor" href="#clojure.core.async.impl.protocols/put!">put!</a>
+      </div>
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.impl.timers" style="margin-top: 3px;">clojure.core.async.impl.timers</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.timers/TimeoutQueueEntry">TimeoutQueueEntry</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.timers/-&gt;TimeoutQueueEntry">-&gt;TimeoutQueueEntry</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.impl.timers/timeout">timeout</a>
+      
+    </div>
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.core.async.lab" style="margin-top: 3px;">clojure.core.async.lab</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.lab/BroadcastingWritePort">BroadcastingWritePort</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.lab/MultiplexingReadPort">MultiplexingReadPort</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.lab/-&gt;BroadcastingWritePort">-&gt;BroadcastingWritePort</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.lab/-&gt;MultiplexingReadPort">-&gt;MultiplexingReadPort</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.lab/broadcast">broadcast</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.lab/multiplex">multiplex</a>
+      
+    </div>
+  </div>
+</div>
+</div>
+                <div id="content-tag"><h1 id="overview">API for <span id="clojure.core.async">clojure.core.async</span>
+  - <span id="header-project">Facilities for async programming and communication</span> <span id="header-version">0.1.0</span><span id="header-status-block"> (<span id="header-status">in development</span>)</span>
+  </h1>
+
+<br />Full namespace name: <span id="long-name">clojure.core.async</span>
+<p></p>
+<h2>Overview</h2>
+<div id="home-page">Project home page is <a href="http://github.com/clojure/core.async/">http://github.com/clojure/core.async/</a></div>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+
+
+
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/&lt;!">&lt;!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (&lt;! port)
+</pre>
+    <pre id="var-docstr">takes a val from port. Must be called inside a (go ...) block. Will
+return nil if closed. Will park if nothing is available.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L77" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/&lt;!!">&lt;!!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (&lt;!! port)
+</pre>
+    <pre id="var-docstr">takes a val from port. Will return nil if closed. Will block
+if nothing is available.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L67" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/&gt;!">&gt;!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (&gt;! port val)
+</pre>
+    <pre id="var-docstr">puts a val into port. nil values are not allowed. Must be called
+inside a (go ...) block. Will park if no buffer space is available.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L108" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/&gt;!!">&gt;!!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (&gt;!! port val)
+</pre>
+    <pre id="var-docstr">puts a val into port. nil values are not allowed. Will block if no
+buffer space is available. Returns nil.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L98" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/alt!">alt!</h2>
+    <span id="var-type">macro</span><br />
+    <pre id="var-usage">Usage: (alt! &amp; clauses)
+</pre>
+    <pre id="var-docstr">Makes a single choice between one of several channel operations,
+as if by alts!, returning the value of the result expr corresponding
+to the operation completed. Must be called inside a (go ...) block.
+
+Each clause takes the form of:
+
+channel-op[s] result-expr
+
+where channel-ops is one of:
+
+take-port - a single port to take
+[take-port | [put-port put-val] ...] - a vector of ports as per alts!
+:default | :priority - an option for alts!
+
+and result-expr is either a list beginning with a vector, whereupon that
+vector will be treated as a binding for the [val port] return of the
+operation, else any other expression.
+
+(alt!
+  [c t] ([val ch] (foo ch val))
+  x ([v] v)
+  [[out val]] :wrote
+  :default 42)
+
+Each option may appear at most once. The choice and parking
+characteristics are those of alts!.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L291" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/alt!!">alt!!</h2>
+    <span id="var-type">macro</span><br />
+    <pre id="var-usage">Usage: (alt!! &amp; clauses)
+</pre>
+    <pre id="var-docstr">Like alt!, except as if by alts!!, will block until completed, and
+not intended for use in (go ...) blocks.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L284" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/alts!">alts!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (alts! ports &amp; {:as opts})
+</pre>
+    <pre id="var-docstr">Completes at most one of several channel operations. Must be called
+inside a (go ...) block. ports is a set of channel endpoints, which
+can be either a channel to take from or a vector of
+[channel-to-put-to val-to-put], in any combination. Takes will be
+made as if by &lt;!, and puts will be made as if by &gt;!. Unless
+the :priority option is true, if more than one port operation is
+ready a non-deterministic choice will be made. If no operation is
+ready and a :default value is supplied, [default-val :default] will
+be returned, otherwise alts! will park until the first operation to
+become ready completes. Returns [val port] of the completed
+operation, where val is the value taken for takes, and nil for puts.
+
+opts are passed as :key val ... Supported options:
+
+:default val - the value to use if none of the operations are immediately ready
+:priority true - (default nil) when true, the operations will be tried in order.
+
+Note: there is no guarantee that the port exps or val exprs will be
+used, nor in what order should they be, so they should not be
+depended upon for side effects.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L221" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/alts!!">alts!!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (alts!! ports &amp; {:as opts})
+</pre>
+    <pre id="var-docstr">Like alts!, except takes will be made as if by &lt;!!, and puts will
+be made as if by &gt;!!, will block until completed, and not intended
+for use in (go ...) blocks.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L210" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/buffer">buffer</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (buffer n)
+</pre>
+    <pre id="var-docstr">Returns a fixed buffer of size n. When full, puts will block/park.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L38" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/chan">chan</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (chan)
+       (chan buf-or-n)
+</pre>
+    <pre id="var-docstr">Creates a channel with an optional buffer. If buf-or-n is a number,
+will create and use a fixed buffer of that size.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L56" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/close!">close!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (close! chan)
+</pre>
+    <pre id="var-docstr">Closes a channel. The channel will no longer accept any puts (they
+will be ignored). Data in the channel remains available for taking, until
+exhausted, after which takes will return nil. If there are any
+pending takes, they will be dispatched with nil. Closing a closed
+channel is a no-op. Returns nil.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L128" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/do-alts">do-alts</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (do-alts fret ports opts)
+</pre>
+    <pre id="var-docstr">returns derefable [val port] if immediate, nil if enqueued</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L181" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/dropping-buffer">dropping-buffer</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (dropping-buffer n)
+</pre>
+    <pre id="var-docstr">Returns a buffer of size n. When full, puts will complete but
+val will be dropped (no transfer).</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L43" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/go">go</h2>
+    <span id="var-type">macro</span><br />
+    <pre id="var-usage">Usage: (go &amp; body)
+</pre>
+    <pre id="var-docstr">Asynchronously executes the body, returning immediately to the
+calling thread. Additionally, any visible calls to &lt;!, &gt;! and alt!/alts!
+channel operations within the body will block (if necessary) by
+'parking' the calling thread rather than tying up an OS thread (or
+the only JS thread when in ClojureScript). Upon completion of the
+operation, the body will be resumed.
+
+Returns a channel which will receive the result of the body when
+completed</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L322" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/put!">put!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (put! port val fn0)
+       (put! port val fn0 on-caller?)
+</pre>
+    <pre id="var-docstr">Asynchronously puts a val into port, calling fn0 when complete. nil
+values are not allowed. Will throw if closed. If
+on-caller? (default true) is true, and the put is immediately
+accepted, will call fn0 on calling thread.  Returns nil.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L114" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/sliding-buffer">sliding-buffer</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (sliding-buffer n)
+</pre>
+    <pre id="var-docstr">Returns a buffer of size n. When full, puts will complete, and be
+buffered, but oldest elements in buffer will be dropped (not
+transferred).</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L49" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/take!">take!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (take! port fn1)
+       (take! port fn1 on-caller?)
+</pre>
+    <pre id="var-docstr">Asynchronously takes a val from port, passing to fn1. Will pass nil
+if closed. If on-caller? (default true) is true, and value is
+immediately available, will call fn1 on calling thread.
+Returns nil.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L83" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/thread">thread</h2>
+    <span id="var-type">macro</span><br />
+    <pre id="var-usage">Usage: (thread &amp; body)
+</pre>
+    <pre id="var-docstr">Executes the body in another thread, returning immediately to the
+calling thread. Returns a channel which will receive the result of
+the body when completed.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L367" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/thread-call">thread-call</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (thread-call f)
+</pre>
+    <pre id="var-docstr">Executes f in another thread, returning immediately to the calling
+thread. Returns a channel which will receive the result of calling
+f when completed.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L351" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/timeout">timeout</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (timeout msecs)
+</pre>
+    <pre id="var-docstr">Returns a channel that will close after msecs</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async.clj#L62" id="var-source">Source</a>
+  </div>
+</div>
+<br />
+<h2 id="clojure.core.async.impl.buffers">clojure.core.async.impl.buffers</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+
+<div id="type-section">
+  <p></p>
+  <h2>Types</h2>
+  <div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.buffers/DroppingBuffer">DroppingBuffer</h2>
+    <span id="type-type">type</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[buf n]</span><br />
+    Protocols: <span id="type-protocols"><a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/Buffer">clojure.core.async.impl.protocols/Buffer</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.Counted</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.buffers/FixedBuffer">FixedBuffer</h2>
+    <span id="type-type">type</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[buf n]</span><br />
+    Protocols: <span id="type-protocols"><a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/Buffer">clojure.core.async.impl.protocols/Buffer</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.Counted</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.buffers/SlidingBuffer">SlidingBuffer</h2>
+    <span id="type-type">type</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[buf n]</span><br />
+    Protocols: <span id="type-protocols"><a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/Buffer">clojure.core.async.impl.protocols/Buffer</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.Counted</span><br />
+  </div>
+</div>
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.buffers/-&gt;DroppingBuffer">-&gt;DroppingBuffer</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;DroppingBuffer buf n)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.buffers.DroppingBuffer.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/buffers.clj#L32" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.buffers/-&gt;FixedBuffer">-&gt;FixedBuffer</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;FixedBuffer buf n)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.buffers.FixedBuffer.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/buffers.clj#L15" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.buffers/-&gt;SlidingBuffer">-&gt;SlidingBuffer</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;SlidingBuffer buf n)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.buffers.SlidingBuffer.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/buffers.clj#L48" id="var-source">Source</a>
+  </div>
+</div>
+<br />
+<h2 id="clojure.core.async.impl.channels">clojure.core.async.impl.channels</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+
+<div id="type-section">
+  <p></p>
+  <h2>Types</h2>
+  <div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.channels/ManyToManyChannel">ManyToManyChannel</h2>
+    <span id="type-type">type</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[takes puts buf closed mutex]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.channels/MMC">MMC</a>, <a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/Channel">clojure.core.async.impl.protocols/Channel</a>, <a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/ReadPort">clojure.core.async.impl.protocols/ReadPort</a>, <a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/WritePort">clojure.core.async.impl.protocols/WritePort</a></span><br />
+    Interfaces: <span id="type-interfaces"></span><br />
+  </div>
+</div>
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.channels/-&gt;ManyToManyChannel">-&gt;ManyToManyChannel</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;ManyToManyChannel takes puts buf closed mutex)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.channels.ManyToManyChannel.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/channels.clj#L25" id="var-source">Source</a>
+  </div>
+</div>
+<br />
+<h2 id="clojure.core.async.impl.concurrent">clojure.core.async.impl.concurrent</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+
+
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.concurrent/counted-thread-factory">counted-thread-factory</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (counted-thread-factory name-format daemon)
+</pre>
+    <pre id="var-docstr">Create a ThreadFactory that maintains a counter for naming Threads.
+name-format specifies thread names - use %d to include counter
+daemon is a flag for whether threads are daemons or not</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/concurrent.clj#L14" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.concurrent/processors">processors</h2>
+    <span id="var-type">var</span><br />
+    <pre id="var-usage"></pre>
+    <pre id="var-docstr">Number of processors reported by the JVM</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/concurrent.clj#L27" id="var-source">Source</a>
+  </div>
+</div>
+<br />
+<h2 id="clojure.core.async.impl.dispatch">clojure.core.async.impl.dispatch</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+
+
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.dispatch/run">run</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (run fn0)
+</pre>
+    <pre id="var-docstr">Runs fn0 in a thread pool thread</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/dispatch.clj#L21" id="var-source">Source</a>
+  </div>
+</div>
+<br />
+<h2 id="clojure.core.async.impl.ioc-alt">clojure.core.async.impl.ioc-alt</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+
+<div id="type-section">
+  <p></p>
+  <h2>Types</h2>
+  <div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-alt/Park">Park</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[ids cont-block]</span><br />
+    Protocols: <span id="type-protocols"><a href="clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/IInstruction">clojure.core.async.impl.ioc-macros/IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div>
+</div>
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-alt/-&gt;Park">-&gt;Park</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Park ids cont-block)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_alt.Park.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_alt.clj#L6" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-alt/map-&gt;Park">map-&gt;Park</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Park m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_alt.Park, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_alt.clj#L6" id="var-source">Source</a>
+  </div>
+</div>
+<br />
+<h2 id="clojure.core.async.impl.ioc-macros">clojure.core.async.impl.ioc-macros</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+<div id="proto-section">
+  <p></p>
+  <h2>Protocols</h2>
+  <div id="proto-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</h2>
+    <span id="proto-type">Protocol</span><br />
+    <pre id="proto-docstr"></pre>
+    Known implementations: <span id="proto-impls"><a href="#clojure.core.async.impl.ioc-macros/Call">Call</a>, <a href="#clojure.core.async.impl.ioc-macros/Case">Case</a>, <a href="clojure.core.async.impl.ioc-alt-api.html#clojure.core.async.impl.ioc-alt/Park">clojure.core.async.impl.ioc-alt.Park</a>, <a href="#clojure.core.async.impl.ioc-macros/CondBr">CondBr</a>, <a href="#clojure.core.async.impl.ioc-macros/Const">Const</a>, <a href="#clojure.core.async.impl.ioc-macros/Fn">Fn</a>, <a href="#clojure.core.async.impl.ioc-macros/Jmp">Jmp</a>, <a href="#clojure.core.async.impl.ioc-macros/Pause">Pause</a>, <a href="#clojure.core.async.impl.ioc-macros/Put!">Put!</a>, <a href="#clojure.core.async.impl.ioc-macros/Return">Return</a>, <a href="#clojure.core.async.impl.ioc-macros/Set">Set</a>, <a href="#clojure.core.async.impl.ioc-macros/Take!">Take!</a></span>
+    <div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.ioc-macros/block-references">block-references</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (block-references this)
+</pre>
+      <pre id="var-docstr">Returns all the blocks this instruction references</pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.ioc-macros/emit-instruction">emit-instruction</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (emit-instruction this state-sym)
+</pre>
+      <pre id="var-docstr">Returns the clojure code that this instruction represents</pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.ioc-macros/reads-from">reads-from</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (reads-from this)
+</pre>
+      <pre id="var-docstr">Returns a list of instructions this instruction reads from</pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.ioc-macros/writes-to">writes-to</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (writes-to this)
+</pre>
+      <pre id="var-docstr">Returns a list of instructions this instruction writes to</pre>
+      
+      
+      
+    </div>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L203" id="proto-source">Source</a>
+  </div>
+</div>
+<div id="type-section">
+  <p></p>
+  <h2>Types</h2>
+  <div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Call">Call</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[refs]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Case">Case</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[val-id test-vals jmp-blocks default-block]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/CondBr">CondBr</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[test then-block else-block]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Const">Const</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[value]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Fn">Fn</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[fn-expr local-names local-refs]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Jmp">Jmp</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[value block]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Pause">Pause</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[value block]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Put!">Put!</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[channel value block]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Return">Return</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[value]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Set">Set</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[set-id value]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/Take!">Take!</h2>
+    <span id="type-type">record</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[channel block]</span><br />
+    Protocols: <span id="type-protocols"><a href="#clojure.core.async.impl.ioc-macros/IInstruction">IInstruction</a></span><br />
+    Interfaces: <span id="type-interfaces">clojure.lang.IHashEq, clojure.lang.IKeywordLookup, clojure.lang.ILookup, clojure.lang.IObj, clojure.lang.IPersistentMap, java.io.Serializable, java.util.Map</span><br />
+  </div>
+</div>
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Call">-&gt;Call</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Call refs)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Call.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L227" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Case">-&gt;Case</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Case val-id test-vals jmp-blocks default-block)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Case.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L235" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;CondBr">-&gt;CondBr</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;CondBr test then-block else-block)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.CondBr.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L312" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Const">-&gt;Const</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Const value)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Const.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L209" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Fn">-&gt;Fn</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Fn fn-expr local-names local-refs)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Fn.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L250" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Jmp">-&gt;Jmp</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Jmp value block)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Jmp.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L260" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Pause">-&gt;Pause</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Pause value block)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Pause.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L301" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Put!">-&gt;Put!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Put! channel value block)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Put!.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L279" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Return">-&gt;Return</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Return value)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Return.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L268" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Set">-&gt;Set</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Set set-id value)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Set.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L219" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/-&gt;Take!">-&gt;Take!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;Take! channel block)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.ioc_macros.Take!.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L290" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/add-block">add-block</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (add-block)
+</pre>
+    <pre id="var-docstr">Adds a new block, returns its id, but does not change the current block (does not call set-block).</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L166" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/add-instruction">add-instruction</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (add-instruction inst)
+</pre>
+    <pre id="var-docstr">Appends an instruction to the current block. </pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L184" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/all">all</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (all itms)
+</pre>
+    <pre id="var-docstr">Assumes that itms is a list of state monad function results, threads the state map
+through all of them. Returns a vector of all the results.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L119" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/assoc-in-plan">assoc-in-plan</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (assoc-in-plan path val)
+</pre>
+    <pre id="var-docstr">Same as assoc-in, but for state hash map</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L131" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/async-chan-wrapper">async-chan-wrapper</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (async-chan-wrapper state)
+</pre>
+    <pre id="var-docstr">State machine wrapper that uses the async library. Has to be in this file do to dependency issues. </pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L791" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/finished?">finished?</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (finished? state-array)
+</pre>
+    <pre id="var-docstr">Returns true if the machine is in a finished state</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L774" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/gen-plan">gen-plan</h2>
+    <span id="var-type">macro</span><br />
+    <pre id="var-usage">Usage: (gen-plan binds id-expr)
+</pre>
+    <pre id="var-docstr">Allows a user to define a state monad binding plan.
+
+(gen-plan
+  [_ (assoc-in-plan [:foo :bar] 42)
+   val (get-in-plan [:foo :bar])]
+  val)</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L62" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/get-binding">get-binding</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (get-binding key)
+</pre>
+    <pre id="var-docstr">Gets the value of the current binding for key</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L100" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/get-block">get-block</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (get-block)
+</pre>
+    <pre id="var-docstr">Gets the current block</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L160" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/get-in-plan">get-in-plan</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (get-in-plan path)
+</pre>
+    <pre id="var-docstr">Same as get-in, but for a state hash map</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L143" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/get-plan">get-plan</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (get-plan f)
+</pre>
+    <pre id="var-docstr">Returns the final [id state] from a plan. </pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L81" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Call">map-&gt;Call</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Call m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Call, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L227" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Case">map-&gt;Case</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Case m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Case, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L235" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;CondBr">map-&gt;CondBr</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;CondBr m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.CondBr, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L312" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Const">map-&gt;Const</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Const m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Const, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L209" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Fn">map-&gt;Fn</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Fn m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Fn, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L250" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Jmp">map-&gt;Jmp</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Jmp m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Jmp, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L260" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Pause">map-&gt;Pause</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Pause m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Pause, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L301" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Put!">map-&gt;Put!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Put! m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Put!, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L279" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Return">map-&gt;Return</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Return m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Return, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L268" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Set">map-&gt;Set</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Set m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Set, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L219" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/map-&gt;Take!">map-&gt;Take!</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (map-&gt;Take! m#)
+</pre>
+    <pre id="var-docstr">Factory function for class clojure.core.async.impl.ioc_macros.Take!, taking a map of keywords to field values.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L290" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/no-op">no-op</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (no-op)
+</pre>
+    <pre id="var-docstr">This function can be used inside a gen-plan when no operation is to be performed</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L113" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/parse-to-state-machine">parse-to-state-machine</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (parse-to-state-machine body)
+</pre>
+    <pre id="var-docstr">Takes an sexpr and returns a hashmap that describes the execution flow of the sexpr as
+a series of SSA style blocks.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L648" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/persistent-value?">persistent-value?</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (persistent-value? index value)
+</pre>
+    <pre id="var-docstr">Returns true if this value should be saved in the state hash map</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L688" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/pop-binding">pop-binding</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (pop-binding key)
+</pre>
+    <pre id="var-docstr">Removes the most recent binding for key</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L106" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/push-alter-binding">push-alter-binding</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (push-alter-binding key f &amp; args)
+</pre>
+    <pre id="var-docstr">Pushes the result of (apply f old-value args) as current value of binding key</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L93" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/push-binding">push-binding</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (push-binding key value)
+</pre>
+    <pre id="var-docstr">Sets the binding 'key' to value. This operation can be undone via pop-bindings.
+Bindings are stored in the state hashmap.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L86" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/set-block">set-block</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (set-block block-id)
+</pre>
+    <pre id="var-docstr">Sets the current block being written to by the functions. The next add-instruction call will append to this block</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L154" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.ioc-macros/update-in-plan">update-in-plan</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (update-in-plan path f &amp; args)
+</pre>
+    <pre id="var-docstr">Same as update-in, but for a state hash map</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L137" id="var-source">Source</a>
+  </div>
+</div>
+<br />
+<h2 id="clojure.core.async.impl.protocols">clojure.core.async.impl.protocols</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+<div id="proto-section">
+  <p></p>
+  <h2>Protocols</h2>
+  <div id="proto-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.protocols/Handler">Handler</h2>
+    <span id="proto-type">Protocol</span><br />
+    <pre id="proto-docstr"></pre>
+    Known implementations: <span id="proto-impls"></span>
+    <div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.protocols/active?">active?</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (active? h)
+</pre>
+      <pre id="var-docstr">returns true if has callback. Must work w/o lock</pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.protocols/commit">commit</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (commit h)
+</pre>
+      <pre id="var-docstr">commit to fulfilling its end of the transfer, returns cb. Must be called within lock</pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.protocols/lock-id">lock-id</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (lock-id h)
+</pre>
+      <pre id="var-docstr">a unique id for lock acquisition order, 0 if no lock</pre>
+      
+      
+      
+    </div>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/protocols.clj#L20" id="proto-source">Source</a>
+  </div><div id="proto-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.protocols/ReadPort">ReadPort</h2>
+    <span id="proto-type">Protocol</span><br />
+    <pre id="proto-docstr"></pre>
+    Known implementations: <span id="proto-impls"><a href="clojure.core.async.impl.channels-api.html#clojure.core.async.impl.channels/ManyToManyChannel">clojure.core.async.impl.channels.ManyToManyChannel</a>, <a href="clojure.core.async.lab-api.html#clojure.core.async.lab/MultiplexingReadPort">clojure.core.async.lab.MultiplexingReadPort</a></span>
+    <div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.protocols/take!">take!</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (take! port fn1-handler)
+</pre>
+      <pre id="var-docstr">derefable val if taken, nil if take was enqueued</pre>
+      
+      
+      
+    </div>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/protocols.clj#L11" id="proto-source">Source</a>
+  </div><div id="proto-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.protocols/WritePort">WritePort</h2>
+    <span id="proto-type">Protocol</span><br />
+    <pre id="proto-docstr"></pre>
+    Known implementations: <span id="proto-impls"><a href="clojure.core.async.impl.channels-api.html#clojure.core.async.impl.channels/ManyToManyChannel">clojure.core.async.impl.channels.ManyToManyChannel</a>, <a href="clojure.core.async.lab-api.html#clojure.core.async.lab/BroadcastingWritePort">clojure.core.async.lab.BroadcastingWritePort</a></span>
+    <div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.impl.protocols/put!">put!</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (put! port val fn0-handler)
+</pre>
+      <pre id="var-docstr">derefable nil if put, nil if put was enqueued. Must throw on nil val.</pre>
+      
+      
+      
+    </div>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/protocols.clj#L14" id="proto-source">Source</a>
+  </div>
+</div>
+
+
+<br />
+<h2 id="clojure.core.async.impl.timers">clojure.core.async.impl.timers</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+
+<div id="type-section">
+  <p></p>
+  <h2>Types</h2>
+  <div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.timers/TimeoutQueueEntry">TimeoutQueueEntry</h2>
+    <span id="type-type">type</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[channel timestamp]</span><br />
+    Protocols: <span id="type-protocols"><a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/Channel">clojure.core.async.impl.protocols/Channel</a></span><br />
+    Interfaces: <span id="type-interfaces">java.util.concurrent.Delayed</span><br />
+  </div>
+</div>
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.timers/-&gt;TimeoutQueueEntry">-&gt;TimeoutQueueEntry</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;TimeoutQueueEntry channel timestamp)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.impl.timers.TimeoutQueueEntry.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/timers.clj#L24" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.impl.timers/timeout">timeout</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (timeout msecs)
+</pre>
+    <pre id="var-docstr">returns a channel that will close after msecs</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/timers.clj#L42" id="var-source">Source</a>
+  </div>
+</div>
+<br />
+<h2 id="clojure.core.async.lab">clojure.core.async.lab</h2>
+<pre id="namespace-docstr">core.async HIGHLY EXPERIMENTAL feature exploration
+
+Caveats:
+
+1. Everything defined in this namespace is experimental, and subject
+to change or deletion without warning.
+
+2. Many features provided by this namespace are highly coupled to
+implementation details of core.async. Potential features which
+operate at higher levels of abstraction are suitable for inclusion
+in the examples.
+
+3. Features provided by this namespace MAY be promoted to
+clojure.core.async at a later point in time, but there is no
+guarantee any of them will.</pre>
+
+
+<br />
+
+<div id="type-section">
+  <p></p>
+  <h2>Types</h2>
+  <div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.lab/BroadcastingWritePort">BroadcastingWritePort</h2>
+    <span id="type-type">type</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[write-ports mutex]</span><br />
+    Protocols: <span id="type-protocols"><a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/WritePort">clojure.core.async.impl.protocols/WritePort</a></span><br />
+    Interfaces: <span id="type-interfaces"></span><br />
+  </div><div id="type-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.lab/MultiplexingReadPort">MultiplexingReadPort</h2>
+    <span id="type-type">type</span><br />
+    <pre id="type-docstr"></pre>
+    Fields: <span id="type-fields">[mutex read-ports]</span><br />
+    Protocols: <span id="type-protocols"><a href="clojure.core.async-api.html#clojure.core.async.impl.protocols/ReadPort">clojure.core.async.impl.protocols/ReadPort</a></span><br />
+    Interfaces: <span id="type-interfaces"></span><br />
+  </div>
+</div>
+<div id="var-section">
+  <p></p>
+  <h2>Public Variables and Functions</h2>
+  <div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.lab/-&gt;BroadcastingWritePort">-&gt;BroadcastingWritePort</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;BroadcastingWritePort write-ports mutex)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.lab.BroadcastingWritePort.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj#L92" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.lab/-&gt;MultiplexingReadPort">-&gt;MultiplexingReadPort</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (-&gt;MultiplexingReadPort mutex read-ports)
+</pre>
+    <pre id="var-docstr">Positional factory function for class clojure.core.async.lab.MultiplexingReadPort.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj#L33" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.lab/broadcast">broadcast</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (broadcast &amp; ports)
+</pre>
+    <pre id="var-docstr">Returns a broadcasting write port which, when written to, writes
+the value to each of ports.
+
+Writes to the broadcasting port will park until the value is written
+to each of the ports used to create it. For this reason, it is
+strongly advised that each of the underlying ports support buffered
+writes.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj#L100" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.lab/multiplex">multiplex</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (multiplex &amp; ports)
+</pre>
+    <pre id="var-docstr">Returns a multiplexing read port which, when read from, produces a
+value from one of ports.
+
+If at read time only one port is available to be read from, the
+multiplexing port will return that value. If multiple ports are
+available to be read from, the multiplexing port will return one
+value from a port chosen non-deterministicly. If no port is
+available to be read from, parks execution until a value is
+available.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj#L69" id="var-source">Source</a>
+  </div>
+</div>
+
+
+</div>
+              </div>
+            </div>
+          </div>
+	</div>
+	<div id="foot">
+	  <div style="text-align: center;" id="copyright">Copyright 2007-2013 by Rich Hickey and the various contributors</div>
+	</div>
+      </div>
+      <div id="DesignedBy">Logo &amp; site design by <a title="Visit Tom Hickey's website." href="http://www.tomhickey.com">Tom Hickey</a>.<br />
+      Clojure auto-documentation system by Tom Faulhaber.</div>
+    </div>
+    <!-- /AllContentContainer -->
+  </body>
+
+</html>
