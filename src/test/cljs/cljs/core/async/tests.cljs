@@ -4,7 +4,7 @@
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.protocols :refer [full? add! remove!]])
   (:require-macros [cljs.core.async.test-helpers :as h :refer [is= is deftest testing runner]]
-                   [cljs.core.async.macros :as m :refer [go]]))
+                   [cljs.core.async.macros :as m :refer [go alt!]]))
 
 (let [c (chan 1)]
   (put! c 42 #(is true) true)
@@ -29,4 +29,20 @@
 
 (let [c (identity-chan 42)]
   (go (is= [42 c]
-           (alts! [c] :priority true))))
+           (alts! [c]))))
+
+(deftest alt-tests
+  (testing "alts! works at all"
+    (let [c (identity-chan 42)]
+      (go (is= [42 c]
+               (alts! [c])))))
+
+  (testing "alt! works"
+    (go
+     (is= [42 :foo]
+          (alt! (identity-chan 42) ([v] [v :foo])))))
+  (testing "alts! can use default"
+    (go
+     (is= [42 :default]
+          (alts!
+           [(chan 1)] :default 42)))))

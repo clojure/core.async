@@ -3,7 +3,7 @@
             [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.protocols :refer [full? add! remove!]])
-  (:require-macros [cljs.core.async.test-helpers :as h :refer [is= deftest testing runner]]
+  (:require-macros [cljs.core.async.test-helpers :as h :refer [is= is deftest testing runner]]
                    [cljs.core.async.macros :as m :refer [go]]))
 
 
@@ -94,4 +94,31 @@
         (runner
          (case :baz
            :foo 44
-           :default)))))
+           :default))))
+
+  (testing "try"
+    (is= 42
+        (runner
+         (try 42
+              (catch Object ex ex))))
+    (is= 42
+        (runner
+         (try
+           (assert false)
+           (catch Object ex 42))))
+
+    (let [a (atom false)
+          v (runner
+             (try
+               true
+               (catch Object ex false)
+               (finally (pause (reset! a true)))))]
+      (is (and @a v)))
+
+    (let [a (atom false)
+          v (runner
+             (try
+               (assert false)
+               (catch Object ex true)
+               (finally (reset! a true))))]
+      (is (and @a v)))))

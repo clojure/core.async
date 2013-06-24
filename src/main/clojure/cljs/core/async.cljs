@@ -74,6 +74,8 @@
 (defn- random-array
   [n]
   (let [a (make-array n)]
+    (dotimes [x n]
+      (aset a x 0))
     (loop [i 1]
       (if (= i n)
         a

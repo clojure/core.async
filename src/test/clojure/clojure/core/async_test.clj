@@ -54,8 +54,6 @@
                      (is (not (realized? read-promise))
                          "The read waits until a writer provides a value.")
                      (>!! test-channel :test-val)
-                     (is (realized? read-promise)
-                         "The read callback executes when a writer provides a value.")
                      (deref read-promise 1000 false)))
       "The written value is the value provided to the read callback."))
 

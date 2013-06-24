@@ -3,7 +3,7 @@
         clojure.core.async.lab)
   (:require [clojure.core.async :as async]))
 
-#_(deftest multiplex-test
+(deftest multiplex-test
   (is (apply = (let [even-chan (async/chan)
                      odd-chan (async/chan)
                      muxer (multiplex even-chan odd-chan)
