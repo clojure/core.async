@@ -36,7 +36,7 @@
    :name "clojure.core.async.impl.ioc-alt",
    :doc nil}
   {:source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async/clojure.core.async.impl.ioc-macros-api.html",
    :name "clojure.core.async.impl.ioc-macros",
@@ -506,566 +506,566 @@
    :name "->Call",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L227",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L221",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Call",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Call.",
    :var-type "function",
-   :line 227,
+   :line 221,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([val-id test-vals jmp-blocks default-block]),
    :name "->Case",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L235",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L229",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Case",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Case.",
    :var-type "function",
-   :line 235,
+   :line 229,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([test then-block else-block]),
    :name "->CondBr",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L312",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L306",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->CondBr",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.CondBr.",
    :var-type "function",
-   :line 312,
+   :line 306,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([value]),
    :name "->Const",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L209",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L203",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Const",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Const.",
    :var-type "function",
-   :line 209,
+   :line 203,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([fn-expr local-names local-refs]),
    :name "->Fn",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L250",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L244",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Fn",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Fn.",
    :var-type "function",
-   :line 250,
+   :line 244,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([value block]),
    :name "->Jmp",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L260",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L254",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Jmp",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Jmp.",
    :var-type "function",
-   :line 260,
+   :line 254,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([value block]),
    :name "->Pause",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L301",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L295",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Pause",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Pause.",
    :var-type "function",
-   :line 301,
+   :line 295,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([channel value block]),
    :name "->Put!",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L279",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L273",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Put!",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Put!.",
    :var-type "function",
-   :line 279,
+   :line 273,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([value]),
    :name "->Return",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L268",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L262",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Return",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Return.",
    :var-type "function",
-   :line 268,
+   :line 262,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([set-id value]),
    :name "->Set",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L219",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L213",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Set",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Set.",
    :var-type "function",
-   :line 219,
+   :line 213,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([channel block]),
    :name "->Take!",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L290",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L284",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/->Take!",
    :doc
    "Positional factory function for class clojure.core.async.impl.ioc_macros.Take!.",
    :var-type "function",
-   :line 290,
+   :line 284,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([]),
    :name "add-block",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L166",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L160",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/add-block",
    :doc
    "Adds a new block, returns its id, but does not change the current block (does not call set-block).",
    :var-type "function",
-   :line 166,
+   :line 160,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([inst]),
    :name "add-instruction",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L184",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L178",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/add-instruction",
    :doc "Appends an instruction to the current block. ",
    :var-type "function",
-   :line 184,
+   :line 178,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([itms]),
    :name "all",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L119",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L113",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/all",
    :doc
    "Assumes that itms is a list of state monad function results, threads the state map\nthrough all of them. Returns a vector of all the results.",
    :var-type "function",
-   :line 119,
+   :line 113,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([path val]),
    :name "assoc-in-plan",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L131",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L125",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/assoc-in-plan",
    :doc "Same as assoc-in, but for state hash map",
    :var-type "function",
-   :line 131,
+   :line 125,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([state]),
    :name "async-chan-wrapper",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L791",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L785",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/async-chan-wrapper",
    :doc
    "State machine wrapper that uses the async library. Has to be in this file do to dependency issues. ",
    :var-type "function",
-   :line 791,
+   :line 785,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([state-array]),
    :name "finished?",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L774",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L768",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/finished?",
    :doc "Returns true if the machine is in a finished state",
    :var-type "function",
-   :line 774,
+   :line 768,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([binds id-expr]),
    :name "gen-plan",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L62",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L56",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/gen-plan",
    :doc
    "Allows a user to define a state monad binding plan.\n\n(gen-plan\n  [_ (assoc-in-plan [:foo :bar] 42)\n   val (get-in-plan [:foo :bar])]\n  val)",
    :var-type "macro",
-   :line 62,
+   :line 56,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([key]),
    :name "get-binding",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L100",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L94",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/get-binding",
    :doc "Gets the value of the current binding for key",
    :var-type "function",
-   :line 100,
+   :line 94,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([]),
    :name "get-block",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L160",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L154",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/get-block",
    :doc "Gets the current block",
    :var-type "function",
-   :line 160,
+   :line 154,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([path]),
    :name "get-in-plan",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L143",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L137",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/get-in-plan",
    :doc "Same as get-in, but for a state hash map",
    :var-type "function",
-   :line 143,
+   :line 137,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([f]),
    :name "get-plan",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L81",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L75",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/get-plan",
    :doc "Returns the final [id state] from a plan. ",
    :var-type "function",
-   :line 81,
+   :line 75,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Call",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L227",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L221",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Call",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Call, taking a map of keywords to field values.",
    :var-type "function",
-   :line 227,
+   :line 221,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Case",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L235",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L229",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Case",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Case, taking a map of keywords to field values.",
    :var-type "function",
-   :line 235,
+   :line 229,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->CondBr",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L312",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L306",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->CondBr",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.CondBr, taking a map of keywords to field values.",
    :var-type "function",
-   :line 312,
+   :line 306,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Const",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L209",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L203",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Const",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Const, taking a map of keywords to field values.",
    :var-type "function",
-   :line 209,
+   :line 203,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Fn",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L250",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L244",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Fn",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Fn, taking a map of keywords to field values.",
    :var-type "function",
-   :line 250,
+   :line 244,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Jmp",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L260",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L254",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Jmp",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Jmp, taking a map of keywords to field values.",
    :var-type "function",
-   :line 260,
+   :line 254,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Pause",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L301",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L295",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Pause",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Pause, taking a map of keywords to field values.",
    :var-type "function",
-   :line 301,
+   :line 295,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Put!",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L279",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L273",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Put!",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Put!, taking a map of keywords to field values.",
    :var-type "function",
-   :line 279,
+   :line 273,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Return",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L268",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L262",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Return",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Return, taking a map of keywords to field values.",
    :var-type "function",
-   :line 268,
+   :line 262,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Set",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L219",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L213",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Set",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Set, taking a map of keywords to field values.",
    :var-type "function",
-   :line 219,
+   :line 213,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([m__5818__auto__]),
    :name "map->Take!",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L290",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L284",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/map->Take!",
    :doc
    "Factory function for class clojure.core.async.impl.ioc_macros.Take!, taking a map of keywords to field values.",
    :var-type "function",
-   :line 290,
+   :line 284,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([]),
    :name "no-op",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L113",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L107",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/no-op",
    :doc
    "This function can be used inside a gen-plan when no operation is to be performed",
    :var-type "function",
-   :line 113,
+   :line 107,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([body]),
    :name "parse-to-state-machine",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L648",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L642",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/parse-to-state-machine",
    :doc
    "Takes an sexpr and returns a hashmap that describes the execution flow of the sexpr as\na series of SSA style blocks.",
    :var-type "function",
-   :line 648,
+   :line 642,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([index value]),
    :name "persistent-value?",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L688",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L682",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/persistent-value?",
    :doc
    "Returns true if this value should be saved in the state hash map",
    :var-type "function",
-   :line 688,
+   :line 682,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([key]),
    :name "pop-binding",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L106",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L100",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/pop-binding",
    :doc "Removes the most recent binding for key",
    :var-type "function",
-   :line 106,
+   :line 100,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([key f & args]),
    :name "push-alter-binding",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L93",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L87",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/push-alter-binding",
    :doc
    "Pushes the result of (apply f old-value args) as current value of binding key",
    :var-type "function",
-   :line 93,
+   :line 87,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([key value]),
    :name "push-binding",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L86",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L80",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/push-binding",
    :doc
    "Sets the binding 'key' to value. This operation can be undone via pop-bindings.\nBindings are stored in the state hashmap.",
    :var-type "function",
-   :line 86,
+   :line 80,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([block-id]),
    :name "set-block",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L154",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L148",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/set-block",
    :doc
    "Sets the current block being written to by the functions. The next add-instruction call will append to this block",
    :var-type "function",
-   :line 154,
+   :line 148,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:arglists ([path f & args]),
    :name "update-in-plan",
    :namespace "clojure.core.async.impl.ioc-macros",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L137",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L131",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/update-in-plan",
    :doc "Same as update-in, but for a state hash map",
    :var-type "function",
-   :line 137,
+   :line 131,
    :file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj"}
   {:file nil,
    :raw-source-url nil,
@@ -1157,13 +1157,13 @@
    :name "Take!"}
   {:file "src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
+   "https://github.com/clojure/core.async/raw/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L203",
+   "https://github.com/clojure/core.async/blob/1aff841e2d1f5cd7b35b2ea232d10187ce268888/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L197",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.impl.ioc-macros/IInstruction",
    :namespace "clojure.core.async.impl.ioc-macros",
-   :line 203,
+   :line 197,
    :var-type "protocol",
    :doc nil,
    :name "IInstruction"}
