@@ -9,7 +9,8 @@
 ;; by Timothy Baldridge
 ;; April 13, 2013
 
-(ns clojure.core.async.impl.ioc-macros
+(ns ^{:skip-wiki true}
+  clojure.core.async.impl.ioc-macros
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
             [clojure.core.async.impl.protocols :as impl]
