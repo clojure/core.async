@@ -37,7 +37,13 @@
 ;; In ordinary threads, we use `>!!` (blocking put) and `<!!`
 ;; (blocking take) to communicate via channels.
 
-;; Use `thread` (like `future`) to execute a body in a pool thread and
+(let [c (chan 10)]
+  (>!! c "hello")
+  (assert (= "hello" (<!! c))))
+
+;; Because these are blocking calls, if we try to put on an
+;; unbuffered channel, we will block the main thread. We can use
+;; `thread` (like `future`) to execute a body in a pool thread and
 ;; return a channel with the result. Here we launch a background task
 ;; to put "hello" on a channel, then read that value in the current thread.
 
