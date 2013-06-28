@@ -1,29 +1,19 @@
-;; This walkthrough introduces the core concepts of core.async
+;; This walkthrough introduces the core concepts of core.async.
 
-;; The clojure.core.async contains the public API
+;; The clojure.core.async namespace contains the public API.
 (require '[clojure.core.async :as async :refer :all])
 
 ;;;; CHANNELS
 
 ;; Data is transmitted on queue-like channels. By default channels
-;; are unbuffered - they require producer and consumer to both 
+;; are unbuffered (0-length) - they require producer and consumer to
 ;; rendezvous for the transfer of a value through the channel.
 
 ;; Use `chan` to make an unbuffered channel:
 (chan)
 
-;; Channels can also be buffered. Unbounded buffers are discouraged!
-;; Fixed size buffers create back pressure or alternately you may
-;; use a buffered channel with an overflow policy.
-
-;; Create a fixed buffer channel (put will block if full):
+;; Pass a number to create a channel with a fixed buffer:
 (chan 10)
-
-;; Create a buffer that drops new values if full:
-(chan (dropping-buffer 10))
-
-;; Create a buffer that drops old values if full:
-(chan (sliding-buffer 10))
 
 ;; `close!` a channel to stop accepting puts. Remaining values are still
 ;; available to take. Drained channels return nil on take. Nils may
@@ -135,5 +125,15 @@
 
 ;; ALT
 
+;; todo
 
+;;;; OTHER BUFFERS
 
+;; Channels can also use custom buffers that have different policies
+;; for the "full" case.  Two useful examples are provided in the API.
+
+;; Use `dropping-buffer` to drop newest values when the buffer is full:
+(chan (dropping-buffer 10))
+
+;; Use `sliding-buffer` to drop oldest values when the buffer is full:
+(chan (sliding-buffer 10))
