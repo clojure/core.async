@@ -77,3 +77,27 @@
                                             (async/<!! (first broadcast-receivers)))
                      expected (range 100)]
                  [expected observed])) "When all channels are sufficiently buffered, reads on one channel are not throttled by reads from other channels."))
+
+(deftest spool-test
+  (testing "nil sequence"
+    (let [c (spool nil)]
+      (is (= nil (async/<!! c)))))
+  (testing "spool empty sequence"
+    (let [c (spool [])]
+      (is (= nil (async/<!! c)))
+      (is (= nil (async/<!! c)))))
+  (testing "spool finite sequence"
+    (let [c (spool [1 2])]
+      (is (= 1 (async/<!! c)))
+      (is (= 2 (async/<!! c)))
+      (is (= nil (async/<!! c)))))
+  (testing "spool infinite sequence"
+    (let [c (spool (repeat 5))]
+      (is (= 5 (async/<!! c)))
+      (is (= 5 (async/<!! c)))))
+  (testing "use existing channel"
+    (let [c (async/chan 10)]
+      (spool [1 2] c)
+      (is (= 1 (async/<!! c)))
+      (is (= 2 (async/<!! c)))
+      (is (= nil (async/<!! c))))))
