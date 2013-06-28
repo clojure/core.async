@@ -6,7 +6,7 @@
    :name "clojure.core.async",
    :doc nil}
   {:source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async/clojure.core.async.lab-api.html",
    :name "clojure.core.async.lab",
@@ -291,27 +291,27 @@
    :var-type "function",
    :line 62,
    :file "src/main/clojure/clojure/core/async.clj"}
-  {:arglists ([write-ports mutex]),
+  {:arglists ([write-ports]),
    :name "->BroadcastingWritePort",
    :namespace "clojure.core.async.lab",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj#L92",
+   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L93",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/raw/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/->BroadcastingWritePort",
    :doc
    "Positional factory function for class clojure.core.async.lab.BroadcastingWritePort.",
    :var-type "function",
-   :line 92,
+   :line 93,
    :file "src/main/clojure/clojure/core/async/lab.clj"}
   {:arglists ([mutex read-ports]),
    :name "->MultiplexingReadPort",
    :namespace "clojure.core.async.lab",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj#L33",
+   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L33",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/raw/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/->MultiplexingReadPort",
    :doc
@@ -323,23 +323,23 @@
    :name "broadcast",
    :namespace "clojure.core.async.lab",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj#L100",
+   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L99",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/raw/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/broadcast",
    :doc
    "Returns a broadcasting write port which, when written to, writes\nthe value to each of ports.\n\nWrites to the broadcasting port will park until the value is written\nto each of the ports used to create it. For this reason, it is\nstrongly advised that each of the underlying ports support buffered\nwrites.",
    :var-type "function",
-   :line 100,
+   :line 99,
    :file "src/main/clojure/clojure/core/async/lab.clj"}
   {:arglists ([& ports]),
    :name "multiplex",
    :namespace "clojure.core.async.lab",
    :source-url
-   "https://github.com/clojure/core.async/blob/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj#L69",
+   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L69",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/d466ba28fbea0a7421f9dfba7288aeb96f1ad289/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/raw/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/multiplex",
    :doc
