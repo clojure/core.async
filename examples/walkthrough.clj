@@ -39,7 +39,8 @@
 
 (let [c (chan 10)]
   (>!! c "hello")
-  (assert (= "hello" (<!! c))))
+  (assert (= "hello" (<!! c)))
+  (close! c))
 
 ;; Because these are blocking calls, if we try to put on an
 ;; unbuffered channel, we will block the main thread. We can use
@@ -70,9 +71,53 @@
 ;; for the producer. The consumer uses a go block to take, then
 ;; returns a result channel, from which we do a blocking take.
 
+;;;; ALTS
 
-;;;; ALT
+;; One killer feature for channels over queues is the ability to wait
+;; on many channels at the same time (like a socket select). This is
+;; done with `alts!!` (ordinary threads) or `alts!` in go blocks.
 
-;; timeouts
+;; We can create a background thread with alts that combines inputs on
+;; either of two channels. `alts!!` takes either a set of operations
+;; to perform - either a channel to take from a [channel value] to put
+;; and returns the value (nil for put) and channel that succeeded:
 
+(let [c1 (chan)
+      c2 (chan)]
+  (thread (while true
+            (let [[v ch] (alts!! [c1 c2])]
+              (println "Read" v "from" ch))))
+  (>!! c1 "hi")
+  (>!! c2 "there"))
 
+;; Prints:
+;;   Read hi from #<ManyToManyChannel ...>
+;;   Read there from #<ManyToManyChannel ...>
+
+;; We can use alts! to do the same thing with go blocks:
+
+(let [c1 (chan)
+      c2 (chan)]
+  (go (while true
+        (let [[v ch] (alts! [c1 c2])]
+          (println "Read" v "from" ch))))
+  (go (>! c1 "hi"))
+  (go (>! c2 "there")))
+
+;; `timeout` creates a channel that waits for a specified ms, then closes:
+
+(let [t (timeout 100)
+      begin (System/currentTimeMillis)]
+  (<!! t)
+  (println "Waited" (- (System/currentTimeMillis) begin)))
+
+;; We can combine timeout with `alts!` to do timed channel waits.
+;; Here we wait for 500 ms for a value to arrive on the channel, then
+;; give up:
+
+(let [c (chan)
+      begin (System/currentTimeMillis)]
+  (alts!! [c (timeout 100)])
+  (println "Gave up after" (- (System/currentTimeMillis) begin)))
+
+;; ALT
