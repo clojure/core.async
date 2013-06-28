@@ -6,7 +6,7 @@
    :name "clojure.core.async",
    :doc nil}
   {:source-url
-   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async/clojure.core.async.lab-api.html",
    :name "clojure.core.async.lab",
@@ -295,9 +295,9 @@
    :name "->BroadcastingWritePort",
    :namespace "clojure.core.async.lab",
    :source-url
-   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L93",
+   "https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L93",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/raw/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/->BroadcastingWritePort",
    :doc
@@ -309,9 +309,9 @@
    :name "->MultiplexingReadPort",
    :namespace "clojure.core.async.lab",
    :source-url
-   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L33",
+   "https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L33",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/raw/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/->MultiplexingReadPort",
    :doc
@@ -323,9 +323,9 @@
    :name "broadcast",
    :namespace "clojure.core.async.lab",
    :source-url
-   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L99",
+   "https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L99",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/raw/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/broadcast",
    :doc
@@ -337,15 +337,29 @@
    :name "multiplex",
    :namespace "clojure.core.async.lab",
    :source-url
-   "https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L69",
+   "https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L69",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj",
+   "https://github.com/clojure/core.async/raw/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/multiplex",
    :doc
    "Returns a multiplexing read port which, when read from, produces a\nvalue from one of ports.\n\nIf at read time only one port is available to be read from, the\nmultiplexing port will return that value. If multiple ports are\navailable to be read from, the multiplexing port will return one\nvalue from a port chosen non-deterministicly. If no port is\navailable to be read from, parks execution until a value is\navailable.",
    :var-type "function",
    :line 69,
+   :file "src/main/clojure/clojure/core/async/lab.clj"}
+  {:arglists ([s c] [s]),
+   :name "spool",
+   :namespace "clojure.core.async.lab",
+   :source-url
+   "https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L112",
+   :raw-source-url
+   "https://github.com/clojure/core.async/raw/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj",
+   :wiki-url
+   "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/spool",
+   :doc
+   "Take a sequence and puts each value on a channel and returns the channel.\nIf no channel is provided, an unbuffered channel is created. If the\nsequence ends, the channel is closed.",
+   :var-type "function",
+   :line 112,
    :file "src/main/clojure/clojure/core/async/lab.clj"}
   {:file nil,
    :raw-source-url nil,

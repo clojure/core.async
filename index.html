@@ -134,6 +134,9 @@ namespace.
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async.lab/multiplex">multiplex</a>
       
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async.lab/spool">spool</a>
+      
     </div>
   </div>
 </div>
@@ -515,7 +518,7 @@ guarantee any of them will.</pre>
     <pre id="var-docstr">Positional factory function for class clojure.core.async.lab.BroadcastingWritePort.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L93" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L93" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -526,7 +529,7 @@ guarantee any of them will.</pre>
     <pre id="var-docstr">Positional factory function for class clojure.core.async.lab.MultiplexingReadPort.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L33" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L33" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -543,7 +546,7 @@ strongly advised that each of the underlying ports support buffered
 writes.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L99" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L99" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -562,7 +565,21 @@ available to be read from, parks execution until a value is
 available.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/75466920ccc3d133bd42a7b741ab2b818cad9700/src/main/clojure/clojure/core/async/lab.clj#L69" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L69" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.lab/spool">spool</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (spool s c)
+       (spool s)
+</pre>
+    <pre id="var-docstr">Take a sequence and puts each value on a channel and returns the channel.
+If no channel is provided, an unbuffered channel is created. If the
+sequence ends, the channel is closed.</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/ad7ca68a831a1e469b6f30334903279b2e4e43f7/src/main/clojure/clojure/core/async/lab.clj#L112" id="var-source">Source</a>
   </div>
 </div>
 
