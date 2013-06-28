@@ -79,23 +79,22 @@
   [& ports]
   (->MultiplexingReadPort (mutex/mutex) (HashSet. ^Collection ports)))
 
-;; WIP: Unfinished work beyond this point
-
 (defn- broadcast-write
-  [fret val port-set]
-  (if (empty? port-set)
-    (fret)
+  [port-set val handler]
+  (if (= (count port-set) 1)
+    (impl/put! (first port-set) val handler)
     (let [clauses (map (fn [port] [port val]) port-set)
-          recur-step (fn [[_ port]] (broadcast-write fret val (dissoc port-set port)))]
-      (async/do-alts recur-step clauses {}))))
+          recur-step (fn [[_ port]] (broadcast-write (disj port-set port) val handler))]
+      (when-let [alt-res (async/do-alts recur-step clauses {})]
+        (recur (disj port-set (second @alt-res))
+               val
+               handler)))))
 
 (deftype BroadcastingWritePort
-    [write-ports mutex]
+    [write-ports]
   impl/WritePort
   (put! [port val handler]
-    (let [fret (fn [_]
-                 ((impl/commit handler)))]
-      (broadcast-write fret val (set write-ports)))))
+    (broadcast-write write-ports val handler)))
 
 (defn broadcast
   "Returns a broadcasting write port which, when written to, writes
@@ -106,5 +105,5 @@
   strongly advised that each of the underlying ports support buffered
   writes."
   [& ports]
-  (->BroadcastingWritePort ports))
+  (->BroadcastingWritePort (set ports)))
 
