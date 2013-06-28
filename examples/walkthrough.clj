@@ -104,6 +104,19 @@
   (go (>! c1 "hi"))
   (go (>! c2 "there")))
 
+;; Since go blocks are lightweight processes not bound to threads, we
+;; can have LOTS of them! Here we create 1000 go blocks that say hi on
+;; 1000 channels. We use alts!! to read them as they're ready.
+
+(let [n 1000
+      cs (repeatedly n chan)
+      begin (System/currentTimeMillis)]
+  (doseq [c cs] (go (>! c "hi")))
+  (dotimes [i n]
+    (let [[v c] (alts!! cs)]
+      (assert (= "hi" v))))
+  (println "Read" n "msgs in" (- (System/currentTimeMillis) begin) "ms"))
+
 ;; `timeout` creates a channel that waits for a specified ms, then closes:
 
 (let [t (timeout 100)
@@ -121,3 +134,6 @@
   (println "Gave up after" (- (System/currentTimeMillis) begin)))
 
 ;; ALT
+
+
+
