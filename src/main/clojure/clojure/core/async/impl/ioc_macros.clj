@@ -585,7 +585,7 @@
     (let [[op & args] form]
       (if-let [var (resolve env op)]
         (if (:macro (meta var))
-          (apply var env form args)
+          (apply var form env args)
           (with-meta (cons (var-name var) args) (meta form)))
         form))
     (macroexpand-1 form)))
