@@ -779,13 +779,15 @@
   (block-references [this] [])
   (emit-instruction [this state-sym]
     (let [[ports opts] ids]
-      `(when-let [cb# (cljs.core.async/do-alts
-                       (fn [val#]
-                         (cljs.core.async.impl.ioc-helpers/async-chan-wrapper
-                          (aset-all! ~state-sym ~VALUE-IDX val# ~STATE-IDX ~cont-block)))
-                           ~ports
-                           ~opts)]
-         (aset-all! ~state-sym ~VALUE-IDX @cb# ~STATE-IDX ~cont-block ~ACTION-IDX :recur)))))
+      `(do (aset-all! ~state-sym ~STATE-IDX ~cont-block ~ACTION-IDX nil)
+         (when-let [cb# (cljs.core.async/do-alts
+                          (fn [val#]
+                            (cljs.core.async.impl.ioc-helpers/async-chan-wrapper
+                              (aset-all! ~state-sym ~VALUE-IDX val#)))
+                          ~ports
+                          ~opts)]
+           (aset-all! ~state-sym ~VALUE-IDX @cb# ~ACTION-IDX :recur))
+         ~state-sym))))
 
 
 (defmethod sexpr-to-ssa 'alts!
