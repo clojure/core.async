@@ -52,15 +52,18 @@
              (dispatch/run #(fn1 val)))))
        nil)))
 
+(defn- nop [])
+
 (defn put!
-  "Asynchronously puts a val into port, calling fn0 when complete. nil
-   values are not allowed. Will throw if closed. If
+  "Asynchronously puts a val into port, calling fn0 (if supplied) when
+   complete. nil values are not allowed. Will throw if closed. If
    on-caller? (default true) is true, and the put is immediately
    accepted, will call fn0 on calling thread.  Returns nil."
+  ([port val] (put! port val nop))
   ([port val fn0] (put! port val fn0 true))
   ([port val fn0 on-caller?]
      (let [ret (impl/put! port val (fn-handler fn0))]
-       (when ret
+       (when (and ret (not= fn0 nop))
          (if on-caller?
            (fn0)
            (dispatch/run fn0)))
