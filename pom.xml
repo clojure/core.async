@@ -28,6 +28,14 @@
     </developer>
   </developers>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>clojurescript</artifactId>
+      <version>0.0-1806</version>
+    </dependency>
+  </dependencies>
+
   <scm>
     <connection>scm:git:git://github.com/clojure/core.async.git</connection>
     <developerConnection>scm:git:git://github.com/clojure/core.async.git</developerConnection>
