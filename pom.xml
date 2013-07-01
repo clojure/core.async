@@ -33,6 +33,7 @@
       <groupId>org.clojure</groupId>
       <artifactId>clojurescript</artifactId>
       <version>0.0-1806</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
