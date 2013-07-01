@@ -62,7 +62,9 @@
                 (do (impl/add! buf val)
                     (box nil))
                 nil))
-            (.unshift puts [handler val]))))))
+            (do
+              (.unshift puts [handler val])
+              nil))))))
 
   impl/ReadPort
   (take! [this handler]

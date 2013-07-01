@@ -17,13 +17,13 @@
   :cljsbuild
   {:builds
    [{:id "simple"
-     :source-paths ["src/test/cljs" "src/main/cljs"]
+     :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
      :compiler {:optimizations :simple
                 :pretty-print true
                 :static-fns true
                 :output-to "tests.js"}}
     {:id "adv"
-     :source-paths ["src/test/cljs" "src/main/cljs"]
+     :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
      :compiler {:optimizations :advanced
                 :pretty-print true
                 :output-to "tests.js"}}]})
