@@ -27,3 +27,6 @@
   (full? [b])
   (remove! [b])
   (add! [b itm]))
+
+(defprotocol Executor
+  (exec [e runnable] "execute runnable asynchronously"))

@@ -8,19 +8,14 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.dispatch
-  (:require [clojure.core.async.impl.concurrent :as conc])
-  (:import [java.lang Runtime]
-           [java.util.concurrent Executors Executor]))
+  (:require [clojure.core.async.impl.protocols :as impl]
+            [clojure.core.async.impl.exec.threadpool :as tp]))
 
 (set! *warn-on-reflection* true)
 
-(defonce the-executor
-  (Executors/newFixedThreadPool
-   (+ 2 conc/processors)
-   (conc/counted-thread-factory "async-dispatch-%d" true)))
+(def executor (delay (tp/thread-pool-executor)))
 
 (defn run
-  "Runs fn0 in a thread pool thread"
-  [^Runnable fn0]
-  (.execute ^Executor the-executor fn0))
-
+  "Runs Runnable r in a thread pool thread"
+  [^Runnable r]
+  (impl/exec @executor r))
