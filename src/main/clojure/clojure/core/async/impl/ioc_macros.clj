@@ -9,7 +9,8 @@
 ;; by Timothy Baldridge
 ;; April 13, 2013
 
-(ns clojure.core.async.impl.ioc-macros
+(ns ^{:skip-wiki true}
+  clojure.core.async.impl.ioc-macros
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
             [clojure.core.async.impl.protocols :as impl]
@@ -53,12 +54,6 @@
 
 ;; State monad stuff, used only in SSA construction
 
-(defn- with-bind [id expr psym body]
-  `(fn [~psym]
-     (let [[~id ~psym] ( ~expr ~psym)]
-       (assert ~psym "Nill plan")
-       ~body)))
-
 (defmacro gen-plan
   "Allows a user to define a state monad binding plan.
 
@@ -69,14 +64,14 @@
   [binds id-expr]
   (let [binds (partition 2 binds)
         psym (gensym "plan_")
-        f (reduce
-           (fn [acc [id expr]]
-             `(~(with-bind id expr psym acc)
-               ~psym))
-           `[~id-expr ~psym]
-           (reverse binds))]
+        forms (reduce
+               (fn [acc [id expr]]
+                 (concat acc `[[~id ~psym] (~expr ~psym)]))
+               []
+               binds)]
     `(fn [~psym]
-       ~f)))
+       (let [~@forms]
+         [~id-expr ~psym]))))
 
 (defn get-plan
   "Returns the final [id state] from a plan. "
@@ -349,7 +344,7 @@
       x
       (if-let [unqualified-translation (*symbol-translations* x)]
         unqualified-translation
-        (if-let [var (resolve *local-env* x)]
+        (if-let [var (and (symbol? x) (resolve *local-env* x))]
           (let [resolved-sym (var-name var)]
             (*symbol-translations* resolved-sym resolved-sym))
           x)))))

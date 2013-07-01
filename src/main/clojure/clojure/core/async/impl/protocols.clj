@@ -6,7 +6,8 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns clojure.core.async.impl.protocols)
+(ns ^{:skip-wiki true}
+  clojure.core.async.impl.protocols)
 
 (defprotocol ReadPort
   (take! [port fn1-handler] "derefable val if taken, nil if take was enqueued"))

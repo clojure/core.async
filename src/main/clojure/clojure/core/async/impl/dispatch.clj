@@ -6,10 +6,10 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns clojure.core.async.impl.dispatch
+(ns ^{:skip-wiki true}
+  clojure.core.async.impl.dispatch
   (:require [clojure.string :as str]
-            [clojure.core.async.impl.protocols :as impl]
-            [clojure.core.async.impl.exec.forkjoin :as fj]))
+            [clojure.core.async.impl.protocols :as impl]))
 
 (set! *warn-on-reflection* true)
 
@@ -54,11 +54,17 @@
 (defn best-executor
   "Determine best executor for current environment and load it."
   [jdk class-check-fn]
+  {:post [(not (nil? %))]}
   (let [ver (str/join "." (take 2 (version-data java-spec-version)))
         checks (get jdk-checks ver (jdk-checks "else"))
         class-checks (map #(when (class-check-fn %) %) checks)
-        best-class (first (drop-while nil? class-checks))]
-    ((resolve (class-to-executor-ns best-class)))))
+        best-class (first (drop-while nil? class-checks))
+        executor-symbol (class-to-executor-ns best-class)]
+    (println "best-class" best-class)
+    (println "executor" (class-to-executor-ns best-class))
+    (println "resolved" (resolve (class-to-executor-ns best-class)))
+    (require (symbol (namespace executor-symbol)))
+    ((resolve executor-symbol))))
 
 (def executor (delay (best-executor (version-data java-spec-version) class-exists?)))
 

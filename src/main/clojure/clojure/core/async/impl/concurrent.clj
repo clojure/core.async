@@ -6,7 +6,8 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns clojure.core.async.impl.concurrent
+(ns ^{:skip-wiki true}
+  clojure.core.async.impl.concurrent
   (:import [java.util.concurrent ThreadFactory]))
 
 (set! *warn-on-reflection* true)
