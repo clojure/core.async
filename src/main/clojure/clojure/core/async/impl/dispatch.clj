@@ -69,7 +69,6 @@
 (def executor (delay (best-executor (version-data java-spec-version) class-exists?)))
 
 (defn run
-  "Runs fn0 in a thread pool thread"
-  [^Runnable task]
-  (impl/exec @executor task))
-
+  "Runs Runnable r in a thread pool thread"
+  [^Runnable r]
+  (impl/exec @executor r))
