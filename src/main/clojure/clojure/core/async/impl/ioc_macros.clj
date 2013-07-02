@@ -28,9 +28,8 @@
 (def ^:const FN-IDX 0)
 (def ^:const STATE-IDX 1)
 (def ^:const VALUE-IDX 2)
-(def ^:const ACTION-IDX 3)
-(def ^:const BINDINGS-IDX 4)
-(def ^:const USER-START-IDX 5)
+(def ^:const BINDINGS-IDX 3)
+(def ^:const USER-START-IDX 4)
 
 (defn aset-object [^AtomicReferenceArray arr idx ^Object o]
   (.set arr idx o))
@@ -553,6 +552,14 @@
     res (add-instruction (->Const ::value))]
    res))
 
+(defn fixup-aliases [sym]
+  (let [aliases (ns-aliases *ns*)]
+    (if-not (namespace sym)
+      sym
+      (if-let [^clojure.lang.Namespace ns (aliases (symbol (namespace sym)))]
+        (symbol (name (.getName ns)) (name sym))
+        sym))))
+
 (defmethod -item-to-ssa :list
   [lst]
   (gen-plan
@@ -561,7 +568,7 @@
     val (let [exp (expand locals lst)]
           (if (seq? exp)
             (if (symbol? (first exp))
-              (let [f (first exp)]
+              (let [f (fixup-aliases (first exp))]
                 (cond
                  (is-special? f) (sexpr-to-ssa exp)
                  (get locals f) (default-sexpr exp)

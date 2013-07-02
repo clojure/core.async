@@ -272,7 +272,7 @@
                       (for [x (range 2)] x)))))
         "locals inside go are protected from macroexpansion")
 
-    #_(let [c (identity-chan 42)]
+    (let [c (identity-chan 42)]
       (is (= [42 c] (<!! (go (async/alts! [c]))))
           "symbol translations apply to resolved symbols")))
 
