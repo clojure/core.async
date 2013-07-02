@@ -13,7 +13,6 @@
             [clojure.core.async.impl.timers :as timers]
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.ioc-macros :as ioc]
-            [clojure.core.async.impl.ioc-alt]
             [clojure.core.async.impl.mutex :as mutex]
             [clojure.core.async.impl.concurrent :as conc]
             )
@@ -322,6 +321,18 @@
   [& clauses]
   (do-alt `alts! clauses))
 
+(defn ioc-alts! [state cont-block ports & {:as opts}]
+  (ioc/aset-all! state ioc/STATE-IDX cont-block)
+  (when-let [cb (clojure.core.async/do-alts
+                  (fn [val]
+                    (ioc/aset-all! state ioc/VALUE-IDX val)
+                    (ioc/run-state-machine state))
+                  ports
+                  opts)]
+    (ioc/aset-all! state ioc/VALUE-IDX @cb)
+    :recur))
+
+
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
   calling thread. Additionally, any visible calls to <!, >! and alt!/alts!
@@ -333,20 +344,16 @@
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (binding [ioc/*symbol-translations* '{alts! clojure.core.async.impl.ioc-alt/alts!
-                                        clojure.core.async/alts! clojure.core.async.impl.ioc-alt/alts!
-                                        case case}
-            ioc/*local-env* &env]
-    `(let [c# (chan 1)
-           captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
-       (dispatch/run
-        (fn []
-          (let [f# ~(ioc/state-machine body 1)
-                state# (-> (f#)
-                           (ioc/aset-all! ioc/USER-START-IDX c#
-                                          ioc/BINDINGS-IDX captured-bindings#))]
-            (ioc/async-chan-wrapper state#))))
-       c#)))
+  `(let [c# (chan 1)
+         captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
+     (dispatch/run
+      (fn []
+        (let [f# ~(ioc/state-machine body 1 &env ioc/async-custom-terminators)
+              state# (-> (f#)
+                         (ioc/aset-all! ioc/USER-START-IDX c#
+                                        ioc/BINDINGS-IDX captured-bindings#))]
+          (ioc/run-state-machine state#))))
+     c#))
 
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
