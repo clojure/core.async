@@ -87,6 +87,15 @@
            (runner [(pause 1)
                     (pause 2)
                     (pause 3)]))))
+  
+  (testing "keywords as functions"
+    (is (= :bar
+           (runner (:foo (pause {:foo :bar}))))))
+
+  (testing "vectors as functions"
+    (is (= 2
+           (runner ([1 2] 1)))))
+  
   (testing "dotimes"
     (is (= 42 (runner
                (dotimes [x 10]
