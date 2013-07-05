@@ -471,6 +471,10 @@
   (gen-plan
    [val-ids (all (map item-to-ssa vals))
     recurs (get-binding :recur-nodes)
+    _ (do (assert (= (count val-ids)
+                     (count recurs))
+                  "Wrong number of arguments to recur")
+          (no-op))
     _ (all (map #(add-instruction (->Set %1 %2))
                 recurs
                 val-ids))
