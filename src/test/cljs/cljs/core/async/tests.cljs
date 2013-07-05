@@ -26,7 +26,7 @@
   (.log js/console x)
   x)
 
-(go (is= (debug (<! (identity-chan 42))) 42))
+(go (is= (<! (identity-chan 42)) 42))
 
 (let [c (identity-chan 42)]
   (go (is= [42 c]

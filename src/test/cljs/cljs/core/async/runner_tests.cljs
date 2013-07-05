@@ -2,10 +2,15 @@
   (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close!]]
             [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
-            [cljs.core.async.impl.protocols :refer [full? add! remove!]])
+            [cljs.core.async.impl.protocols :refer [full? add! remove!]]
+            [cljs.core.async.impl.ioc-helpers :as ioch])
   (:require-macros [cljs.core.async.test-helpers :as h :refer [is= is deftest testing runner]]
-                   [cljs.core.async.macros :as m :refer [go]]))
+                   [cljs.core.async.macros :as m :refer [go]]
+                   [cljs.core.async.impl.ioc-macros :as ioc]))
 
+(defn pause [state blk val]
+  (ioc/aset-all! state ioch/STATE-IDX blk ioch/VALUE-IDX val)
+  :recur)
 
 (deftest runner-tests
   (testing "do blocks"
@@ -73,6 +78,15 @@
                 (dotimes [x 10]
                   (pause x))
                 42)))
+
+  (testing "keywords as functions"
+    (is (= :bar
+           (runner (:foo (pause {:foo :bar}))))))
+
+  (testing "vectors as functions"
+    (is (= 2
+           (runner ([1 2] 1)))))
+
   
   (testing "fn closures"
     (is= 42
@@ -100,18 +114,18 @@
     (is= 42
         (runner
          (try 42
-              (catch Object ex ex))))
+              (catch ex ex))))
     (is= 42
         (runner
          (try
            (assert false)
-           (catch Object ex 42))))
+           (catch ex 42))))
 
     (let [a (atom false)
           v (runner
              (try
                true
-               (catch Object ex false)
+               (catch ex false)
                (finally (pause (reset! a true)))))]
       (is (and @a v)))
 

@@ -733,7 +733,7 @@
                                    (:blocks machine)))]
                   (if (identical? result# :recur)
                     (recur)
-                    ~state-sym)))
+                    result#)))
               (finally
                 (clojure.lang.Var/resetThreadBindingFrame old-frame#))))))))
 
