@@ -104,7 +104,7 @@
                        (if (>= (.-key x') k)
                          x'
                          (recur x')))))]
-          (if nx
+          (if-not (nil? nx)
             (recur nx (dec level))
             (recur x (dec level))))
         (when-not (identical? x header)
@@ -145,6 +145,6 @@
             (fn []
               (.remove timeouts-map timeout)
               (impl/close! timeout-channel))
-            timeout)
+            msecs)
           timeout-channel))))
 
