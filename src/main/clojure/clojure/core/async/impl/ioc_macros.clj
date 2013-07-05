@@ -23,8 +23,6 @@
   x)
 
 
-(defonce ^:private ^java.util.concurrent.atomic.AtomicLong block-id-gen (java.util.concurrent.atomic.AtomicLong.))
-
 (def ^:const FN-IDX 0)
 (def ^:const STATE-IDX 1)
 (def ^:const VALUE-IDX 2)
@@ -158,16 +156,17 @@
 (defn add-block
   "Adds a new block, returns its id, but does not change the current block (does not call set-block)."
   []
-  (let [blk-id (.incrementAndGet block-id-gen)]
-    (gen-plan
-     [cur-blk (get-block)
-      _ (assoc-in-plan [:blocks blk-id] [])
-      catches (get-binding :catch)
-      _ (assoc-in-plan [:block-catches blk-id] catches)
-      _ (if-not cur-blk
-          (assoc-in-plan [:start-block] blk-id)
-          (no-op))]
-     blk-id)))
+  (gen-plan
+   [_ (update-in-plan [:block-id] (fnil inc 0))
+    blk-id (get-in-plan [:block-id])
+    cur-blk (get-block)
+    _ (assoc-in-plan [:blocks blk-id] [])
+    catches (get-binding :catch)
+    _ (assoc-in-plan [:block-catches blk-id] catches)
+    _ (if-not cur-blk
+        (assoc-in-plan [:start-block] blk-id)
+        (no-op))]
+   blk-id))
 
 
 (defn instruction? [x]
