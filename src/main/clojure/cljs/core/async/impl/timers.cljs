@@ -110,6 +110,23 @@
         (when-not (identical? x header)
           x))))
   
+  (floorEntry [coll k]
+    (loop [x header level level]
+      (if-not (neg? level)
+        (let [nx (loop [x x]
+                   (let [x' (aget (.-forward x) level)]
+                     (if-not (nil? x')
+                       (if (> (.-key x') k)
+                         x
+                         (recur x'))
+                       (when (zero? level)
+                         x))))]
+          (if nx
+            (recur nx (dec level))
+            (recur x (dec level))))
+        (when-not (identical? x header)
+          x))))
+
   ISeqable
   (-seq [coll]
     (letfn [(iter [node]
