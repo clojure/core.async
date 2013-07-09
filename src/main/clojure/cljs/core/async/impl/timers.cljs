@@ -153,15 +153,18 @@
   "returns a channel that will close after msecs"
   [msecs]
   (let [timeout (+ (.valueOf (js/Date.)) msecs)
-        me (.ceilingEntry timeouts-map timeout)]
-    (or (when (and me (< (.-key me) (+ timeout TIMEOUT_RESOLUTION_MS)))
-          (.-val me))
-        (let [timeout-channel (channels/chan nil)]
-          (.put timeouts-map timeout timeout-channel)
-          (dispatch/queue-delay
-            (fn []
-              (.remove timeouts-map timeout)
-              (impl/close! timeout-channel))
-            msecs)
-          timeout-channel))))
+        fe (.floorEntry timeouts-map timeout)]
+    (if (and fe (> (.-key fe) (- timeout TIMEOUT_RESOLUTION_MS)))
+      (.-val fe)
+      (let [ce (.ceilingEntry timeouts-map timeout)]
+        (if (and ce (< (.-key ce) (+ timeout TIMEOUT_RESOLUTION_MS)))
+          (.-val ce)
+          (let [timeout-channel (channels/chan nil)]
+            (.put timeouts-map timeout timeout-channel)
+            (dispatch/queue-delay
+              (fn []
+                (.remove timeouts-map timeout)
+                (impl/close! timeout-channel))
+              msecs)
+            timeout-channel))))))
 
