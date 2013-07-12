@@ -12,10 +12,10 @@
   (take! [port fn1-handler] "derefable val if taken, nil if take was enqueued"))
 
 (defprotocol WritePort
-  (put! [port val fn0-handler] "derefable nil if put, nil if put was enqueued. Must throw on nil val."))
-
-(defprotocol Channel
+  (put! [port val fn0-handler] "derefable nil if put, nil if put was enqueued. Must throw on nil val.")
   (close! [chan]))
+
+(defprotocol Channel)
 
 (defprotocol Handler
   (active? [h] "returns true if has callback. Must work w/o lock")

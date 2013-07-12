@@ -117,3 +117,14 @@
            (put! c :enqueues #(deliver p :proceeded))  ;; enqueue a put
            (<!! c)        ;; make room in the buffer
            (deref p 250 :timeout)))))
+
+(deftest constrained-ports
+  (let [c (chan 1)
+        ro (<port c)
+        wo (>port c)]
+    (is (thrown? IllegalArgumentException (>!! ro :foo)))
+    (>!! wo :foo)
+    (is (thrown? IllegalArgumentException (<!! wo)))
+    (is (= (<!! ro) :foo))
+    (is (thrown? IllegalArgumentException (close! ro)))
+    (close! wo)))

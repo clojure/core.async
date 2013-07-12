@@ -37,6 +37,16 @@
   ([] (chan nil))
   ([buf-or-n] (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n))))
 
+(defn <port
+  "Returns a receive-only port wrapping the given channel."
+  [channel]
+  (channels/<port channel))
+
+(defn >port
+  "Returns a send-only port wrapping the given channel."
+  [channel]
+  (channels/>port channel))
+
 (defn timeout
   "Returns a channel that will close after msecs"
   [msecs]
