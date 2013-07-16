@@ -43,6 +43,10 @@
     (is (= nil
            (runner (when (pause false)
                      (pause true))))))
+
+  (testing "quote"
+    (is (= '(1 2 3)
+           (runner (pause '(1 2 3))))))
   
   (testing "loop expressions"
     (is (= 100

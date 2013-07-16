@@ -87,6 +87,9 @@
     (is (= 2
            (runner ([1 2] 1)))))
 
+  (testing "quote"
+    (is= '(1 2 3)
+        (runner (pause '(1 2 3)))))
   
   (testing "fn closures"
     (is= 42
