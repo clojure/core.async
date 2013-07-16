@@ -126,7 +126,13 @@
            (runner
             (case :baz
               :foo 44
-              :default)))))
+              :default))))
+    (is (= 42
+           (runner
+            (loop [x 0]
+              (case (int x)
+                0 (recur (inc x))
+                1 42))))))
 
   (testing "try"
     (is (= 42

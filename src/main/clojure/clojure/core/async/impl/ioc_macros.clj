@@ -403,7 +403,9 @@
                                  [blk-id (add-block)
                                   _ (set-block blk-id)
                                   expr-id (item-to-ssa expr)
-                                  _ (add-instruction (->Jmp expr-id end-blk))]
+                                  _ (if (not= expr-id ::terminated)
+                                      (add-instruction (->Jmp expr-id end-blk))
+                                      (no-op))]
                                  blk-id))
                               (map second clauses)))
       default-block (if default
@@ -411,7 +413,9 @@
                        [blk-id (add-block)
                         _ (set-block blk-id)
                         expr-id (item-to-ssa default)
-                        _ (add-instruction (->Jmp expr-id end-blk))]
+                        _ (if (not= expr-id ::terminated)
+                            (add-instruction (->Jmp expr-id end-blk))
+                            (no-op))]
                        blk-id)
                       (no-op))
       _ (set-block start-blk)
