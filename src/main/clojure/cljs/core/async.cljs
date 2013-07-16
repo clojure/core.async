@@ -3,6 +3,7 @@
               [cljs.core.async.impl.channels :as channels]
               [cljs.core.async.impl.buffers :as buffers]
               [cljs.core.async.impl.timers :as timers]
+              [cljs.core.async.impl.dispatch :as dispatch]
               [cljs.core.async.impl.ioc-helpers :as helpers]))
 
 
