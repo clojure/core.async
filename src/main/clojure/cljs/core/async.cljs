@@ -6,8 +6,6 @@
               [cljs.core.async.impl.dispatch :as dispatch]
               [cljs.core.async.impl.ioc-helpers :as helpers]))
 
-
-
 (defn- fn-handler [f]
   (reify
     impl/Handler
@@ -43,6 +41,12 @@
   [msecs]
   (timers/timeout msecs))
 
+(defn <!
+  "takes a val from port. Must be called inside a (go ...) block. Will
+  return nil if closed. Will park if nothing is available."
+  [port]
+  (assert nil "<! used not in (go ...) block"))
+
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
    if closed. If on-caller? (default true) is true, and value is
@@ -59,6 +63,12 @@
        nil)))
 
 (defn- nop [])
+
+(defn >!
+  "puts a val into port. nil values are not allowed. Must be called
+  inside a (go ...) block. Will park if no buffer space is available."
+  [port val]
+  (assert nil ">! used not in (go ...) block"))
 
 (defn put!
   "Asynchronously puts a val into port, calling fn0 (if supplied) when
@@ -137,5 +147,27 @@
        (when-let [got (and (impl/active? flag) (impl/commit flag))]
          (channels/box [(:default opts) :default]))))))
 
+(defn alts!
+  "Completes at most one of several channel operations. Must be called
+  inside a (go ...) block. ports is a set of channel endpoints, which
+  can be either a channel to take from or a vector of
+  [channel-to-put-to val-to-put], in any combination. Takes will be
+  made as if by <!, and puts will be made as if by >!. Unless
+  the :priority option is true, if more than one port operation is
+  ready a non-deterministic choice will be made. If no operation is
+  ready and a :default value is supplied, [default-val :default] will
+  be returned, otherwise alts! will park until the first operation to
+  become ready completes. Returns [val port] of the completed
+  operation, where val is the value taken for takes, and nil for puts.
 
+  opts are passed as :key val ... Supported options:
 
+  :default val - the value to use if none of the operations are immediately ready
+  :priority true - (default nil) when true, the operations will be tried in order.
+
+  Note: there is no guarantee that the port exps or val exprs will be
+  used, nor in what order should they be, so they should not be
+  depended upon for side effects."
+
+  [ports & {:as opts}]
+  (assert nil "alts! used not in (go ...) block"))
