@@ -27,6 +27,16 @@
       (dotimes [x 10]
         (is (= (<!! remote-chan) x)))))
 
+  (testing "can send and receive in reverse"
+    (let [[local remote] (apply simulated-connection (channel-transports))
+          local-chan (chan)
+          remote-chan (chan)]
+      (register-chan local "test" local-chan)
+      (duct-> remote-chan remote "test")
+      (send-seq remote-chan (range 10))
+      (dotimes [x 10]
+        (is (= (<!! local-chan) x)))))
+
   (testing "multiple ducts can point to the same remote endpoint"
     (let [[local remote] (apply simulated-connection (channel-transports))
           local-chan1 (chan)
@@ -46,7 +56,7 @@
 
 (deftest basic-localhost-tcp-tests
   (testing "can send and receive a single message"
-    (let [[local remote] (apply simulated-connection #_(channel-transports) (localhost-tcp-transports 10422))
+    (let [[local remote] (apply simulated-connection (localhost-tcp-transports 10422))
           local-chan (chan)
           remote-chan (chan)]
       (register-chan remote "test" remote-chan)
