@@ -120,7 +120,7 @@
              0 (recur (inc x))
              1 42)))))
 
-  (testing "try"
+  #_(testing "try"
     (is= 42
         (runner
          (try 42
