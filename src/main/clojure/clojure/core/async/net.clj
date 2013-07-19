@@ -1,7 +1,13 @@
 (ns clojure.core.async.net
   (:require [clojure.core.async :refer :all]))
 
+;; This is a highly experimental implementation of networked channels.
+;; This code is not to be considered as finalized, well thought
+;; through or even working. It's most likely full of hacks and poorly
+;; thought out code.
 
+;; What this is, is a playground to think about how network channels
+;; might be implemented with core.async. 
 
 (defprotocol IRemoteChannelManager
   (net-send [this nm data ack-chan])
