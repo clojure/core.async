@@ -1,5 +1,7 @@
 (ns clojure.core.async.net
-  (:require [clojure.core.async :refer :all]))
+  (:require [clojure.core.async :refer :all]
+            [clojure.java.io :refer [reader writer]])
+  (:import [java.net ServerSocket Socket]))
 
 ;; This is a highly experimental implementation of networked channels.
 ;; This code is not to be considered as finalized, well thought
@@ -80,3 +82,48 @@
        (let [data (<! c)]
          (net-send manager remote-name data ack-chan)
          (assert (= (<! ack-chan) :ACK) "Unknown reponse on ack-chan"))))))
+
+
+
+
+(defn- localhost-tcp-server [port]
+  (future (let [take-chan (chan)
+                put-chan (chan)
+                server (ServerSocket. port)
+                socket (.accept server)
+                out (writer (.getOutputStream socket))
+                in (java.io.PushbackReader. (reader (.getInputStream socket)))]
+            (thread
+             (while true
+               (>!! take-chan (read in))))
+            (thread
+             (while true
+               (binding [*out* out]
+                 (prn (<!! put-chan))
+                 (flush))))
+            (reify ITransport
+              (get-put-chan [this] put-chan)
+              (get-take-chan [this] take-chan)))))
+
+(defn- localhost-tcp-client [port]
+  (future (let [take-chan (chan)
+                put-chan (chan)
+                socket (Socket. "localhost" port)
+                out (writer (.getOutputStream socket))
+                in (java.io.PushbackReader. (reader (.getInputStream socket)))]
+            (thread
+             (while true
+               (>!! take-chan (read in))))
+            (thread
+             (while true
+               (binding [*out* out]
+                 (prn (<!! put-chan))
+                 (flush))))
+            (reify ITransport
+              (get-put-chan [this] put-chan)
+              (get-take-chan [this] take-chan)))))
+
+(defn localhost-tcp-transports [port]
+  (let [remote (localhost-tcp-server port)
+        local (localhost-tcp-client port)]
+    [@local @remote]))

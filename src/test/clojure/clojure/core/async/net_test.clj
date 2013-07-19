@@ -1,7 +1,8 @@
 (ns clojure.core.async.net-test
   (:require [clojure.test :refer :all]
             [clojure.core.async :refer :all]
-            [clojure.core.async.net :refer [duct-> simulated-connection register-chan channel-transports]]))
+            [clojure.core.async.net :refer [duct-> simulated-connection register-chan channel-transports
+                                            localhost-tcp-transports]]))
 
 
 (defn send-seq [c seq]
@@ -41,3 +42,15 @@
       
       (is (= (frequencies (take-seq remote-chan 6))
              {0 2 1 2 2 2})))))
+
+
+(deftest basic-localhost-tcp-tests
+  (testing "can send and receive a single message"
+    (let [[local remote] (apply simulated-connection #_(channel-transports) (localhost-tcp-transports 10422))
+          local-chan (chan)
+          remote-chan (chan)]
+      (register-chan remote "test" remote-chan)
+      (duct-> local-chan local "test")
+      (send-seq local-chan (range 10))
+      (dotimes [x 10]
+        (is (= (<!! remote-chan) x))))))
