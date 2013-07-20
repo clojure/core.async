@@ -725,26 +725,28 @@
         local-map (atom {::next-idx local-start-idx})
         block-catches (:block-catches machine)
         state-val-sym (gensym "state_val_")]
-    `(fn state-machine#
-       ([] (aset-all! (make-array ~state-arr-size)
-                      ~FN-IDX state-machine#
-                      ~STATE-IDX ~(:start-block machine)))
-       ([~state-sym]
-          (loop []
-            (let [~state-val-sym (aget ~state-sym ~STATE-IDX)
-                  result# (cond
-                            ~@(mapcat
-                                (fn [[id blk]]
-                                  [`(== ~state-val-sym ~id)
-                                    (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                                   (build-block-body state-sym blk))
-                                                ~state-sym ~(build-new-state local-map index state-sym blk)]
-                                           ~(terminate-block (last blk) state-sym custom-terminators))
-                                      (wrap-with-tries state-sym (get block-catches id)))])
-                                (:blocks machine)))]
-              (if (identical? result# :recur)
-                (recur)
-                result#)))))))
+    `(let [switch# (fn [~state-sym]
+                     (let [~state-val-sym (aget ~state-sym ~STATE-IDX)]
+                       (cond
+                         ~@(mapcat
+                             (fn [[id blk]]
+                               [`(== ~state-val-sym ~id)
+                                 (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                                (build-block-body state-sym blk))
+                                             ~state-sym ~(build-new-state local-map index state-sym blk)]
+                                        ~(terminate-block (last blk) state-sym custom-terminators))
+                                   (wrap-with-tries state-sym (get block-catches id)))])
+                             (:blocks machine)))))]
+       (fn state-machine#
+         ([] (aset-all! (make-array ~state-arr-size)
+               ~FN-IDX state-machine#
+               ~STATE-IDX ~(:start-block machine)))
+         ([~state-sym]
+           (loop []
+             (let [result# (switch# ~state-sym)]
+               (if (identical? result# :recur)
+                 (recur)
+                 result#))))))))
 
 
 (def async-custom-terminators
