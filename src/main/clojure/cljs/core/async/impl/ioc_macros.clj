@@ -723,22 +723,25 @@
         local-start-idx (+ num-user-params USER-START-IDX)
         state-arr-size (+ local-start-idx (count-persistent-values index))
         local-map (atom {::next-idx local-start-idx})
-        block-catches (:block-catches machine)]
+        block-catches (:block-catches machine)
+        state-val-sym (gensym "state_val_")]
     `(fn state-machine#
        ([] (aset-all! (make-array ~state-arr-size)
                       ~FN-IDX state-machine#
                       ~STATE-IDX ~(:start-block machine)))
        ([~state-sym]
           (loop []
-            (let [result# (case (int (aget ~state-sym ~STATE-IDX))
+            (let [~state-val-sym (aget ~state-sym ~STATE-IDX)
+                  result# (cond
                             ~@(mapcat
-                               (fn [[id blk]]
-                                 [id (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                                          (build-block-body state-sym blk))
+                                (fn [[id blk]]
+                                  [`(== ~state-val-sym ~id)
+                                    (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                                   (build-block-body state-sym blk))
                                                 ~state-sym ~(build-new-state local-map index state-sym blk)]
-                                            ~(terminate-block (last blk) state-sym custom-terminators))
-                                         (wrap-with-tries state-sym (get block-catches id)))])
-                               (:blocks machine)))]
+                                           ~(terminate-block (last blk) state-sym custom-terminators))
+                                      (wrap-with-tries state-sym (get block-catches id)))])
+                                (:blocks machine)))]
               (if (identical? result# :recur)
                 (recur)
                 result#)))))))
