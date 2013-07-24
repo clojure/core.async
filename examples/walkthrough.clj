@@ -120,7 +120,7 @@
 
 (let [c (chan)
       begin (System/currentTimeMillis)]
-  (alts!! [c (timeout 100)])
+  (alts!! [c (timeout 500)])
   (println "Gave up after" (- (System/currentTimeMillis) begin)))
 
 ;; ALT
