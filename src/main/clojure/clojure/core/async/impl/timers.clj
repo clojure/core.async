@@ -35,10 +35,7 @@
        -1
        (if (= timestamp ostamp)
          0
-         1))))
-  impl/Channel
-  (close! [this]
-    (impl/close! channel)))
+         1)))))
 
 (defn timeout
   "returns a channel that will close after msecs"
@@ -59,7 +56,7 @@
     (loop []
       (let [^TimeoutQueueEntry tqe (.take q)]
         (.remove timeouts-map (.timestamp tqe) tqe)
-        (impl/close! tqe))
+        (impl/close! (.channel tqe)))
       (recur))))
 
 (defonce timeout-daemon

@@ -38,34 +38,6 @@
             (do (.splice takes idx 1)
                 (recur idx)))))))
 
-  impl/WritePort
-  (put! [this val handler]
-    (assert (not (nil? val)) "Can't put nil in on a channel")
-    (cleanup this)
-    (if @closed
-      (box nil)
-      (let [[put-cb take-cb] (loop [taker-idx 0]
-                               (when (< taker-idx (.-length takes))
-                                 (let [taker (aget takes taker-idx)]
-                                   (if (and (impl/active? taker)
-                                            (impl/active? handler))
-                                     (do (.splice takes taker-idx 1)
-                                         [(impl/commit handler) (impl/commit taker)])
-                                     (recur (inc taker-idx))))))]
-        (if (and put-cb take-cb)
-          (do (dispatch/run (fn [] (take-cb val)))
-              (box nil))
-          (if (and buf (not (impl/full? buf)))
-            (let [put-cb (and (impl/active? handler)
-                              (impl/commit handler))]
-              (if put-cb
-                (do (impl/add! buf val)
-                    (box nil))
-                nil))
-            (do
-              (.unshift puts [handler val])
-              nil))))))
-
   impl/ReadPort
   (take! [this handler]
     (cleanup this)
@@ -93,7 +65,34 @@
               nil)
             (do (.unshift takes handler)
                 nil))))))
-  impl/Channel
+
+  impl/WritePort
+  (put! [this val handler]
+    (assert (not (nil? val)) "Can't put nil in on a channel")
+    (cleanup this)
+    (if @closed
+      (box nil)
+      (let [[put-cb take-cb] (loop [taker-idx 0]
+                               (when (< taker-idx (.-length takes))
+                                 (let [taker (aget takes taker-idx)]
+                                   (if (and (impl/active? taker)
+                                            (impl/active? handler))
+                                     (do (.splice takes taker-idx 1)
+                                         [(impl/commit handler) (impl/commit taker)])
+                                     (recur (inc taker-idx))))))]
+        (if (and put-cb take-cb)
+          (do (dispatch/run (fn [] (take-cb val)))
+              (box nil))
+          (if (and buf (not (impl/full? buf)))
+            (let [put-cb (and (impl/active? handler)
+                              (impl/commit handler))]
+              (if put-cb
+                (do (impl/add! buf val)
+                    (box nil))
+                nil))
+            (do
+              (.unshift puts [handler val])
+              nil))))))
   (close! [this]
     (cleanup this)
     (if @closed
@@ -109,3 +108,16 @@
 (defn chan [buf]
   (ManyToManyChannel. (make-array 0) (make-array 0) buf (atom nil)))
 
+(defn <port [c]
+  (reify
+    impl/ReadPort
+    (take! [this fn1-handler]
+      (impl/take! c fn1-handler))))
+
+(defn >port [c]
+  (reify
+    impl/WritePort
+    (put! [this val handler]
+      (impl/put! c val handler))
+    (close! [this]
+      (impl/close! c))))

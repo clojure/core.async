@@ -42,55 +42,6 @@
          (when (.hasNext iter)
            (recur (.next iter)))))))
 
-  impl/WritePort
-  (put!
-   [this val handler]
-   (when (nil? val)
-     (throw (IllegalArgumentException. "Can't put nil on channel")))
-   (.lock mutex)
-   (cleanup this)
-   (if @closed
-     (do (.unlock mutex)
-         (box nil))
-     (let [^Lock handler handler
-           iter (.iterator takes)
-           [put-cb take-cb] (when (.hasNext iter)
-                              (loop [^Lock taker (.next iter)]
-                                (if (< (impl/lock-id handler) (impl/lock-id taker))
-                                  (do (.lock handler) (.lock taker))
-                                  (do (.lock taker) (.lock handler)))
-                                (let [ret (when (and (impl/active? handler) (impl/active? taker))
-                                            [(impl/commit handler) (impl/commit taker)])]
-                                  (.unlock handler)
-                                  (.unlock taker)
-                                  (if ret
-                                    (do
-                                      (.remove iter)
-                                      ret)
-                                    (when (.hasNext iter)
-                                      (recur (.next iter)))))))]
-       (if (and put-cb take-cb)
-         (do
-           (.unlock mutex)
-           (dispatch/run (fn [] (take-cb val)))
-           (box nil))
-         (if (and buf (not (impl/full? buf)))
-           (do
-             (.lock handler)
-             (let [put-cb (and (impl/active? handler) (impl/commit handler))]
-               (.unlock handler)
-               (if put-cb
-                 (do (impl/add! buf val)
-                     (.unlock mutex)
-                     (box nil))
-                 (do (.unlock mutex)
-                     nil))))
-           (do
-             (when (impl/active? handler)
-               (.add puts [handler val]))
-             (.unlock mutex)
-             nil))))))
-  
   impl/ReadPort
   (take!
    [this handler]
@@ -159,7 +110,54 @@
                (.unlock mutex)
                nil)))))))
 
-  impl/Channel
+  impl/WritePort
+  (put!
+   [this val handler]
+   (when (nil? val)
+     (throw (IllegalArgumentException. "Can't put nil on channel")))
+   (.lock mutex)
+   (cleanup this)
+   (if @closed
+     (do (.unlock mutex)
+         (box nil))
+     (let [^Lock handler handler
+           iter (.iterator takes)
+           [put-cb take-cb] (when (.hasNext iter)
+                              (loop [^Lock taker (.next iter)]
+                                (if (< (impl/lock-id handler) (impl/lock-id taker))
+                                  (do (.lock handler) (.lock taker))
+                                  (do (.lock taker) (.lock handler)))
+                                (let [ret (when (and (impl/active? handler) (impl/active? taker))
+                                            [(impl/commit handler) (impl/commit taker)])]
+                                  (.unlock handler)
+                                  (.unlock taker)
+                                  (if ret
+                                    (do
+                                      (.remove iter)
+                                      ret)
+                                    (when (.hasNext iter)
+                                      (recur (.next iter)))))))]
+       (if (and put-cb take-cb)
+         (do
+           (.unlock mutex)
+           (dispatch/run (fn [] (take-cb val)))
+           (box nil))
+         (if (and buf (not (impl/full? buf)))
+           (do
+             (.lock handler)
+             (let [put-cb (and (impl/active? handler) (impl/commit handler))]
+               (.unlock handler)
+               (if put-cb
+                 (do (impl/add! buf val)
+                     (.unlock mutex)
+                     (box nil))
+                 (do (.unlock mutex)
+                     nil))))
+           (do
+             (when (impl/active? handler)
+               (.add puts [handler val]))
+             (.unlock mutex)
+             nil))))))
   (close!
    [this]
    (.lock mutex)
@@ -186,3 +184,16 @@
 (defn chan [buf]
  (ManyToManyChannel. (LinkedList.) (LinkedList.) buf (atom nil) (mutex/mutex)))
 
+(defn <port [c]
+  (reify
+    impl/ReadPort
+    (take! [this fn1-handler]
+      (impl/take! c fn1-handler))))
+
+(defn >port [c]
+  (reify
+    impl/WritePort
+    (put! [this val handler]
+      (impl/put! c val handler))
+    (close! [this]
+      (impl/close! c))))
