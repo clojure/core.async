@@ -120,22 +120,22 @@
              0 (recur (inc x))
              1 42)))))
 
-  #_(testing "try"
+  (testing "try"
     (is= 42
         (runner
          (try 42
-              (catch ex ex))))
+              (catch js/Error ex ex))))
     (is= 42
         (runner
          (try
            (assert false)
-           (catch ex 42))))
+           (catch js/Error ex 42))))
 
     (let [a (atom false)
           v (runner
              (try
                true
-               (catch ex false)
+               (catch js/Error ex false)
                (finally (pause (reset! a true)))))]
       (is (and @a v)))
 
@@ -143,6 +143,6 @@
           v (runner
              (try
                (assert false)
-               (catch Object ex true)
+               (catch js/Error ex true)
                (finally (reset! a true))))]
       (is (and @a v)))))

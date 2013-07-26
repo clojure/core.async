@@ -431,7 +431,7 @@
         finally (next (first (filter finally-fn body)))
         body (remove finally-fn body)
         catch (next (first (filter catch-fn body)))
-        [ex-bind & catch-body] catch
+        [ex ex-bind & catch-body] catch
         body (remove catch-fn body)]
     (gen-plan
      [end-blk (add-block)
@@ -459,7 +459,7 @@
                                                            end-blk)))
                     _ (pop-binding :locals)
                     _ (set-block cur-blk)
-                    _ (push-alter-binding :catch (fnil conj []) [blk])]
+                    _ (push-alter-binding :catch (fnil conj []) [ex blk])]
                    blk)
                   (no-op))
       body-blk (add-block)
@@ -707,10 +707,10 @@
 (defn- wrap-with-tries [body state-sym tries]
   (if tries
     (-> (reduce
-         (fn [acc [blk]]
+         (fn [acc [ex blk]]
            `(try
               ~acc
-              (catch ex# (do (aset-all! ~state-sym ~STATE-IDX ~blk ~VALUE-IDX ex#)
+              (catch ~ex ex# (do (aset-all! ~state-sym ~STATE-IDX ~blk ~VALUE-IDX ex#)
                                  :recur))))
          body
          tries))
