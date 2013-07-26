@@ -559,12 +559,13 @@
     res (add-instruction (->Const ::value))]
    res))
 
-(defn fixup-aliases [sym]
+(defn fixup-aliases [sym env]
   (let [aliases (ns-aliases *ns*)]
     (if-not (namespace sym)
       sym
-      (if-let [^clojure.lang.Namespace ns (aliases (symbol (namespace sym)))]
-        (symbol (name (.getName ns)) (name sym))
+      (if-let [ns (or (get-in env [:ns :requires-macros (symbol (namespace sym))])
+                      (get-in env [:ns :requires (symbol (namespace sym))]))]
+        (symbol (name ns) (name sym))
         sym))))
 
 (defmethod -item-to-ssa :list
@@ -576,7 +577,7 @@
     val (let [exp (expand locals env lst)]
           (if (seq? exp)
             (if (symbol? (first exp))
-              (let [f (fixup-aliases (first exp))]
+              (let [f (fixup-aliases (first exp) env)]
                 (cond
                  (is-special? f) (sexpr-to-ssa exp)
                  (get locals f) (default-sexpr exp)
@@ -751,11 +752,11 @@
 
 (def async-custom-terminators
   {'<! 'cljs.core.async.impl.ioc-helpers/take!
-   'clojure.core.async/<! 'cljs.core.async.impl.ioc-helpers/take!
+   'cljs.core.async/<! 'cljs.core.async.impl.ioc-helpers/take!
    '>! 'cljs.core.async.impl.ioc-helpers/put!
-   'clojure.core.async/>! 'cljs.core.async.impl.ioc-helpers/put!
+   'cljs.core.async/>! 'cljs.core.async.impl.ioc-helpers/put!
    'alts! 'cljs.core.async.impl.ioc-helpers/ioc-alts!
-   'clojure.core.async/alts! 'cljs.core.async.impl.ioc-helpers/ioc-alts!
+   'cljs.core.async/alts! 'cljs.core.async.impl.ioc-helpers/ioc-alts!
    :Return 'cljs.core.async.impl.ioc-helpers/return-chan})
 
 

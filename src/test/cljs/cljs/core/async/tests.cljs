@@ -1,5 +1,5 @@
 (ns cljs.core.async.tests
-  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close!]]
+  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close!] :as async]
             [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.timers :as timers :refer [timeout]]
@@ -55,5 +55,9 @@
 
   (testing "timeout map is empty after timeout expires"
     (go
-      (<! (timeout 300))
-      (is= 0 (count (seq timers/timeouts-map))))))
+     (<! (timeout 300))
+     (is= 0 (count (seq timers/timeouts-map)))))
+  (testing "timeout map is empty after timeout expires with namespaced take"
+    (go
+     (async/<! (timeout 300))
+     (is= 0 (count (seq timers/timeouts-map))))))
