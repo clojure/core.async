@@ -312,6 +312,7 @@
 (defmulti -item-to-ssa (fn [x]
                          (cond
                           (symbol? x) :symbol
+                          (instance? clojure.lang.IRecord x) :record
                           (seq? x) :list
                           (map? x) :map
                           (set? x) :set
@@ -617,6 +618,11 @@
 (defmethod -item-to-ssa :map
   [x]
   (-item-to-ssa `(hash-map ~@(mapcat identity x))))
+
+(defmethod -item-to-ssa :record
+  [x]
+  (-item-to-ssa `(~(symbol (.getName (class x)) "create")
+                  (hash-map ~@(mapcat identity x)))))
 
 (defmethod -item-to-ssa :vector
   [x]
