@@ -18,7 +18,17 @@
        (assert (ioc/finished? state#) "state did not return finished")
        (ioc/aget-object state# ioc/VALUE-IDX))))
 
+(defmacro locals-test []
+  (if (get &env 'x)
+    :pass
+    :fail))
+
+
 (deftest runner-tests
+  (testing "macros add locals to the env"
+    (is (= :pass
+           (runner (let [x 42]
+                     (pause (locals-test)))))))
   (testing "fn as first arg in sexpr"
     (is (= 42
            (runner ((fn [] 42))))))

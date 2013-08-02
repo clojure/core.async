@@ -31,3 +31,8 @@
 (defmacro is
   [a]
   `(assert ~a))
+
+(defmacro locals-test []
+  (if (get-in &env [:locals] 'x)
+    :pass
+    :fail))

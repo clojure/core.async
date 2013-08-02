@@ -544,7 +544,8 @@
           (if (or (get locals s)
                   (special-override? s))
             form
-            (let [expanded (cljs/macroexpand-1 env form)]
+            (let [new-env (update-in env [:locals] merge locals)
+                  expanded (cljs/macroexpand-1 new-env form)]
               (if (= expanded form)
                 form
                 (recur expanded))))
