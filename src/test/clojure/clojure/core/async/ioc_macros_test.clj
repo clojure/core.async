@@ -68,7 +68,12 @@
            (runner (loop [x (pause 0)]
                      (if (< x 100)
                        (recur (inc (pause x)))
-                       (pause x)))))))
+                       (pause x))))))
+    (is (= [:b :a]
+           (runner (loop [a :a b :b n 1]
+                     (if (pos? n)
+                       (recur b a (dec n)) ;; swap bindings
+                       [a b]))))))
   
   (testing "let expressions"
     (is (= 3
