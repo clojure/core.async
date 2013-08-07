@@ -108,7 +108,7 @@
   "puts a val into port. nil values are not allowed. Must be called
   inside a (go ...) block. Will park if no buffer space is available."
   [port val]
-  (assert nil ">! used not in (go ...) block"))
+  (assert nil ">! used outside (go ...) block"))
 
 (defn- nop [])
 
@@ -243,7 +243,7 @@
   depended upon for side effects."
 
   [ports & {:as opts}]
-  (assert nil "alts! used not in (go ...) block"))
+  (assert nil "alts! used outside (go ...) block"))
 
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
