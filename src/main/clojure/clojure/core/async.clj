@@ -77,7 +77,7 @@
   "takes a val from port. Must be called inside a (go ...) block. Will
   return nil if closed. Will park if nothing is available."
   [port]
-  (assert nil "<! used not in (go ...) block"))
+  (assert nil "<! used outside (go ...) block"))
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
