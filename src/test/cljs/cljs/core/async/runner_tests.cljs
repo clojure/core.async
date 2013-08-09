@@ -88,6 +88,10 @@
                (pause x))
              42)))
 
+  (testing "set!"
+    (let [x (js-obj)]
+      (runner (set! (.-foo x) "bar"))))
+
   (testing "keywords as functions"
     (is (= :bar
            (runner (:foo (pause {:foo :bar}))))))

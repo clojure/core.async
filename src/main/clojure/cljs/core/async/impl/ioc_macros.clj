@@ -306,6 +306,16 @@
                       ~STATE-IDX :finished)
            nil))))
 
+(defrecord Set! [field object val]
+  IInstruction
+  (reads-from [this] [object val])
+  (writes-to [this] [(:id this)])
+  (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~(:id this)
+      (set! (~field ~object) ~val)]))
+
 (defrecord CondBr [test then-block else-block]
   IInstruction
   (reads-from [this] [test])
@@ -395,6 +405,14 @@
       _ (set-block final-blk)
       ret-id (add-instruction (->Const ::value))]
      ret-id)))
+
+(defmethod sexpr-to-ssa 'set!
+  [[_ [field obj] val]]
+  (gen-plan
+   [obj-id (item-to-ssa obj)
+    val-id (item-to-ssa val)
+    ret-id (add-instruction (->Set! field obj-id val-id))]
+   ret-id))
 
 (defmethod sexpr-to-ssa 'do
   [[_ & body]]
