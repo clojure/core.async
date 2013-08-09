@@ -383,7 +383,16 @@
         syms (map first parted)
         inits (map second parted)]
     (gen-plan
-     [local-val-ids (all (map item-to-ssa inits))
+     [local-val-ids (all (map ; parallel bind
+                          (fn [sym init]
+                            (gen-plan
+                             [itm-id (item-to-ssa init)
+                              _ (push-alter-binding :locals assoc sym itm-id)]
+                             itm-id))
+                          syms
+                          inits))
+      _ (all (for [x syms]
+               (pop-binding :locals)))
       local-ids (all (map (comp add-instruction ->Const) local-val-ids))
       body-blk (add-block)
       final-blk (add-block)

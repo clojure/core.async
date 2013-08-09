@@ -15,8 +15,8 @@
 (deftest runner-tests
   (testing "macros add locals to the env"
     (is= :pass
-        (runner (let [x 42]
-                  (pause (locals-test))))))
+         (runner (let [x 42]
+                   (pause (locals-test))))))
   (testing "do blocks"
     (is= 42
          (runner (do (pause 42))))
@@ -46,10 +46,14 @@
                      (recur (inc (pause x)))
                      (pause x)))))
     (is= [:b :a]
-        (runner (loop [a :a b :b n 1]
-                  (if (pos? n)
-                    (recur b a (dec n)) ;; swap bindings
-                    [a b])))))
+         (runner (loop [a :a b :b n 1]
+                   (if (pos? n)
+                     (recur b a (dec n)) ;; swap bindings
+                     [a b]))))
+    (is= 1
+        (runner (loop [x 0
+                       y (inc x)]
+                  y))))
   
   (testing "let expressions"
     (is= 3
