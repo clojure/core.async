@@ -14,8 +14,7 @@
 (set! *warn-on-reflection* true)
 
 (defonce the-executor
-  (Executors/newFixedThreadPool
-   (+ 2 conc/processors)
+  (Executors/newCachedThreadPool
    (conc/counted-thread-factory "async-dispatch-%d" true)))
 
 (defn thread-pool-executor
