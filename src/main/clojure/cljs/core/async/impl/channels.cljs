@@ -63,7 +63,11 @@
                     (box nil))
                 nil))
             (do
-              (.unshift puts [handler val])
+              (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
+                      (str "No more than " impl/MAX-QUEUE-SIZE
+                           " pending puts are allowed on a single channel."
+                           " Consider using a windowed buffer."))
+              (.push puts [handler val])
               nil))))))
 
   impl/ReadPort
@@ -91,8 +95,12 @@
             (if-let [take-cb (and (impl/active? handler) (impl/commit handler))]
               (box nil)
               nil)
-            (do (.unshift takes handler)
-                nil))))))
+            (do
+              (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
+                      (str "No more than " impl/MAX-QUEUE-SIZE
+                           " pending takes are allowed on a single channel."))
+              (.push takes handler)
+              nil))))))
   impl/Channel
   (close! [this]
     (cleanup this)

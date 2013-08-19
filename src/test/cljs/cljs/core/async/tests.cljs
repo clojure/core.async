@@ -4,7 +4,7 @@
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.timers :as timers :refer [timeout]]
             [cljs.core.async.impl.protocols :refer [full? add! remove!]])
-  (:require-macros [cljs.core.async.test-helpers :as h :refer [is= is deftest testing runner]]
+  (:require-macros [cljs.core.async.test-helpers :as h :refer [is= is deftest testing runner throws?]]
                    [cljs.core.async.macros :as m :refer [go alt!]]))
 
 (let [c (chan 1)]
@@ -61,3 +61,18 @@
     (go
      (async/<! (timeout 300))
      (is= 0 (count (seq timers/timeouts-map))))))
+
+(deftest put-limits
+  (testing "async put!s are limited"
+    (let [c (chan)]
+      (dotimes [x 1024]
+        (put! c x))
+      (is (throws? (put! c 42)))
+      (take! c (fn [x] (is= x 0)))))
+
+  (testing "async take!s are limited"
+    (let [c (chan)]
+      (dotimes [x 1024]
+        (take! c (fn [x])))
+      (is (throws? (take! c (fn [x]))))
+      (put! c 42))))

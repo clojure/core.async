@@ -8,6 +8,8 @@
 
 (ns cljs.core.async.impl.protocols)
 
+(def ^:const MAX-QUEUE-SIZE 1024)
+
 (defprotocol ReadPort
   (take! [port fn1-handler] "derefable val if taken, nil if take was enqueued"))
 

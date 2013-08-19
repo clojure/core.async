@@ -17,6 +17,11 @@
   `(do (.log js/console (str "Testing: " ~(str nm) "..."))
        ~@body))
 
+(defmacro throws?
+  [& exprs]
+  `(try ~@exprs false
+        (catch ~'js/Object e# true)))
+
 (defmacro testing
   [nm & body]
     `(do (.log js/console (str "    " ~nm "..."))
