@@ -25,7 +25,7 @@
     (loop [idx 0]
       (when (< idx (.-length puts))
         (let [[itm val] (aget puts idx)]
-          (if (impl/active? itm)
+          (if ^boolean (impl/active? itm)
             (recur (inc idx))
             (do (.splice puts idx 1)
                 (recur idx))))))
@@ -33,7 +33,7 @@
     (loop [idx 0]
       (when (< idx (.-length takes))
         (let [itm (aget takes idx)]
-          (if (impl/active? itm)
+          (if ^boolean (impl/active? itm)
             (recur (inc idx))
             (do (.splice takes idx 1)
                 (recur idx)))))))
@@ -42,23 +42,23 @@
   (put! [this val handler]
     (assert (not (nil? val)) "Can't put nil in on a channel")
     (cleanup this)
-    (if @closed
+    (if ^boolean @closed
       (box nil)
       (let [[put-cb take-cb] (loop [taker-idx 0]
                                (when (< taker-idx (.-length takes))
                                  (let [taker (aget takes taker-idx)]
-                                   (if (and (impl/active? taker)
-                                            (impl/active? handler))
+                                   (if (and ^boolean (impl/active? taker)
+                                            ^boolean (impl/active? handler))
                                      (do (.splice takes taker-idx 1)
                                          [(impl/commit handler) (impl/commit taker)])
                                      (recur (inc taker-idx))))))]
-        (if (and put-cb take-cb)
+        (if (not (or (nil? put-cb) (nil? take-cb)))
           (do (dispatch/run (fn [] (take-cb val)))
               (box nil))
-          (if (and buf (not (impl/full? buf)))
-            (let [put-cb (and (impl/active? handler)
-                              (impl/commit handler))]
-              (if put-cb
+          (if (not (or (nil? buf) ^boolean (impl/full? buf)))
+            (let [put-cb (and ^boolean (impl/active? handler)
+                              (not (nil? (impl/commit handler))))]
+              (if-not (false? put-cb)
                 (do (impl/add! buf val)
                     (box nil))
                 nil))
@@ -73,28 +73,31 @@
   impl/ReadPort
   (take! [this handler]
     (cleanup this)
-    (if (and buf (pos? (count buf)))
-      (if-let [take-cb (and (impl/active? handler) (impl/commit handler))]
-        (box (impl/remove! buf))
-        nil)
+    (if (and (not (nil? buf)) (pos? (count buf)))
+      (let [take-cb (and ^boolean (impl/active? handler) (not (nil? (impl/commit handler))))]
+        (if-not (false? take-cb)
+          (box (impl/remove! buf))
+          nil))
       (let [[take-cb put-cb val] (loop [put-idx 0]
                                    (when (< put-idx (.-length puts))
-                                     (let [[putter val] (aget puts put-idx)]
-                                       (if-let [ret (when (and (impl/active? handler) 
-                                                               (impl/active? putter))
-                                                      [(impl/commit handler) 
-                                                       (impl/commit putter) 
-                                                       val])]
+                                     (let [[putter val] (aget puts put-idx)
+                                            ret (when (and ^boolean (impl/active? handler) 
+                                                           ^boolean (impl/active? putter))
+                                                  [(impl/commit handler) 
+                                                   (impl/commit putter) 
+                                                   val])]
+                                       (if-not (nil? ret)
                                          (do (.splice puts put-idx 1)
-                                             ret)
+                                           ret)
                                          (recur (inc put-idx))))))]
-        (if (and put-cb take-cb)
+        (if (not (or (nil? put-cb) (nil? take-cb)))
           (do (dispatch/run put-cb)
               (box val))
-          (if @closed
-            (if-let [take-cb (and (impl/active? handler) (impl/commit handler))]
-              (box nil)
-              nil)
+          (if ^boolean @closed
+            (let [take-cb (and ^boolean (impl/active? handler) (not (nil? (impl/commit handler))))]
+              (if-not (false? take-cb)
+                (box nil)
+                nil))
             (do
               (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
                       (str "No more than " impl/MAX-QUEUE-SIZE
@@ -104,14 +107,15 @@
   impl/Channel
   (close! [this]
     (cleanup this)
-    (if @closed
+    (if ^boolean @closed
       nil
       (do (reset! closed true)
           (dotimes [idx (.-length takes)]
-            (let [taker (aget takes idx)
-                  take-cb (and (impl/active? taker) (impl/commit taker))]
-              (when take-cb
-                (dispatch/run (fn [] (take-cb nil))))))
+            (let [taker (aget takes idx)]
+              (when ^boolean (impl/active? taker)
+                (let [take-cb (impl/commit taker)]
+                  (when-not (nil? take-cb)
+                    (dispatch/run (fn [] (take-cb nil))))))))
           nil))))
 
 (defn chan [buf]
