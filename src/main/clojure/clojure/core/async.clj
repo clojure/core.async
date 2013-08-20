@@ -326,7 +326,7 @@
   (when-let [cb (clojure.core.async/do-alts
                   (fn [val]
                     (ioc/aset-all! state ioc/VALUE-IDX val)
-                    (ioc/run-state-machine state))
+                    (ioc/run-state-machine-wrapped state))
                   ports
                   opts)]
     (ioc/aset-all! state ioc/VALUE-IDX @cb)
@@ -352,7 +352,7 @@
               state# (-> (f#)
                          (ioc/aset-all! ioc/USER-START-IDX c#
                                         ioc/BINDINGS-IDX captured-bindings#))]
-          (ioc/run-state-machine state#))))
+          (ioc/run-state-machine-wrapped state#))))
      c#))
 
 (defonce ^:private ^Executor thread-macro-executor

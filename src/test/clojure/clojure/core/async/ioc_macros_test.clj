@@ -291,6 +291,16 @@
                               (recur (conj acc label) (inc cnt))))
                           acc))))))))
 
+(deftest close-on-exception-tests
+  (testing "threads"
+    (is (nil? (<!! (thread (assert false "This exception is expected")))))
+    (is (nil? (<!! (thread (alts! [(identity-chan 42)])
+                           (assert false "This exception is expected"))))))
+  (testing "go blocks"
+    (is (nil? (<!! (go (assert false "This exception is expected")))))
+    (is (nil? (<!! (go (alts! [(identity-chan 42)])
+                       (assert false "This exception is expected")))))))
+
 (deftest resolution-tests
     (let [<! (constantly 42)]
       (is (= 42 (<!! (go (<! (identity-chan 0)))))

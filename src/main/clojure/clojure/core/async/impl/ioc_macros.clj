@@ -811,11 +811,18 @@
 (defn run-state-machine [state]
   ((aget-object state FN-IDX) state))
 
+(defn run-state-machine-wrapped [state]
+  (try
+    (run-state-machine state)
+    (catch Throwable ex
+      (impl/close! (aget-object state USER-START-IDX))
+      (throw ex))))
+
 (defn take! [state blk c]
   (if-let [cb (impl/take! c (fn-handler
                                    (fn [x]
                                      (aset-all! state VALUE-IDX x STATE-IDX blk)
-                                     (run-state-machine state))))]
+                                     (run-state-machine-wrapped state))))]
     (do (aset-all! state VALUE-IDX @cb STATE-IDX blk)
         :recur)
     nil))
@@ -823,7 +830,7 @@
 (defn put! [state blk c val]
   (if-let [cb (impl/put! c val (fn-handler (fn []
                                              (aset-all! state VALUE-IDX nil STATE-IDX blk)
-                                             (run-state-machine state))))]
+                                             (run-state-machine-wrapped state))))]
     (do (aset-all! state VALUE-IDX @cb STATE-IDX blk)
         :recur)
     nil))

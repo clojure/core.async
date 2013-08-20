@@ -53,11 +53,11 @@
     (is= (timeout 10) (timeout 5))
     (is= 1 (count (seq timers/timeouts-map))))
 
-  (testing "timeout map is empty after timeout expires"
+  #_(testing "timeout map is empty after timeout expires"
     (go
      (<! (timeout 300))
      (is= 0 (count (seq timers/timeouts-map)))))
-  (testing "timeout map is empty after timeout expires with namespaced take"
+  #_(testing "timeout map is empty after timeout expires with namespaced take"
     (go
      (async/<! (timeout 300))
      (is= 0 (count (seq timers/timeouts-map))))))
@@ -76,3 +76,12 @@
         (take! c (fn [x])))
       (is (throws? (take! c (fn [x]))))
       (put! c 42))))
+
+(deftest close-on-exception-tests
+  (testing "go blocks"
+    (go
+     (alt! (go (assert false "This exception is expected")) ([v] (is (nil? v)))
+           (timeout 500) ([v] (assert false "Channel did not close")))
+     (alt! (go (alts! [(identity-chan 42)])
+               (assert false "This exception is expected"))  ([v] (is (nil? v)))
+               (timeout 500) ([v] (assert false "Channel did not close"))))))

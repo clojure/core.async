@@ -18,7 +18,7 @@
         (let [f# ~(ioc/state-machine body 1 &env ioc/async-custom-terminators)
               state# (-> (f#)
                          (ioc/aset-all! cljs.core.async.impl.ioc-helpers/USER-START-IDX c#))]
-          (cljs.core.async.impl.ioc-helpers/run-state-machine state#))))
+          (cljs.core.async.impl.ioc-helpers/run-state-machine-wrapped state#))))
      c#))
 
 
