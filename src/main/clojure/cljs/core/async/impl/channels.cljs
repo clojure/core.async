@@ -19,13 +19,13 @@
 (defprotocol MMC
   (cleanup [_]))
 
-(deftype ManyToManyChannel [takes puts buf closed]
+(deftype ManyToManyChannel [takes puts ^not-native buf closed]
   MMC
   (cleanup [_]
     (loop [idx 0]
       (when (< idx (.-length puts))
         (let [[itm val] (aget puts idx)]
-          (if ^boolean (impl/active? itm)
+          (if ^boolean (impl/active? ^not-native itm)
             (recur (inc idx))
             (do (.splice puts idx 1)
                 (recur idx))))))
@@ -33,20 +33,20 @@
     (loop [idx 0]
       (when (< idx (.-length takes))
         (let [itm (aget takes idx)]
-          (if ^boolean (impl/active? itm)
+          (if ^boolean (impl/active? ^not-native itm)
             (recur (inc idx))
             (do (.splice takes idx 1)
                 (recur idx)))))))
 
   impl/WritePort
-  (put! [this val handler]
+  (put! [this val ^not-native handler]
     (assert (not (nil? val)) "Can't put nil in on a channel")
     (cleanup this)
     (if ^boolean @closed
       (box nil)
       (let [[put-cb take-cb] (loop [taker-idx 0]
                                (when (< taker-idx (.-length takes))
-                                 (let [taker (aget takes taker-idx)]
+                                 (let [^not-native taker (aget takes taker-idx)]
                                    (if (and ^boolean (impl/active? taker)
                                             ^boolean (impl/active? handler))
                                      (do (.splice takes taker-idx 1)
@@ -71,7 +71,7 @@
               nil))))))
 
   impl/ReadPort
-  (take! [this handler]
+  (take! [this ^not-native handler]
     (cleanup this)
     (if (and (not (nil? buf)) (pos? (count buf)))
       (let [take-cb (and ^boolean (impl/active? handler) (not (nil? (impl/commit handler))))]
@@ -82,9 +82,9 @@
                                    (when (< put-idx (.-length puts))
                                      (let [[putter val] (aget puts put-idx)
                                             ret (when (and ^boolean (impl/active? handler) 
-                                                           ^boolean (impl/active? putter))
+                                                           ^boolean (impl/active? ^not-native putter))
                                                   [(impl/commit handler) 
-                                                   (impl/commit putter) 
+                                                   (impl/commit ^not-native putter) 
                                                    val])]
                                        (if-not (nil? ret)
                                          (do (.splice puts put-idx 1)
@@ -111,7 +111,7 @@
       nil
       (do (reset! closed true)
           (dotimes [idx (.-length takes)]
-            (let [taker (aget takes idx)]
+            (let [^not-native taker (aget takes idx)]
               (when ^boolean (impl/active? taker)
                 (let [take-cb (impl/commit taker)]
                   (when-not (nil? take-cb)

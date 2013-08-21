@@ -35,10 +35,10 @@
   (try
     (run-state-machine state)
     (catch js/Object ex
-      (impl/close! (aget-object state USER-START-IDX))
+      (impl/close! ^not-native (aget-object state USER-START-IDX))
       (throw ex))))
 
-(defn take! [state blk c]
+(defn take! [state blk ^not-native c]
   (if-let [cb (impl/take! c (fn-handler
                                    (fn [x]
                                      (ioc/aset-all! state VALUE-IDX x STATE-IDX blk)
@@ -47,7 +47,7 @@
         :recur)
     nil))
 
-(defn put! [state blk c val]
+(defn put! [state blk ^not-native c val]
   (if-let [cb (impl/put! c val (fn-handler (fn []
                                              (ioc/aset-all! state VALUE-IDX nil STATE-IDX blk)
                                              (run-state-machine-wrapped state))))]
@@ -67,7 +67,7 @@
     :recur))
 
 (defn return-chan [state value]
-  (let [c (aget state USER-START-IDX)]
+  (let [^not-native c (aget state USER-START-IDX)]
            (when-not (nil? value)
              (impl/put! c value (fn-handler (fn [] nil))))
            (impl/close! c)
