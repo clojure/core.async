@@ -9,6 +9,28 @@
 (ns cljs.core.async.impl.buffers
   (:require [cljs.core.async.impl.protocols :as impl]))
 
+;; -----------------------------------------------------------------------------
+;; DO NOT USE, this is internal buffer representation
+
+(deftype RingBuffer [^:mutable head ^:mutable tail ^:mutable length arr]
+  Object
+  (pop [_]
+    (when-not (zero? length)
+      (let [x (aget arr tail)]
+        (set! tail (js-mod (inc tail) (alength arr)))
+        (set! length (dec length))
+        x)))
+  (unshift [_ x]
+    (aset arr head x)
+    (set! head (js-mod (inc head) (alength arr)))
+    (set! length (inc length))
+    nil))
+
+(defn ring-buffer [n]
+  (RingBuffer. 0 0 0 (make-array n)))
+
+;; -----------------------------------------------------------------------------
+
 (deftype FixedBuffer [buf n]
   impl/Buffer
   (full? [this]
@@ -23,8 +45,7 @@
     (.-length buf)))
 
 (defn fixed-buffer [n]
-  (FixedBuffer. (make-array 0) n))
-
+  (FixedBuffer. (ring-buffer n) n))
 
 (deftype DroppingBuffer [buf n]
   impl/Buffer
@@ -40,7 +61,7 @@
     (.-length buf)))
 
 (defn dropping-buffer [n]
-  (DroppingBuffer. (make-array 0) n))
+  (DroppingBuffer. (ring-buffer n) n))
 
 (deftype SlidingBuffer [buf n]
   impl/Buffer
@@ -57,5 +78,5 @@
     (.-length buf)))
 
 (defn sliding-buffer [n]
-  (SlidingBuffer. (make-array 0) n))
+  (SlidingBuffer. (ring-buffer n) n))
          
