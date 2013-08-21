@@ -34,7 +34,7 @@
 (deftype FixedBuffer [buf n]
   impl/Buffer
   (full? [this]
-    (= (.-length buf) n))
+    (== (.-length buf) n))
   (remove! [this]
     (.pop buf))
   (add! [this itm]
@@ -54,7 +54,7 @@
   (remove! [this]
     (.pop buf))
   (add! [this itm]
-    (when-not (= (.-length buf) n)
+    (when-not (== (.-length buf) n)
       (.unshift buf itm)))
   cljs.core/ICounted
   (-count [this]
@@ -70,7 +70,7 @@
   (remove! [this]
     (.pop buf))
   (add! [this itm]
-    (when (= (.-length buf) n)
+    (when (== (.-length buf) n)
       (impl/remove! this))
     (.unshift buf itm))
   cljs.core/ICounted
