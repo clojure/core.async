@@ -62,7 +62,8 @@
      (async/<! (timeout 300))
      (is= 0 (count (seq timers/timeouts-map))))))
 
-(deftest put-limits
+
+#_(deftest queue-limits
   (testing "async put!s are limited"
     (let [c (chan)]
       (dotimes [x 1024]
@@ -85,3 +86,29 @@
      (alt! (go (alts! [(identity-chan 42)])
                (assert false "This exception is expected"))  ([v] (is (nil? v)))
                (timeout 500) ([v] (assert false "Channel did not close"))))))
+
+
+(defn print-fn [x]
+  (.log js/console x))
+
+(set! *print-fn* print-fn)
+
+(def c (chan))
+
+(def MILLION 1000000)
+(def TEN-THOUSAND 10)
+(def AMOUNT MILLION)
+
+(go
+ (<! (timeout 500))
+ (time
+  (dotimes [x AMOUNT]
+    (>! c x))))
+
+(def a (atom []))
+(go
+ (dotimes [x AMOUNT]
+   (let [v (<! c)]
+     (assert (= x v) (str x " != " v)))))
+
+
