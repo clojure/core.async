@@ -23,36 +23,37 @@
   impl/WritePort
   (put! [this val ^not-native handler]
     (assert (not (nil? val)) "Can't put nil in on a channel")
-    (if (or closed
-            ^boolean (not (impl/active? handler)))
-      (box nil)
-      (loop []
-        (let [taker (.pop takes)]
-          (if-not (nil? taker)
-            (if ^boolean (impl/active? taker)
+    ;; bug in CLJS compiler boolean inference - David
+    (let [^boolean closed closed]
+      (if (or closed
+            (not ^boolean (impl/active? handler)))
+        (box nil)
+        (loop []
+          (let [^not-native taker (.pop takes)]
+            (if-not (nil? taker)
+              (if ^boolean (impl/active? taker)
                 (let [take-cb (impl/commit taker)
-                      _ (impl/commit handler)]
+                       _ (impl/commit handler)]
                   (dispatch/run (fn [] (take-cb val)))
                   (box nil))
                 (recur))
             
-            (if (not (or (nil? buf)
+              (if (not (or (nil? buf)
                          ^boolean (impl/full? buf)))
-              (let [_ (impl/commit handler)]
-                (do (impl/add! buf val)
+                (let [_ (impl/commit handler)]
+                  (do (impl/add! buf val)
                     (box nil)))
-              (do
-                (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
-                        (str "No more than " impl/MAX-QUEUE-SIZE
-                             " pending puts are allowed on a single channel."
-                             " Consider using a windowed buffer."))
-                (.unbounded-unshift puts (PutBox. handler val))
-                nil)))))))
+                (do
+                  (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
+                    (str "No more than " impl/MAX-QUEUE-SIZE
+                      " pending puts are allowed on a single channel."
+                      " Consider using a windowed buffer."))
+                  (.unbounded-unshift puts (PutBox. handler val))
+                  nil))))))))
 
   impl/ReadPort
   (take! [this ^not-native handler]
-    
-    (if (not (impl/active? handler))
+    (if (not ^boolean (impl/active? handler))
       nil
       (if (and (not (nil? buf)) (pos? (count buf)))
         (let [_ (impl/commit handler)]
@@ -60,7 +61,7 @@
         (loop []
           (let [putter (.pop puts)]
             (if-not (nil? putter)
-              (let [put-handler (.-handler putter)
+              (let [^not-native put-handler (.-handler putter)
                     val (.-val putter)]
                 (if ^boolean (impl/active? put-handler)
                     (let [put-cb (impl/commit put-handler)
@@ -84,7 +85,7 @@
         nil
         (do (set! closed true)
             (loop []
-              (let [taker (.pop takes)]
+              (let [^not-native taker (.pop takes)]
                 (when-not (nil? taker)
                   (when ^boolean (impl/active? taker)
                     (let [take-cb (impl/commit taker)]
