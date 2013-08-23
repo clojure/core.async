@@ -12,19 +12,58 @@
 ;; -----------------------------------------------------------------------------
 ;; DO NOT USE, this is internal buffer representation
 
-(deftype RingBuffer [^:mutable head ^:mutable tail ^:mutable length arr]
+(defn acopy [src src-start dest dest-start len]
+  (loop [cnt 0]
+    (when (< cnt len)
+      (aset dest
+            (+ dest-start cnt)
+            (aget src (+ src-start cnt)))
+      (recur (inc cnt)))))
+
+(deftype RingBuffer [^:mutable head ^:mutable tail ^:mutable length ^:mutable arr]
   Object
   (pop [_]
     (when-not (zero? length)
       (let [x (aget arr tail)]
+        (aset arr tail nil) ;; for GC reasons
         (set! tail (js-mod (inc tail) (alength arr)))
         (set! length (dec length))
         x)))
+
   (unshift [_ x]
     (aset arr head x)
     (set! head (js-mod (inc head) (alength arr)))
     (set! length (inc length))
-    nil))
+    nil)
+
+  (unbounded-unshift [this x]
+    (if (== (inc length) (alength arr))
+      (.resize this))
+    (.unshift this x))
+
+  ;; Doubles the size of the buffer while retaining all the existing values
+  (resize
+    [_]
+    (let [new-arr-size (* (alength arr) 2)
+          new-arr (make-array new-arr-size)]
+      (cond
+       (< tail head)
+       (do (acopy arr tail new-arr 0 length)
+           (set! tail 0)
+           (set! head length)
+           (set! arr new-arr))
+
+       (> tail head)
+       (do (acopy arr tail new-arr 0 (- (alength arr) tail))
+           (acopy arr 0 new-arr (- (alength arr) tail) head)
+           (set! tail 0)
+           (set! head length)
+           (set! arr new-arr))
+       
+       (== tail head)
+       (do (set! tail 0)
+           (set! head 0)
+           (set! arr new-arr))))))
 
 (defn ring-buffer [n]
   (RingBuffer. 0 0 0 (make-array n)))
