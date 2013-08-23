@@ -23,30 +23,31 @@
   impl/WritePort
   (put! [this val ^not-native handler]
     (assert (not (nil? val)) "Can't put nil in on a channel")
-    (if (or ^boolean closed
+    (if (or closed
             ^boolean (not (impl/active? handler)))
       (box nil)
       (loop []
-        (if-let [taker (.pop takes)]
-          (if ^boolean (impl/active? taker)
-              (let [take-cb (impl/commit taker)
-                    _ (impl/commit handler)]
-                (dispatch/run (fn [] (take-cb val)))
-                (box nil))
-              (recur))
-          
-          (if (not (or (nil? buf)
-                       ^boolean (impl/full? buf)))
-            (let [_ (impl/commit handler)]
-              (do (impl/add! buf val)
-                  (box nil)))
-            (do
-              (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
-                      (str "No more than " impl/MAX-QUEUE-SIZE
-                           " pending puts are allowed on a single channel."
-                           " Consider using a windowed buffer."))
-              (.unbounded-unshift puts (PutBox. handler val))
-              nil))))))
+        (let [taker (.pop takes)]
+          (if-not (nil? taker)
+            (if ^boolean (impl/active? taker)
+                (let [take-cb (impl/commit taker)
+                      _ (impl/commit handler)]
+                  (dispatch/run (fn [] (take-cb val)))
+                  (box nil))
+                (recur))
+            
+            (if (not (or (nil? buf)
+                         ^boolean (impl/full? buf)))
+              (let [_ (impl/commit handler)]
+                (do (impl/add! buf val)
+                    (box nil)))
+              (do
+                (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
+                        (str "No more than " impl/MAX-QUEUE-SIZE
+                             " pending puts are allowed on a single channel."
+                             " Consider using a windowed buffer."))
+                (.unbounded-unshift puts (PutBox. handler val))
+                nil)))))))
 
   impl/ReadPort
   (take! [this ^not-native handler]
@@ -57,24 +58,25 @@
         (let [_ (impl/commit handler)]
           (box (impl/remove! buf)))
         (loop []
-          (if-let [putter (.pop puts)]
-            (let [put-handler (.-handler putter)
-                  val (.-val putter)]
-              (if ^boolean (impl/active? put-handler)
-                  (let [put-cb (impl/commit put-handler)
-                        _ (impl/commit handler)]
-                    (dispatch/run put-cb)
-                    (box val))
-                  (recur)))
-            (if closed
-              (let [_ (impl/commit handler)]
-                (box nil))
-              (do
-                (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
-                        (str "No more than " impl/MAX-QUEUE-SIZE
-                             " pending takes are allowed on a single channel."))
-                (.unbounded-unshift takes handler)
-                nil)))))))
+          (let [putter (.pop puts)]
+            (if-not (nil? putter)
+              (let [put-handler (.-handler putter)
+                    val (.-val putter)]
+                (if ^boolean (impl/active? put-handler)
+                    (let [put-cb (impl/commit put-handler)
+                          _ (impl/commit handler)]
+                      (dispatch/run put-cb)
+                      (box val))
+                    (recur)))
+              (if ^boolean closed
+                (let [_ (impl/commit handler)]
+                  (box nil))
+                (do
+                  (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
+                          (str "No more than " impl/MAX-QUEUE-SIZE
+                               " pending takes are allowed on a single channel."))
+                  (.unbounded-unshift takes handler)
+                  nil))))))))
   
   impl/Channel
   (close! [this]
@@ -82,11 +84,12 @@
         nil
         (do (set! closed true)
             (loop []
-              (when-let [taker (.pop takes)]
-                (when (impl/active? taker)
-                  (let [take-cb (impl/commit taker)]
-                    (dispatch/run (fn [] (take-cb nil)))
-                    (recur)))))
+              (let [taker (.pop takes)]
+                (when-not (nil? taker)
+                  (when ^boolean (impl/active? taker)
+                    (let [take-cb (impl/commit taker)]
+                      (dispatch/run (fn [] (take-cb nil)))
+                      (recur))))))
             nil))))
 
 (defn chan [buf]

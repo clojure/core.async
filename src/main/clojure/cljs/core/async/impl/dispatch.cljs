@@ -14,10 +14,11 @@
   (set! running? true)
   (set! queued? false)
   (loop [count 0]
-    (when-let [m (.pop tasks)]
-      (m)
-      (when (< count TASK_BATCH_SIZE)
-        (recur (inc count)))))
+    (let [m (.pop tasks)]
+      (when-not (nil? m)
+        (m)
+        (when (< count TASK_BATCH_SIZE)
+          (recur (inc count))))))
   (set! running? false)
   (when (> (.-length tasks) 0)
     (queue-dispatcher)))
@@ -29,8 +30,8 @@
           (process-messages))))
 
 (defn queue-dispatcher []
-  (when-not (and queued?
-                 running?)
+  (when-not ^boolean (and ^boolean queued?
+                          running?)
     (set! queued? true)
     (cond
      (exists? js/MessageChannel) (.postMessage (.-port2 message-channel) 0)
