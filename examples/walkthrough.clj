@@ -80,7 +80,7 @@
   (>!! c1 "hi")
   (>!! c2 "there"))
 
-;; Prints:
+;; Prints (on stdout, possibly not visible at your repl):
 ;;   Read hi from #<ManyToManyChannel ...>
 ;;   Read there from #<ManyToManyChannel ...>
 
