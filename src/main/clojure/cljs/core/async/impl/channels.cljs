@@ -88,10 +88,10 @@
                 (when-not (nil? taker)
                   (when ^boolean (impl/active? taker)
                     (let [take-cb (impl/commit taker)]
-                      (dispatch/run (fn [] (take-cb nil)))
-                      (recur))))))
+                      (dispatch/run (fn [] (take-cb nil)))))
+                  (recur))))
             nil))))
 
 (defn chan [buf]
-  (ManyToManyChannel. (buffers/ring-buffer 0) (buffers/ring-buffer 0) buf nil))
+  (ManyToManyChannel. (buffers/ring-buffer 32) (buffers/ring-buffer 32) buf nil))
 

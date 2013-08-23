@@ -25,7 +25,6 @@
   (pop [_]
     (when-not (zero? length)
       (let [x (aget arr tail)]
-        (aset arr tail nil) ;; for GC reasons
         (set! tail (js-mod (inc tail) (alength arr)))
         (set! length (dec length))
         x)))
@@ -66,6 +65,7 @@
            (set! arr new-arr))))))
 
 (defn ring-buffer [n]
+  (assert (> n 0) "Can't create a ring buffer of size 0")
   (RingBuffer. 0 0 0 (make-array n)))
 
 ;; -----------------------------------------------------------------------------
