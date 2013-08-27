@@ -88,27 +88,19 @@
                (timeout 500) ([v] (assert false "Channel did not close"))))))
 
 
-(defn print-fn [x]
-  (.log js/console x))
+(deftest cleanup
+  (testing "alt handlers are removed from put!"
+    (go
+     (let [c (chan)]
+       (dotimes [x 1024]
+         (alts! [[c x]] :default 42))
+       (put! c 42))))
+    (testing "alt handlers are removed from take!"
+    (go
+     (let [c (chan)]
+       (dotimes [x 1024]
+         (alts! [c] :default 42))
+       (take! c (fn [x] nil))))))
 
-(set! *print-fn* print-fn)
-
-(def c (chan))
-
-(def MILLION 1000000)
-(def TEN-THOUSAND 10)
-(def AMOUNT MILLION)
-
-(go
- (<! (timeout 500))
- (time
-  (dotimes [x AMOUNT]
-    (>! c x))))
-
-(def a (atom []))
-(go
- (dotimes [x AMOUNT]
-   (let [v (<! c)]
-     (assert (= x v) (str x " != " v)))))
 
 

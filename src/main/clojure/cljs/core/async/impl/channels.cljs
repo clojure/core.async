@@ -19,35 +19,44 @@
 
 (deftype PutBox [handler val])
 
-(deftype ManyToManyChannel [takes puts ^not-native buf ^:mutable closed]
+(defn put-active? [box]
+  (impl/active? (.-handler box)))
+
+(def ^:const MAX_DIRTY 64)
+
+(deftype ManyToManyChannel [takes ^:mutable dirty-takes puts ^:mutable dirty-puts ^not-native buf ^:mutable closed]
   impl/WritePort
   (put! [this val ^not-native handler]
     (assert (not (nil? val)) "Can't put nil in on a channel")
     ;; bug in CLJS compiler boolean inference - David
     (let [^boolean closed closed]
       (if (or closed
-            (not ^boolean (impl/active? handler)))
+              (not ^boolean (impl/active? handler)))
         (box nil)
         (loop []
           (let [^not-native taker (.pop takes)]
             (if-not (nil? taker)
               (if ^boolean (impl/active? taker)
-                (let [take-cb (impl/commit taker)
-                       _ (impl/commit handler)]
-                  (dispatch/run (fn [] (take-cb val)))
-                  (box nil))
-                (recur))
-            
+                  (let [take-cb (impl/commit taker)
+                        _ (impl/commit handler)]
+                    (dispatch/run (fn [] (take-cb val)))
+                    (box nil))
+                  (recur))
+              
               (if (not (or (nil? buf)
-                         ^boolean (impl/full? buf)))
+                           ^boolean (impl/full? buf)))
                 (let [_ (impl/commit handler)]
                   (do (impl/add! buf val)
-                    (box nil)))
+                      (box nil)))
                 (do
+                  (if (> dirty-puts MAX_DIRTY)
+                    (do (set! dirty-puts 0)
+                        (.cleanup puts put-active?))
+                    (set! dirty-puts (inc dirty-puts)))
                   (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
-                    (str "No more than " impl/MAX-QUEUE-SIZE
-                      " pending puts are allowed on a single channel."
-                      " Consider using a windowed buffer."))
+                          (str "No more than " impl/MAX-QUEUE-SIZE
+                               " pending puts are allowed on a single channel."
+                               " Consider using a windowed buffer."))
                   (.unbounded-unshift puts (PutBox. handler val))
                   nil))))))))
 
@@ -70,14 +79,19 @@
                       (box val))
                     (recur)))
               (if ^boolean closed
-                (let [_ (impl/commit handler)]
-                  (box nil))
-                (do
-                  (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
-                          (str "No more than " impl/MAX-QUEUE-SIZE
-                               " pending takes are allowed on a single channel."))
-                  (.unbounded-unshift takes handler)
-                  nil))))))))
+                  (let [_ (impl/commit handler)]
+                    (box nil))
+                  (do
+                    (if (> dirty-takes MAX_DIRTY)
+                      (do (set! dirty-takes 0)
+                          (.cleanup takes impl/active?))
+                      (set! dirty-takes (inc dirty-takes)))                    
+
+                    (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
+                            (str "No more than " impl/MAX-QUEUE-SIZE
+                                 " pending takes are allowed on a single channel."))
+                    (.unbounded-unshift takes handler)
+                    nil))))))))
   
   impl/Channel
   (close! [this]
@@ -88,11 +102,11 @@
               (let [^not-native taker (.pop takes)]
                 (when-not (nil? taker)
                   (when ^boolean (impl/active? taker)
-                    (let [take-cb (impl/commit taker)]
-                      (dispatch/run (fn [] (take-cb nil)))))
+                        (let [take-cb (impl/commit taker)]
+                          (dispatch/run (fn [] (take-cb nil)))))
                   (recur))))
             nil))))
 
 (defn chan [buf]
-  (ManyToManyChannel. (buffers/ring-buffer 32) (buffers/ring-buffer 32) buf nil))
+  (ManyToManyChannel. (buffers/ring-buffer 32) 0 (buffers/ring-buffer 32) 0 buf nil))
 

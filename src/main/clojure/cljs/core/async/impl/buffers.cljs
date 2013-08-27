@@ -62,7 +62,13 @@
        (== tail head)
        (do (set! tail 0)
            (set! head 0)
-           (set! arr new-arr))))))
+           (set! arr new-arr)))))
+
+  (cleanup [this keep?]
+    (dotimes [x length]
+      (let [v (.pop this)]
+        (when (keep? v)
+          (.unshift this v))))))
 
 (defn ring-buffer [n]
   (assert (> n 0) "Can't create a ring buffer of size 0")
