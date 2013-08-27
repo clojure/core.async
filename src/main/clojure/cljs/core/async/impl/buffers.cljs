@@ -67,7 +67,7 @@
   (cleanup [this keep?]
     (dotimes [x length]
       (let [v (.pop this)]
-        (when (keep? v)
+        (when ^boolean (keep? v)
           (.unshift this v))))))
 
 (defn ring-buffer [n]
