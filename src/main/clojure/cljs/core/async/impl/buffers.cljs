@@ -25,6 +25,7 @@
   (pop [_]
     (when-not (zero? length)
       (let [x (aget arr tail)]
+        (aset arr tail nil)
         (set! tail (js-mod (inc tail) (alength arr)))
         (set! length (dec length))
         x)))
