@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Generate a pom file with a version number for this project
+
+set -e
+
+cd `dirname $0`/../..
+
+POM_TEMPLATE="pom.template.xml"
+POM_FILE="pom.xml"
+
+REVISION=`script/build/revision`
+
+sed -e s/RELEASE_VERSION/$REVISION/ < "$POM_TEMPLATE" > "$POM_FILE"
