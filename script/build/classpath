@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Create a pom file for this project
+
+set -e
+
+cd `dirname $0`/../..
+
+script/build/pom
+mvn_output=`mvn dependency:build-classpath`
+classpath=`echo $mvn_output | grep -oP "\[INFO\] Dependencies classpath: \K.*?\[INFO\]"`
+
+echo ${classpath:0:${#classpath}-7}
