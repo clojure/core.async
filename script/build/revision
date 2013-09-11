@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Return the complete revision number
+# <major>.<minor>.<trunk-basis>.<patch-or-0>-<sha>[-qualifier]
+
+set -e
+
+source script/major_minor_qualifier
+
+trunk_basis=`script/build/trunk_revision`
+patch=`script/build/branch_revision`
+sha=`git rev-parse HEAD`
+
+trunk_basis=`expr $trunk_basis - $patch`
+
+sha=${sha:0:${#sha}-34} # drop the last 34 characters, keep 6
+
+version=$major.$minor.$trunk_basis.$patch-$sha
+
+if [ -z "$qualifier" ]; then
+    echo $version
+else
+    echo $version-$qualifier
+fi

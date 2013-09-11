@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# If on a branch other than master, returns the number of commits made off of master
+# If on master, returns 0
+
+set -e
+
+master_tag=`git rev-parse --abbrev-ref HEAD`
+
+if [ "$master_tag" == "master" ]; then
+    echo "0"
+else
+    last_commit=`git rev-parse HEAD`
+    revision=`git rev-list master..$last_commit | wc -l`
+    echo $revision
+fi
