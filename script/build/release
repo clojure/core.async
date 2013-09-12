@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Create a new core.async release
+
+set -ex
+
+cd `dirname $0`/../..
+
+version_template=`cat VERSION_TEMPLATE`
+
+git_revision=`script/build/git_revision`
+
+prefix=${version_template%%GENERATED_VERSION*}
+tag=v$prefix${git_revision:0:${#git_revision}-7}
+
+script/build/pom
+
+if [ "$HUDSON" = "true" ]; then
+    mvn --fail-at-end -Psonatype-oss-release \
+        clean deploy nexus-staging:release
+
+    echo "Creating tag $tag"
+    git tag -f "$tag"
+    git push origin "$tag"
+else
+    echo "Skipping remote deployment and Git tag because we are not on Hudson."
+    mvn clean install
+fi
+
