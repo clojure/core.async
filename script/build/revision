@@ -5,20 +5,8 @@
 
 set -e
 
-source script/major_minor_qualifier
+version_template=`cat VERSION_TEMPLATE`
 
-trunk_basis=`script/build/trunk_revision`
-patch=`script/build/branch_revision`
-sha=`git rev-parse HEAD`
+git_revision=`script/build/git_revision`
 
-trunk_basis=`expr $trunk_basis - $patch`
-
-sha=${sha:0:${#sha}-34} # drop the last 34 characters, keep 6
-
-version=$major.$minor.$trunk_basis.$patch-$sha
-
-if [ -z "$qualifier" ]; then
-    echo $version
-else
-    echo $version-$qualifier
-fi
+echo ${version_template/GENERATED_VERSION/$git_revision}
