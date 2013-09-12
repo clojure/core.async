@@ -7,6 +7,13 @@ set -e
 
 version_template=`cat VERSION_TEMPLATE`
 
-git_revision=`script/build/git_revision`
+if [[ "$version_template" =~ ^[0-9]+\.[0-9]+\.GENERATED_VERSION(-[a-zA-Z0-9]+)?$ ]]; then
 
-echo ${version_template/GENERATED_VERSION/$git_revision}
+    git_revision=`script/build/git_revision`
+    echo ${version_template/GENERATED_VERSION/$git_revision}
+
+else
+    echo "Invalid version template string: $version_template" >&2
+    exit -1
+fi
+
