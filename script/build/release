@@ -16,7 +16,7 @@ tag=v$prefix${git_revision:0:${#git_revision}-7}
 script/build/pom
 
 if [ "$HUDSON" = "true" ]; then
-    mvn -X -e --fail-at-end -Dclojure.version=1.5.1 -Psonatype-oss-release \
+    mvn --fail-at-end -Dclojure.version=1.5.1 -Psonatype-oss-release \
         clean deploy nexus-staging:release
 
     echo "Creating tag $tag"
