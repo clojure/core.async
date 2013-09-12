@@ -790,7 +790,7 @@
          ([~state-sym]
            (loop []
              (let [result# (switch# ~state-sym)]
-               (if (identical? result# :recur)
+               (if (cljs.core/keyword-identical? result# :recur)
                  (recur)
                  result#))))))))
 

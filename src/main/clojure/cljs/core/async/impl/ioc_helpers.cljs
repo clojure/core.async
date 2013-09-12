@@ -18,7 +18,7 @@
 (defn finished?
   "Returns true if the machine is in a finished state"
   [state-array]
-  (identical? (aget state-array STATE-IDX) :finished))
+  (keyword-identical? (aget state-array STATE-IDX) :finished))
 
 (defn- fn-handler
   [f]
