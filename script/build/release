@@ -17,8 +17,11 @@ script/build/pom
 
 if [ "$HUDSON" = "true" ]; then
     mvn -X -e --fail-at-end -Dclojure.version=1.5.1 -Psonatype-oss-release \
-        clean deploy
+        clean deploy nexus-staging:release
 
+    echo "Creating tag $tag"
+    git tag -f "$tag"
+    git push origin "$tag"
 else
     echo "Skipping remote deployment and Git tag because we are not on Hudson."
     mvn clean install
