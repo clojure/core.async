@@ -96,6 +96,19 @@
 
   <profiles>
     <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.clojure</groupId>
+          <artifactId>clojure</artifactId>
+          <version>${clojure.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
       <id>sonatype-oss-release</id>
       <dependencies>
         <!-- Copy default Clojure dependency here, because enabling
