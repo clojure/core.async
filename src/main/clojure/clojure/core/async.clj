@@ -7,6 +7,7 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.core.async
+  (:refer-clojure :exclude [reduce into merge])
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.channels :as channels]
             [clojure.core.async.impl.buffers :as buffers]
@@ -20,9 +21,11 @@
            [java.util.concurrent.locks Lock]
            [java.util.concurrent Executors Executor]))
 
+(alias 'core 'clojure.core)
+
 (set! *warn-on-reflection* true)
 
-(defn- fn-handler
+(defn fn-handler
   [f]
   (reify
    Lock
@@ -252,11 +255,11 @@
         opts (filter opt? clauses)
         clauses (remove opt? clauses)
         [clauses bindings]
-        (reduce
+        (core/reduce
          (fn [[clauses bindings] [ports expr]]
            (let [ports (if (vector? ports) ports [ports])
                  [ports bindings]
-                 (reduce
+                 (core/reduce
                   (fn [[ports bindings] port]
                     (if (vector? port)
                       (let [[port val] port
@@ -380,3 +383,487 @@
   the body when completed."
   [& body]
   `(thread-call (fn [] ~@body)))
+
+;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn map<
+  "Takes a function and a source channel, and returns a channel which
+  contains the values produced by applying f to each value taken from
+  the source channel"
+  [f ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+
+   impl/ReadPort
+   (take! [_ fn1]
+     (let [ret
+       (impl/take! ch
+         (reify
+          Lock
+          (lock [_] (.lock ^Lock fn1))
+          (unlock [_] (.unlock ^Lock fn1))
+          
+          impl/Handler
+          (active? [_] (impl/active? fn1))
+          (lock-id [_] (impl/lock-id fn1))
+          (commit [_]
+           (let [f1 (impl/commit fn1)]
+             #(f1 (if (nil? %) nil (f %)))))))]
+       (if (and ret (not (nil? @ret)))
+         (channels/box (f @ret))
+         ret)))
+   
+   impl/WritePort
+   (put! [_ val fn0] (impl/put! ch val fn0))))
+
+(defn map>
+  "Takes a function and a target channel, and returns a channel which
+  applies f to each value before supplying it to the target channel."
+  [f ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+   
+   impl/ReadPort
+   (take! [_ fn1] (impl/take! ch fn1))
+   
+   impl/WritePort
+   (put! [_ val fn0]
+    (impl/put! ch (f val) fn0))))
+
+(defn filter>
+  "Takes a predicate and a target channel, and returns a channel which
+  supplies only the values for which the predicate returns true to the
+  target channel."
+  [p ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+
+   impl/ReadPort
+   (take! [_ fn1] (impl/take! ch fn1))
+   
+   impl/WritePort
+   (put! [_ val fn0]
+    (if (p val)
+      (impl/put! ch val fn0)
+      (channels/box nil)))))
+
+(defn remove>
+  "Takes a predicate and a target channel, and returns a channel which
+  supplies only the values for which the predicate returns false to the
+  target channel."
+  [p ch]
+  (filter> (complement p) ch))
+
+(defmacro go-loop
+  "Like (go (loop ...))"
+  [bindings & body]
+  `(go (loop ~bindings ~@body)))
+
+(defn filter<
+  "Takes a predicate and a source channel, and returns a channel which
+  contains only the values taken from the source channel for which the
+  predicate returns true. The channel will be created by default, or
+  can be supplied. By default the channel will close when the source
+  channel closes, but can be determined by the close? parameter."
+  ([p ch] (filter< p ch (chan)))
+  ([p ch out] (filter< p ch out true))
+  ([p ch out close?]
+     (go-loop []
+       (let [val (<! ch)]
+         (if (nil? val)
+           (when close? (close! out))
+           (do (when (p val)
+                 (>! out val))
+               (recur)))))
+     out))
+
+(defn remove<
+  "Takes a predicate and a source channel, and returns a channel which
+  contains only the values taken from the source channel for which the
+  predicate returns false.
+
+  The out channel will be created by default, or
+  can be supplied. By default the channel will close when the source
+  channel closes, but can be determined by the close? parameter."
+  ([p ch] (filter< (complement p) ch))
+  ([p ch out] (filter< (complement p) ch out))
+  ([p ch out close?] (filter< (complement p) ch out close?)))
+
+(defn mapcat<
+  "Takes a function and a source channel, and returns a channel which
+  contains the values in each collection produced by applying f to
+  each value taken from the source channel. f must return a
+  collection.
+
+  The out channel will be created by default, or can be supplied. By
+  default the channel will close when the source channel closes, but
+  can be determined by the close? parameter."
+  ([f in] (mapcat< f in (chan)))
+  ([f in out] (mapcat< f in out true))
+  ([f in out close?]
+     (go-loop []
+       (let [val (<! in)]
+         (if (nil? val)
+           (when close? (close! out))
+           (let [vals (f val)]
+             (doseq [v vals]
+               (>! out val))
+             (recur)))))
+     out))
+
+(defn mapcat>
+  "Takes a function and a target channel, and returns a channel which
+  applies f to each value put, then supplies each element of the result
+  to the target channel. f must return a collection.
+
+  The in channel will be created by default, or can be supplied. By
+  default the target channel will be closed when the source channel
+  closes, but can be determined by the close? parameter."
+  
+  ([f out] (mapcat> (chan) out))
+  ([f in out] (mapcat< in out) in)
+  ([f in out closing?] (mapcat< in out closing?) in))
+
+(defn pipe
+  "Takes elements from the from channel and supplies them to the to
+  channel. By default the to channel will be closed when the
+  from channel closes, but can be determined by the close?
+  parameter."
+  ([from to] (pipe from to true))
+  ([from to close?]
+     (go-loop []
+      (let [v (<! from)]
+        (if (nil? v)
+          (when close? (close! to))
+          (do (>! to v)
+              (recur)))))
+     to))
+
+(defn merge
+  "Takes two channels and returns a third channel which contains all
+  values taken from the first two.
+
+  The out channel will be created by default, or can be supplied. By
+  default the channel will close after both source channels have
+  closed, but can be determined by the close? parameter."
+  ([c1 c2] (merge c1 c2 (chan)))
+  ([c1 c2 out] (merge c1 c2 out true))
+  ([c1 c2 out close?]
+   (let [out (chan)]
+     (go-loop [cs [c1 c2]]
+       (if (pos? (count cs))
+         (let [[v c] (alts! cs)]
+           (if (nil? v)
+             (recur (filterv #(not= c %) cs))
+             (do (>! out v)
+                 (recur cs))))
+         (when close? (close! out))))
+     out)))
+
+(defn split
+  "Takes a predicate and a source channel and returns a vector of two
+  channels, the first of which will contain the values for which the
+  predicate returned true, the second those for which it returned
+  false.
+
+  The out channels will be created by default, or can be supplied. By
+  default the channels will close after the source channel has
+  closed, but can be determined by the close? parameter."
+  ([p ch] (split p ch (chan) (chan)))
+  ([p ch truec falsec] (split p ch truec falsec true))
+  ([p ch tc fc close?]
+     (go-loop []
+       (let [v (<! ch)]
+         (if (nil? v)
+           (when close? (close! tc) (close! fc))
+           (do (>! (if (p v) tc fc) v)
+               (recur)))))
+     [tc fc]))
+
+(defn reduce
+  "f should be a function of 2 arguments. Returns a channel containing
+  the single result of applying f to init and the first item from the
+  channel, then applying f to that result and the 2nd item, etc. If
+  the channel closes without yielding items, returns init and f is not
+  called. ch must close before reduce produces a result."
+  [f init ch]
+  (go-loop [ret init]
+    (let [v (<! ch)]
+      (if (nil? v)
+        ret
+        (recur (f ret v))))))
+
+(defn into
+  "Returns a channel containing the single (collection) result of the
+  items taken from the channel conjoined to the supplied
+  collection. ch must close before into produces a result."
+  [coll ch]
+  (reduce conj coll ch))
+
+(defn- bounded-count
+  "Returns the smaller of n or the count of coll, without examining
+  more than n items if coll is not counted"
+  [n coll]
+  (if (counted? coll)
+    (min n (count coll))
+    (loop [i 0 s (seq coll)]
+      (if (and s (< i n))
+        (recur (inc i) (next s))
+        i))))
+
+(defn onto-chan
+  "Puts the contents of coll into the supplied channel.
+
+  By default the channel will be closed after the items are copied,
+  but can be determined by the close? parameter.
+
+  Returns a channel which will close after the items are copied."
+  ([ch coll] (onto-chan ch coll true))
+  ([ch coll close?]
+     (go-loop [vs (seq coll)]
+       (if vs
+         (do (>! ch (first vs))
+             (recur (next vs)))
+         (when close?
+           (close! ch))))))
+
+(defn to-chan
+  "Creates and returns a channel which contains the contents of coll,
+  closing when exhausted."
+  [coll]
+  (let [ch (chan (bounded-count 100 coll))]
+    (onto-chan ch coll)
+    ch))
+
+(defprotocol Mux
+  (muxch* [_]))
+
+(defprotocol Mult
+  (tap* [m ch close?])
+  (untap* [m ch])
+  (untap-all* [m]))
+
+(defn mult
+  "Creates and returns a mult(iple) of the supplied channel. Channels
+  containing copies of the channel can be created with 'tap', and
+  detached with 'untap'"
+  [ch]
+  (let [cs (atom {}) ;;ch->close?
+        m (reify
+           Mux
+           (muxch* [_] ch)
+           
+           Mult
+           (tap* [_ ch close?] (swap! cs assoc ch close?) nil)
+           (untap* [_ ch] (swap! cs dissoc ch) nil)
+           (untap-all* [_] (reset! cs {}) nil))]
+    (go-loop []
+     (let [val (<! ch)]
+       (if (nil? val)
+         (doseq [[c close?] @cs]
+           (when close? (close! c)))
+         (do (doseq [c (keys @cs)]
+               (try
+                 (put! c val)
+                 (catch Exception e
+                   (untap* m c))))
+             (recur)))))
+    m))
+
+(defn tap
+  "Copies the mult source onto the supplied channel.
+
+  By default the channel will be closed when the source closes,
+  but can be determined by the close? parameter."
+  ([mult ch] (tap mult ch true))
+  ([mult ch close?] (tap* mult ch close?) ch))
+
+(defn untap
+  "Disconnects a target channel from a mult"
+  [mult ch]
+  (untap* mult ch))
+
+(defn untap-all
+  "Disconnects all target channels from a mult"
+  [mult] (untap-all* mult))
+
+(defprotocol Mix
+  (admix* [m ch])
+  (unmix* [m ch])
+  (unmix-all* [m])
+  (toggle* [m state-map])
+  (solo-mode* [m mode]))
+
+(defn mix
+  "Creates and returns a mix of one or more input channels which will
+  be put on the supplied out channel. Input sources can be added to
+  the mix with 'admix', and removed with 'unmix'. A mix supports
+  soloing, muting and pausing multiple inputs atomically using
+  'toggle', and can solo using either muting or pausing as determined
+  by 'solo-mode'.
+
+  Each channel can have zero or more boolean modes set via 'toggle':
+
+  :solo - when true, only this (ond other soloed) channel(s) will appear
+          in the mix output channel. :mute and :pause states of soloed
+          channels are ignored. If solo-mode is :mute, non-soloed
+          channels are muted, if :pause, non-soloed channels are
+          paused.
+
+  :mute - muted channels will have their contents consumed but not included in the mix
+  :pause - paused channels will not have their contents consumed (and thus also not included in the mix)
+"
+  [out]
+  (let [cs (atom {}) ;;ch->attrs-map
+        solo-modes #{:mute :pause}
+        attrs (conj solo-modes :solo)
+        solo-mode (atom :mute)
+        change (chan)
+        changed #(put! change true)
+        pick (fn [attr chs]
+               (reduce-kv
+                   (fn [ret c v]
+                     (if (attr v)
+                       (conj ret c)
+                       ret))
+                   #{} chs))
+        calc-state (fn []
+                     (let [chs @cs
+                           mode @solo-mode
+                           solos (pick :solo chs)
+                           pauses (pick :pause chs)]
+                       {:solos solos
+                        :mutes (pick :mute chs)
+                        :reads (conj
+                                (if (and (= mode :pause) (not (empty? solos)))
+                                  (vec solos)
+                                  (vec (remove pauses (keys chs))))
+                                change)}))
+        m (reify
+           Mux
+           (muxch* [_] out)
+           Mix
+           (admix* [_ ch] (swap! cs assoc ch {}) (changed))
+           (unmix* [_ ch] (swap! cs dissoc ch) (changed))
+           (unmix-all* [_] (reset! cs {}) (changed))
+           (toggle* [_ state-map] (swap! cs merge-with merge state-map) (changed))
+           (solo-mode* [_ mode]
+             (assert (solo-modes mode) (str "mode must be one of: " solo-modes))
+             (reset! solo-mode mode)
+             (changed)))]
+    (go-loop [{:keys [solos mutes reads] :as state} (calc-state)]
+      (let [[v c] (alts! reads)]
+        (if (or (nil? v) (= c change))
+          (do (when (nil? v)
+                (swap! cs dissoc c))
+              (recur (calc-state)))
+          (do (when (or (solos c)
+                        (and (empty? solos) (not (mutes c))))
+                (>! out v))
+            (recur state)))))
+    m))
+
+(defn admix
+  "Adds ch as an input to the mix"
+  [mix ch]
+  (admix* mix ch))
+
+(defn unmix
+  "Removes ch as an input to the mix"
+  [mix ch]
+  (unmix* mix ch))
+
+(defn unmix-all
+  "removes all inputs from the mix"
+  [mix]
+  (unmix-all* mix))
+
+(defn toggle
+  "Atomically sets the state(s) of one or more channels in a mix. The
+  state map is a map of channels -> channel-state-map. A
+  channel-state-map is a map of attrs -> boolean, where attr is one or
+  more of :mute, :pause or :solo. Any states supplied are merged with
+  the current state.
+
+  Note that channels can be added to a mix via toggle, which can be
+  used to add channels in a particular (e.g. paused) state."
+  [mix state-map]
+  (toggle* mix state-map))
+
+(defn solo-mode
+  "Sets the solo mode of the mix. mode must be one of :mute or :pause"
+  [mix mode]
+  (solo-mode* mix mode))
+
+(defprotocol Pub
+  (sub* [p v ch close?])
+  (unsub* [p v ch])
+  (unsub-all* [p] [p v]))
+
+(defn pub
+  "Creates and returns a pub(lication) of the supplied channel,
+  partitioned into topics by the topic-fn. topic-fn will be applied to
+  each value on the channel and the result will determine the topic on
+  which that value will be put. Channels can be subscribed to receive
+  copies of topics using 'sub', and unsubscribed using 'unsub'. Each
+  partition will be handled by an internal mult on a deidicated
+  channel. By default these internal channels will be created
+  via (chan), but a chan-fn can be supplied which creates channels
+  with desired properties.
+
+  Note that each topic is handled asynchronously, i.e. if a channel is
+  subscribed to more than one topic it should not expect them to be
+  interleaved identically with the source."
+  ([ch topic-fn] (pub ch topic-fn chan))
+  ([ch topic-fn chan-fn]
+     (let [mults (atom {}) ;;dval->mult
+           ensure-mult (fn [v]
+                         (or (get @mults v)
+                             (get (swap! mults #(if (% v) % (assoc % v (mult (chan-fn))))) v)))
+           p (reify
+              Mux
+              (muxch* [_] ch)
+              
+              Pub
+              (sub* [p v ch close?]
+                    (let [m (ensure-mult v)]
+                      (tap m ch close?)))
+              (unsub* [p v ch]
+                      (when-let [m (get @mults v)]
+                        (untap m ch)))
+              (unsub-all* [_] (reset! mults {}))
+              (unsub-all* [_ v] (swap! mults dissoc v)))]
+       (go-loop []
+         (let [val (<! ch)]
+           (if (nil? val)
+             (doseq [m (vals @mults)]
+               (close! (muxch* m)))
+             (let [m (get @mults val)]
+               (when m
+                 (try
+                   (put! (muxch* m) val)
+                   (catch Exception e
+                     (swap! mults dissoc val))))
+               (recur))))))))
+
+(defn sub
+  "Subscribes a channel to a topic of a pub.
+
+  By default the channel will be closed when the source closes,
+  but can be determined by the close? parameter."
+  ([p topic ch] (sub p topic ch true))
+  ([p topic ch close?] (sub* p topic ch close?)))
+
+(defn unsub
+  "Unsubscribes a channel from a topic of a pub"
+  [p topic ch]
+  (unsub* p topic ch))
+
+(defn unsub-all
+  "Unsubscribes all channels from a pub, or a topic of a pub"
+  ([p] (unsub-all* p))
+  ([p topic] (unsub-all* p topic)))
+
