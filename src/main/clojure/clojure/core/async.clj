@@ -465,32 +465,39 @@
 (defn filter<
   "Takes a predicate and a source channel, and returns a channel which
   contains only the values taken from the source channel for which the
-  predicate returns true. The channel will be created by default, or
-  can be supplied. By default the channel will close when the source
-  channel closes, but can be determined by the close? parameter."
-  ([p ch] (filter< p ch (chan)))
-  ([p ch out] (filter< p ch out true))
-  ([p ch out close?]
-     (go-loop []
-       (let [val (<! ch)]
-         (if (nil? val)
-           (when close? (close! out))
-           (do (when (p val)
-                 (>! out val))
-               (recur)))))
-     out))
+  predicate returns true. The returned channel will be unbuffered by
+  default, or a buf-or-n can be supplied. The channel will close
+  when the source channel closes."
+  ([p ch] (filter< p ch nil))
+  ([p ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go-loop []
+         (let [val (<! ch)]
+           (if (nil? val)
+             (close! out)
+             (do (when (p val)
+                   (>! out val))
+                 (recur)))))
+       out)))
 
 (defn remove<
   "Takes a predicate and a source channel, and returns a channel which
   contains only the values taken from the source channel for which the
-  predicate returns false.
+  predicate returns false. The returned channel will be unbuffered by
+  default, or a buf-or-n can be supplied. The channel will close
+  when the source channel closes."
+  ([p ch] (remove< p ch nil))
+  ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
 
-  The out channel will be created by default, or
-  can be supplied. By default the channel will close when the source
-  channel closes, but can be determined by the close? parameter."
-  ([p ch] (filter< (complement p) ch))
-  ([p ch out] (filter< (complement p) ch out))
-  ([p ch out close?] (filter< (complement p) ch out close?)))
+(defn- mapcat* [f in out]
+  (go-loop []
+    (let [val (<! in)]
+      (if (nil? val)
+        (close! out)
+        (let [vals (f val)]
+          (doseq [v vals]
+            (>! out val))
+          (recur))))))
 
 (defn mapcat<
   "Takes a function and a source channel, and returns a channel which
@@ -498,38 +505,33 @@
   each value taken from the source channel. f must return a
   collection.
 
-  The out channel will be created by default, or can be supplied. By
-  default the channel will close when the source channel closes, but
-  can be determined by the close? parameter."
-  ([f in] (mapcat< f in (chan)))
-  ([f in out] (mapcat< f in out true))
-  ([f in out close?]
-     (go-loop []
-       (let [val (<! in)]
-         (if (nil? val)
-           (when close? (close! out))
-           (let [vals (f val)]
-             (doseq [v vals]
-               (>! out val))
-             (recur)))))
-     out))
+  The returned channel will be unbuffered by default, or a buf-or-n
+  can be supplied. The channel will close when the source channel
+  closes."
+  ([f in] (mapcat< f in nil))
+  ([f in buf-or-n]
+    (let [out (chan buf-or-n)]
+      (mapcat* f in out)
+      out)))
 
 (defn mapcat>
   "Takes a function and a target channel, and returns a channel which
   applies f to each value put, then supplies each element of the result
   to the target channel. f must return a collection.
 
-  The in channel will be created by default, or can be supplied. By
-  default the target channel will be closed when the source channel
-  closes, but can be determined by the close? parameter."
+  The returned channel will be unbuffered by default, or a buf-or-n
+  can be supplied. The target channel will be closed when the source
+  channel closes."
   
-  ([f out] (mapcat> (chan) out))
-  ([f in out] (mapcat< in out) in)
-  ([f in out closing?] (mapcat< in out closing?) in))
+  ([f out] (mapcat> f out nil))
+  ([f out buf-or-n]
+     (let [in (chan buf-or-n)]
+       (mapcat* f in out)
+       in)))
 
 (defn pipe
   "Takes elements from the from channel and supplies them to the to
-  channel. By default the to channel will be closed when the
+  channel. By default, the to channel will be closed when the
   from channel closes, but can be determined by the close?
   parameter."
   ([from to] (pipe from to true))
@@ -544,24 +546,21 @@
 
 (defn merge
   "Takes two channels and returns a third channel which contains all
-  values taken from the first two.
-
-  The out channel will be created by default, or can be supplied. By
-  default the channel will close after both source channels have
-  closed, but can be determined by the close? parameter."
-  ([c1 c2] (merge c1 c2 (chan)))
-  ([c1 c2 out] (merge c1 c2 out true))
-  ([c1 c2 out close?]
-   (let [out (chan)]
-     (go-loop [cs [c1 c2]]
-       (if (pos? (count cs))
-         (let [[v c] (alts! cs)]
-           (if (nil? v)
-             (recur (filterv #(not= c %) cs))
-             (do (>! out v)
-                 (recur cs))))
-         (when close? (close! out))))
-     out)))
+  values taken from the first two. The returned channel will be
+  unbuffered by default, or a buf-or-n can be supplied. The channel
+  will close after both source channels have closed."
+  ([c1 c2] (merge c1 c2 nil))
+  ([c1 c2 buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go-loop [cs [c1 c2]]
+         (if (pos? (count cs))
+           (let [[v c] (alts! cs)]
+             (if (nil? v)
+               (recur (filterv #(not= c %) cs))
+               (do (>! out v)
+                   (recur cs))))
+           (close! out)))
+       out)))
 
 (defn split
   "Takes a predicate and a source channel and returns a vector of two
@@ -569,19 +568,20 @@
   predicate returned true, the second those for which it returned
   false.
 
-  The out channels will be created by default, or can be supplied. By
-  default the channels will close after the source channel has
-  closed, but can be determined by the close? parameter."
-  ([p ch] (split p ch (chan) (chan)))
-  ([p ch truec falsec] (split p ch truec falsec true))
-  ([p ch tc fc close?]
-     (go-loop []
-       (let [v (<! ch)]
-         (if (nil? v)
-           (when close? (close! tc) (close! fc))
-           (do (>! (if (p v) tc fc) v)
-               (recur)))))
-     [tc fc]))
+  The out channels will be unbuffered by default, or two buf-or-ns can
+  be supplied. The channels will close after the source channel has
+  closed."
+  ([p ch] (split p ch nil nil))
+  ([p ch t-buf-or-n f-buf-or-n]
+     (let [tc (chan t-buf-or-n)
+           fc (chan f-buf-or-n)]
+       (go-loop []
+         (let [v (<! ch)]
+           (if (nil? v)
+             (do (close! tc) (close! fc))
+             (do (>! (if (p v) tc fc) v)
+                 (recur)))))
+       [tc fc])))
 
 (defn reduce
   "f should be a function of 2 arguments. Returns a channel containing
@@ -809,7 +809,7 @@
   each value on the channel and the result will determine the topic on
   which that value will be put. Channels can be subscribed to receive
   copies of topics using 'sub', and unsubscribed using 'unsub'. Each
-  partition will be handled by an internal mult on a deidicated
+  partition will be handled by an internal mult on a dedicated
   channel. By default these internal channels will be created
   via (chan), but a chan-fn can be supplied which creates channels
   with desired properties.
