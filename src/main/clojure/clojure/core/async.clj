@@ -749,7 +749,7 @@
            (admix* [_ ch] (swap! cs assoc ch {}) (changed))
            (unmix* [_ ch] (swap! cs dissoc ch) (changed))
            (unmix-all* [_] (reset! cs {}) (changed))
-           (toggle* [_ state-map] (swap! cs merge-with merge state-map) (changed))
+           (toggle* [_ state-map] (swap! cs (partial merge-with core/merge) state-map) (changed))
            (solo-mode* [_ mode]
              (assert (solo-modes mode) (str "mode must be one of: " solo-modes))
              (reset! solo-mode mode)
