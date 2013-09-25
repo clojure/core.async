@@ -7,7 +7,7 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.core.async
-  (:refer-clojure :exclude [reduce into merge])
+  (:refer-clojure :exclude [reduce into merge map])
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.channels :as channels]
             [clojure.core.async.impl.buffers :as buffers]
@@ -274,10 +274,10 @@
         gch (gensym "ch")
         gret (gensym "ret")]
     `(let [~@(mapcat identity bindings)
-           [val# ~gch :as ~gret] (~alts [~@(apply concat (map first clauses))] ~@(apply concat opts))]
+           [val# ~gch :as ~gret] (~alts [~@(apply concat (core/map first clauses))] ~@(apply concat opts))]
        (cond
         ~@(mapcat (fn [[ports expr]]
-                    [`(or ~@(map (fn [port]
+                    [`(or ~@(core/map (fn [port]
                                    `(= ~gch ~(if (vector? port) (first port) port)))
                                  ports))
                      (if (and (seq? expr) (vector? (first expr)))
@@ -432,6 +432,11 @@
    (put! [_ val fn0]
     (impl/put! ch (f val) fn0))))
 
+(defmacro go-loop
+  "Like (go (loop ...))"
+  [bindings & body]
+  `(go (loop ~bindings ~@body)))
+
 (defn filter>
   "Takes a predicate and a target channel, and returns a channel which
   supplies only the values for which the predicate returns true to the
@@ -456,11 +461,6 @@
   target channel."
   [p ch]
   (filter> (complement p) ch))
-
-(defmacro go-loop
-  "Like (go (loop ...))"
-  [bindings & body]
-  `(go (loop ~bindings ~@body)))
 
 (defn filter<
   "Takes a predicate and a source channel, and returns a channel which
@@ -544,24 +544,6 @@
               (recur)))))
      to))
 
-(defn merge
-  "Takes two channels and returns a third channel which contains all
-  values taken from the first two. The returned channel will be
-  unbuffered by default, or a buf-or-n can be supplied. The channel
-  will close after both source channels have closed."
-  ([c1 c2] (merge c1 c2 nil))
-  ([c1 c2 buf-or-n]
-     (let [out (chan buf-or-n)]
-       (go-loop [cs [c1 c2]]
-         (if (pos? (count cs))
-           (let [[v c] (alts! cs)]
-             (if (nil? v)
-               (recur (filterv #(not= c %) cs))
-               (do (>! out v)
-                   (recur cs))))
-           (close! out)))
-       out)))
-
 (defn split
   "Takes a predicate and a source channel and returns a vector of two
   channels, the first of which will contain the values for which the
@@ -595,13 +577,6 @@
       (if (nil? v)
         ret
         (recur (f ret v))))))
-
-(defn into
-  "Returns a channel containing the single (collection) result of the
-  items taken from the channel conjoined to the supplied
-  collection. ch must close before into produces a result."
-  [coll ch]
-  (reduce conj coll ch))
 
 (defn- bounded-count
   "Returns the smaller of n or the count of coll, without examining
@@ -890,3 +865,65 @@
   ([p] (unsub-all* p))
   ([p topic] (unsub-all* p topic)))
 
+;;; these are down here because they alias core fns, don't want accidents above
+
+(defn map
+  "Takes a function and a collection of source channels, and returns a
+  channel which contains the values produced by applying f to the set
+  of first items taken from each source channel, followed by applying
+  f to the set of second items from each channel, until any one of the
+  channels is closed, at which point the output channel will be
+  closed. The returned channel will be unbuffered by default, or a
+  buf-or-n can be supplied"
+  ([f chs] (map f chs nil))
+  ([f chs buf-or-n]
+     (let [chs (vec chs) 
+           out (chan buf-or-n)
+           cnt (count chs)
+           rets (object-array cnt)
+           dchan (chan 1)
+           dctr (atom nil)
+           done (mapv (fn [i]
+                         (fn [ret]
+                           (aset rets i ret)
+                           (when (zero? (swap! dctr dec))
+                             (put! dchan (java.util.Arrays/copyOf rets cnt)))))
+                       (range cnt))]
+       (go-loop []
+         (reset! dctr cnt)
+         (dotimes [i cnt]
+           (try
+             (take! (chs i) (done i))
+             (catch Exception e
+               (swap! dctr dec))))
+         (let [rets (<! dchan)]
+           (if (some nil? rets)
+             (close! out)
+             (do (>! out (apply f rets))
+                 (recur)))))
+       out)))
+
+(defn merge
+  "Takes a collection of source channels and returns a channel which
+  contains all values taken from them. The returned channel will be
+  unbuffered by default, or a buf-or-n can be supplied. The channel
+  will close after all the source channels have closed."
+  ([chs] (merge chs nil))
+  ([chs buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go-loop [cs (vec chs)]
+         (if (pos? (count cs))
+           (let [[v c] (alts! cs)]
+             (if (nil? v)
+               (recur (filterv #(not= c %) cs))
+               (do (>! out v)
+                   (recur cs))))
+           (close! out)))
+       out)))
+
+(defn into
+  "Returns a channel containing the single (collection) result of the
+  items taken from the channel conjoined to the supplied
+  collection. ch must close before into produces a result."
+  [coll ch]
+  (reduce conj coll ch))
