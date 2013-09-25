@@ -649,7 +649,13 @@
 (defn mult
   "Creates and returns a mult(iple) of the supplied channel. Channels
   containing copies of the channel can be created with 'tap', and
-  detached with 'untap'"
+  detached with 'untap'.
+
+  Each item is distributed to all taps in parallel and synchronously,
+  i.e. each tap must accept before the next item is distributed. Use
+  buffering/windowing to prevent slow taps from holding up the mult.
+
+  If a tap put throws an exception, it will be removed from the mult."
   [ch]
   (let [cs (atom {}) ;;ch->close?
         m (reify
@@ -659,18 +665,27 @@
            Mult
            (tap* [_ ch close?] (swap! cs assoc ch close?) nil)
            (untap* [_ ch] (swap! cs dissoc ch) nil)
-           (untap-all* [_] (reset! cs {}) nil))]
+           (untap-all* [_] (reset! cs {}) nil))
+        dchan (chan 1)
+        dctr (atom nil)
+        done #(when (zero? (swap! dctr dec))
+                (put! dchan true))]
     (go-loop []
      (let [val (<! ch)]
        (if (nil? val)
          (doseq [[c close?] @cs]
            (when close? (close! c)))
-         (do (doseq [c (keys @cs)]
+         (let [chs (keys @cs)]
+           (reset! dctr (count chs))
+           (doseq [c chs]
                (try
-                 (put! c val)
+                 (put! c val done)
                  (catch Exception e
+                   (swap! dctr dec)
                    (untap* m c))))
-             (recur)))))
+           ;;wait for all
+           (<! dchan)
+           (recur)))))
     m))
 
 (defn tap
@@ -806,47 +821,55 @@
 (defn pub
   "Creates and returns a pub(lication) of the supplied channel,
   partitioned into topics by the topic-fn. topic-fn will be applied to
-  each value on the channel and the result will determine the topic on
-  which that value will be put. Channels can be subscribed to receive
-  copies of topics using 'sub', and unsubscribed using 'unsub'. Each
-  partition will be handled by an internal mult on a dedicated
-  channel. By default these internal channels will be created
-  via (chan), but a chan-fn can be supplied which creates channels
-  with desired properties.
+  each value on the channel and the result will determine the 'topic'
+  on which that value will be put. Channels can be subscribed to
+  receive copies of topics using 'sub', and unsubscribed using
+  'unsub'. Each topic will be handled by an internal mult on a
+  dedicated channel. By default these internal channels are
+  unbuffered, but a buf-fn can be supplied which, given a topic,
+  creates a buffer with desired properties.
 
-  Note that each topic is handled asynchronously, i.e. if a channel is
-  subscribed to more than one topic it should not expect them to be
-  interleaved identically with the source."
-  ([ch topic-fn] (pub ch topic-fn chan))
-  ([ch topic-fn chan-fn]
-     (let [mults (atom {}) ;;dval->mult
-           ensure-mult (fn [v]
-                         (or (get @mults v)
-                             (get (swap! mults #(if (% v) % (assoc % v (mult (chan-fn))))) v)))
+  Each item is distributed to all subs in parallel and synchronously,
+  i.e. each sub must accept before the next item is distributed. Use
+  buffering/windowing to prevent slow subs from holding up the pub.
+
+  Note that if buf-fns are used then each topic is handled
+  asynchronously, i.e. if a channel is subscribed to more than one
+  topic it should not expect them to be interleaved identically with
+  the source."
+  ([ch topic-fn] (pub ch topic-fn (constantly nil)))
+  ([ch topic-fn buf-fn]
+     (let [mults (atom {}) ;;topic->mult
+           ensure-mult (fn [topic]
+                         (or (get @mults topic)
+                             (get (swap! mults
+                                         #(if (% topic) % (assoc % topic (mult (chan (buf-fn topic))))))
+                                  topic)))
            p (reify
               Mux
               (muxch* [_] ch)
               
               Pub
-              (sub* [p v ch close?]
-                    (let [m (ensure-mult v)]
+              (sub* [p topic ch close?]
+                    (let [m (ensure-mult topic)]
                       (tap m ch close?)))
-              (unsub* [p v ch]
-                      (when-let [m (get @mults v)]
+              (unsub* [p topic ch]
+                      (when-let [m (get @mults topic)]
                         (untap m ch)))
               (unsub-all* [_] (reset! mults {}))
-              (unsub-all* [_ v] (swap! mults dissoc v)))]
+              (unsub-all* [_ topic] (swap! mults dissoc topic)))]
        (go-loop []
          (let [val (<! ch)]
            (if (nil? val)
              (doseq [m (vals @mults)]
                (close! (muxch* m)))
-             (let [m (get @mults val)]
+             (let [topic (topic-fn val)
+                   m (get @mults topic)]
                (when m
                  (try
-                   (put! (muxch* m) val)
+                   (>! (muxch* m) val)
                    (catch Exception e
-                     (swap! mults dissoc val))))
+                     (swap! mults dissoc topic))))
                (recur))))))))
 
 (defn sub
