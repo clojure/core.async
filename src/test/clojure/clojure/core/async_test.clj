@@ -192,4 +192,15 @@
            (<!! (a/into [] (a/map + [(a/to-chan (range 4))
                                      (a/to-chan (range 4))
                                      (a/to-chan (range 4))
-                                     (a/to-chan (range 4))])))))))
+                                     (a/to-chan (range 4))]))))))
+  (testing merge
+    ;; merge uses alt, so results can be in any order, we're using
+    ;; frequencies as a way to make sure we get the right result.
+    (is (= {0 4
+            1 4
+            2 4
+            3 4}
+           (frequencies (<!! (a/into [] (a/merge [(a/to-chan (range 4))
+                                                  (a/to-chan (range 4))
+                                                  (a/to-chan (range 4))
+                                                  (a/to-chan (range 4))]))))))))
