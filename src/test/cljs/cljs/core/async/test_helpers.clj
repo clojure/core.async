@@ -6,16 +6,21 @@
   into a state machine. At run time the body will be run as normal. This transform is
   only really useful for testing."
   [& body]
-  (binding [ioc/*symbol-translations* '{pause clojure.core.async.ioc-macros/pause
-                                        case case
-                                        try try}
-            ioc/*local-env* &env]
-    `(cljs.core.async.impl.ioc-helpers/runner-wrapper ~(ioc/state-machine body 0))))
+  (let [terminators {'pause 'cljs.core.async.runner-tests/pause}]
+    `(let [state# (~(ioc/state-machine body 0 &env terminators))]
+       (cljs.core.async.impl.ioc-helpers/run-state-machine state#)
+       (assert (cljs.core.async.impl.ioc-helpers/finished? state#) "state did not return finished")
+       (aget state# ~ioc/VALUE-IDX))))
 
 (defmacro deftest
   [nm & body]
   `(do (.log js/console (str "Testing: " ~(str nm) "..."))
        ~@body))
+
+(defmacro throws?
+  [& exprs]
+  `(try ~@exprs false
+        (catch ~'js/Object e# true)))
 
 (defmacro testing
   [nm & body]
@@ -31,3 +36,8 @@
 (defmacro is
   [a]
   `(assert ~a))
+
+(defmacro locals-test []
+  (if (get-in &env [:locals] 'x)
+    :pass
+    :fail))

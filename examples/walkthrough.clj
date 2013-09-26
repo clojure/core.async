@@ -80,7 +80,7 @@
   (>!! c1 "hi")
   (>!! c2 "there"))
 
-;; Prints:
+;; Prints (on stdout, possibly not visible at your repl):
 ;;   Read hi from #<ManyToManyChannel ...>
 ;;   Read there from #<ManyToManyChannel ...>
 
@@ -115,7 +115,7 @@
   (println "Waited" (- (System/currentTimeMillis) begin)))
 
 ;; We can combine timeout with `alts!` to do timed channel waits.
-;; Here we wait for 500 ms for a value to arrive on the channel, then
+;; Here we wait for 100 ms for a value to arrive on the channel, then
 ;; give up:
 
 (let [c (chan)

@@ -15,7 +15,10 @@
 
 (defonce the-executor
   (Executors/newFixedThreadPool
-   (+ 2 conc/processors)
+   (-> (Runtime/getRuntime)
+       (.availableProcessors)
+       (* 2)
+       (+ 42))
    (conc/counted-thread-factory "async-dispatch-%d" true)))
 
 (defn thread-pool-executor

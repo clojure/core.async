@@ -109,6 +109,22 @@
       "When on-caller? requested, but no reader can consume the value,
       put!'s callback executes on a different thread."))
 
+(deftest limit-async-take!-put!
+  (testing "async put! limit"
+    (let [c (chan)]
+      (dotimes [x 1024]
+        (put! c x))
+      (is (thrown? AssertionError
+                   (put! c 42)))
+      (is (= (<!! c) 0)))) ;; make sure the channel unlocks
+  (testing "async take! limit"
+    (let [c (chan)]
+      (dotimes [x 1024]
+        (take! c (fn [x])))
+      (is (thrown? AssertionError
+                   (take! c (fn [x]))))
+      (is (nil? (>!! c 42)))))) ;; make sure the channel unlocks
+
 (deftest puts-fulfill-when-buffer-available
   (is (= :proceeded
          (let [c (chan 1)

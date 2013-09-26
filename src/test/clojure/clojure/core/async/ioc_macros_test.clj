@@ -3,25 +3,32 @@
             [clojure.core.async :refer :all :as async]
             [clojure.test :refer :all]))
 
-(defn runner-wrapper
-  "Simple wrapper that runs the state machine to completion"
-  [f]
-  (loop [state (f)]
-    (if (ioc/finished? state)
-      (ioc/aget-object state ioc/VALUE-IDX)
-      (recur (f state)))))
+(defn pause [state blk val]
+  (ioc/aset-all! state ioc/STATE-IDX blk ioc/VALUE-IDX val)
+  :recur)
 
 (defmacro runner
   "Creates a runner block. The code inside the body of this macro will be translated
   into a state machine. At run time the body will be run as normal. This transform is
   only really useful for testing."
   [& body]
-  (binding [ioc/*symbol-translations* '{pause clojure.core.async.ioc-macros/pause
-                                        case case}
-            ioc/*local-env* &env]
-    `(runner-wrapper ~(ioc/state-machine body 0))))
+  (let [terminators {'pause `pause}]
+    `(let [state# (~(ioc/state-machine body 0 &env terminators))]
+       (ioc/run-state-machine state#)
+       (assert (ioc/finished? state#) "state did not return finished")
+       (ioc/aget-object state# ioc/VALUE-IDX))))
+
+(defmacro locals-test []
+  (if (get &env 'x)
+    :pass
+    :fail))
+
 
 (deftest runner-tests
+  (testing "macros add locals to the env"
+    (is (= :pass
+           (runner (let [x 42]
+                     (pause (locals-test)))))))
   (testing "fn as first arg in sexpr"
     (is (= 42
            (runner ((fn [] 42))))))
@@ -46,13 +53,31 @@
     (is (= nil
            (runner (when (pause false)
                      (pause true))))))
+
+  (testing "quote"
+    (is (= '(1 2 3)
+           (runner (pause '(1 2 3))))))
   
   (testing "loop expressions"
     (is (= 100
            (runner (loop [x 0]
                      (if (< x 100)
                        (recur (inc (pause x)))
-                       (pause x)))))))
+                       (pause x))))))
+    (is (= 100
+           (runner (loop [x (pause 0)]
+                     (if (< x 100)
+                       (recur (inc (pause x)))
+                       (pause x))))))
+    (is (= [:b :a]
+           (runner (loop [a :a b :b n 1]
+                     (if (pos? n)
+                       (recur b a (dec n)) ;; swap bindings
+                       [a b])))))
+    (is (= 1
+           (runner (loop [x 0
+                          y (inc x)]
+                     y)))))
   
   (testing "let expressions"
     (is (= 3
@@ -85,6 +110,15 @@
            (runner [(pause 1)
                     (pause 2)
                     (pause 3)]))))
+  
+  (testing "keywords as functions"
+    (is (= :bar
+           (runner (:foo (pause {:foo :bar}))))))
+
+  (testing "vectors as functions"
+    (is (= 2
+           (runner ([1 2] 1)))))
+  
   (testing "dotimes"
     (is (= 42 (runner
                (dotimes [x 10]
@@ -99,6 +133,10 @@
                   f (fn [] x)]
               (f))))))
 
+  (testing "specials cannot be shadowed"
+    (is (= 3
+           (let [let* :foo] (runner (let* [x 3] x))))))
+
   (testing "case"
     (is (= 43
            (runner
@@ -111,7 +149,13 @@
            (runner
             (case :baz
               :foo 44
-              :default)))))
+              :default))))
+    (is (= 42
+           (runner
+            (loop [x 0]
+              (case (int x)
+                0 (recur (inc x))
+                1 42))))))
 
   (testing "try"
     (is (= 42
@@ -139,8 +183,6 @@
                (catch Throwable ex true)
                (finally (reset! a true))))]
       (is (and @a v)))))
-
-
 
 (defn identity-chan 
   "Defines a channel that instantly writes the given value"
@@ -171,6 +213,11 @@
     (is (= nil
            (<!! (go nil)))))
 
+  (testing "take inside binding of loop"
+    (is (= 42
+           (<!! (go (loop [x (<! (identity-chan 42))]
+                     x))))))
+
   (testing "can get from a catch"
     (let [c (identity-chan 42)]
       (is (= 42
@@ -191,78 +238,92 @@
              (>!! c :foo)
              (<!! async-chan)))))
   (testing "puts into channels with full buffers re-enter async properly"
-    (is (= #{:foo :bar :baz :boz}
-           (let [c (chan 1)
-                 async-chan (go
-                             (>! c :foo)
-                             (>! c :bar)
-                             (>! c :baz)
+      (is (= #{:foo :bar :baz :boz}
+             (let [c (chan 1)
+                   async-chan (go
+                               (>! c :foo)
+                               (>! c :bar)
+                               (>! c :baz)
 
-                             (>! c :boz)
-                             (<! c))]
-             (set [(<!! c)
-                   (<!! c)
-                   (<!! c)
-                   (<!! async-chan)]))))))
+                               (>! c :boz)
+                               (<! c))]
+               (set [(<!! c)
+                     (<!! c)
+                     (<!! c)
+                     (<!! async-chan)]))))))
 
 (defn rand-timeout [x]
   (timeout (rand-int x)))
 
 (deftest alt-tests
   (testing "alts works at all"
-    (let [c (identity-chan 42)]
-      (is (= [42 c]
-             (<!! (go (alts!
-                       [c])))))))
+      (let [c (identity-chan 42)]
+        (is (= [42 c]
+               (<!! (go (alts!
+                         [c])))))))
   (testing "alt works"
-    (is (= [42 :foo]
-           (<!! (go (alt!
-                     (identity-chan 42) ([v] [v :foo])))))))
+      (is (= [42 :foo]
+             (<!! (go (alt!
+                       (identity-chan 42) ([v] [v :foo])))))))
 
   (testing "alts can use default"
-    (is (= [42 :default]
-           (<!! (go (alts!
-                     [(chan 1)] :default 42))))))
+      (is (= [42 :default]
+             (<!! (go (alts!
+                       [(chan 1)] :default 42))))))
 
   (testing "alt can use default"
-             (is (= 42
-                    (<!! (go (alt!
-                              (chan) ([v] :failed)
-                              :default 42))))))
+      (is (= 42
+             (<!! (go (alt!
+                       (chan) ([v] :failed)
+                       :default 42))))))
 
   (testing "alt obeys its random-array initialization"
-    (is (= #{:two}
-           (with-redefs [clojure.core.async/random-array
-                         (constantly (int-array [1 2 0]))]
-             (<!! (go (loop [acc #{}
-                             cnt 0]
-                        (if (< cnt 10)
-                          (let [label (alt!
-                                        (identity-chan :one) ([v] v)
-                                        (identity-chan :two) ([v] v)
-                                        (identity-chan :three) ([v] v))]
-                            (recur (conj acc label) (inc cnt))))
-                        acc))))))))
+      (is (= #{:two}
+             (with-redefs [clojure.core.async/random-array
+                           (constantly (int-array [1 2 0]))]
+               (<!! (go (loop [acc #{}
+                               cnt 0]
+                          (if (< cnt 10)
+                            (let [label (alt!
+                                         (identity-chan :one) ([v] v)
+                                         (identity-chan :two) ([v] v)
+                                         (identity-chan :three) ([v] v))]
+                              (recur (conj acc label) (inc cnt))))
+                          acc))))))))
+
+(deftest close-on-exception-tests
+  (testing "threads"
+    (is (nil? (<!! (thread (assert false "This exception is expected")))))
+    (is (nil? (<!! (thread (alts! [(identity-chan 42)])
+                           (assert false "This exception is expected"))))))
+  (testing "go blocks"
+    (is (nil? (<!! (go (assert false "This exception is expected")))))
+    (is (nil? (<!! (go (alts! [(identity-chan 42)])
+                       (assert false "This exception is expected")))))))
 
 (deftest resolution-tests
-  (let [<! (constantly 42)]
-    (is (= 42 (<!! (go (<! (identity-chan 0)))))
-        "symbol translations do not apply to locals outside go"))
+    (let [<! (constantly 42)]
+      (is (= 42 (<!! (go (<! (identity-chan 0)))))
+          "symbol translations do not apply to locals outside go"))
 
-  (is (= 42 (<!! (go (let [<! (constantly 42)]
-                       (<! (identity-chan 0))))))
-      "symbol translations do not apply to locals inside go")
+    (is (= 42 (<!! (go (let [<! (constantly 42)]
+                         (<! (identity-chan 0))))))
+        "symbol translations do not apply to locals inside go")
 
-  (let [for vector x 3]
+    (let [for vector x 3]
+      (is (= [[3 [0 1]] 3]
+             (<!! (go (for [x (range 2)] x))))
+          "locals outside go are protected from macroexpansion"))
+
     (is (= [[3 [0 1]] 3]
-           (<!! (go (for [x (range 2)] x))))
-        "locals outside go are protected from macroexpansion"))
+           (<!! (go (let [for vector x 3]
+                      (for [x (range 2)] x)))))
+        "locals inside go are protected from macroexpansion")
 
-  (is (= [[3 [0 1]] 3]
-         (<!! (go (let [for vector x 3]
-                    (for [x (range 2)] x)))))
-      "locals inside go are protected from macroexpansion")
+    (let [c (identity-chan 42)]
+      (is (= [42 c] (<!! (go (async/alts! [c]))))
+          "symbol translations apply to resolved symbols")))
 
-  (let [c (identity-chan 42)]
-    (is (= [42 c] (<!! (go (async/alts! [c]))))
-        "symbol translations apply to resolved symbols")))
+
+
+
