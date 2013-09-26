@@ -845,7 +845,8 @@
                    (>! (muxch* m) val)
                    (catch Exception e
                      (swap! mults dissoc topic))))
-               (recur))))))))
+               (recur)))))
+       p)))
 
 (defn sub
   "Subscribes a channel to a topic of a pub.
