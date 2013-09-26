@@ -1,10 +1,12 @@
 (ns cljs.core.async
+    (:refer-clojure :exclude [reduce into merge map])
     (:require [cljs.core.async.impl.protocols :as impl]
               [cljs.core.async.impl.channels :as channels]
               [cljs.core.async.impl.buffers :as buffers]
               [cljs.core.async.impl.timers :as timers]
               [cljs.core.async.impl.dispatch :as dispatch]
-              [cljs.core.async.impl.ioc-helpers :as helpers]))
+              [cljs.core.async.impl.ioc-helpers :as helpers])
+    (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn- fn-handler [f]
   (reify
@@ -34,7 +36,13 @@
   "Creates a channel with an optional buffer. If buf-or-n is a number,
   will create and use a fixed buffer of that size."
   ([] (chan nil))
-  ([buf-or-n] (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n))))
+  ([buf-or-n]
+     (let [buf-or-n (if (= buf-or-n 0)
+                      nil
+                      buf-or-n)]
+       (channels/chan (if (number? buf-or-n)
+                        (buffer buf-or-n)
+                        buf-or-n)))))
 
 (defn timeout
   "Returns a channel that will close after msecs"
@@ -171,3 +179,160 @@
 
   [ports & {:as opts}]
   (assert nil "alts! used not in (go ...) block"))
+
+;;;;;;; channel ops
+
+
+(defn map<
+  "Takes a function and a source channel, and returns a channel which
+  contains the values produced by applying f to each value taken from
+  the source channel"
+  [f ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+
+   impl/ReadPort
+   (take! [_ fn1]
+     (let [ret
+       (impl/take! ch
+         (reify
+          impl/Handler
+          (active? [_] (impl/active? fn1))
+          (lock-id [_] (impl/lock-id fn1))
+          (commit [_]
+           (let [f1 (impl/commit fn1)]
+             #(f1 (if (nil? %) nil (f %)))))))]
+       (if (and ret (not (nil? @ret)))
+         (channels/box (f @ret))
+         ret)))
+
+   impl/WritePort
+   (put! [_ val fn0] (impl/put! ch val fn0))))
+
+(defn map>
+  "Takes a function and a target channel, and returns a channel which
+  applies f to each value before supplying it to the target channel."
+  [f ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+
+   impl/ReadPort
+   (take! [_ fn1] (impl/take! ch fn1))
+
+   impl/WritePort
+   (put! [_ val fn0]
+     (impl/put! ch (f val) fn0))))
+
+
+
+(defn filter>
+  "Takes a predicate and a target channel, and returns a channel which
+  supplies only the values for which the predicate returns true to the
+  target channel."
+  [p ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+
+   impl/ReadPort
+   (take! [_ fn1] (impl/take! ch fn1))
+
+   impl/WritePort
+   (put! [_ val fn0]
+    (if (p val)
+      (impl/put! ch val fn0)
+      (channels/box nil)))))
+
+(defn remove>
+  "Takes a predicate and a target channel, and returns a channel which
+  supplies only the values for which the predicate returns false to the
+  target channel."
+  [p ch]
+  (filter> (complement p) ch))
+
+(defn filter<
+  "Takes a predicate and a source channel, and returns a channel which
+  contains only the values taken from the source channel for which the
+  predicate returns true. The returned channel will be unbuffered by
+  default, or a buf-or-n can be supplied. The channel will close
+  when the source channel closes."
+  ([p ch] (filter< p ch nil))
+  ([p ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go-loop []
+         (let [val (<! ch)]
+           (if (nil? val)
+             (close! out)
+             (do (when (p val)
+                   (>! out val))
+                 (recur)))))
+       out)))
+
+(defn remove<
+  "Takes a predicate and a source channel, and returns a channel which
+  contains only the values taken from the source channel for which the
+  predicate returns false. The returned channel will be unbuffered by
+  default, or a buf-or-n can be supplied. The channel will close
+  when the source channel closes."
+  ([p ch] (remove< p ch nil))
+  ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
+
+(defn reduce
+  "f should be a function of 2 arguments. Returns a channel containing
+  the single result of applying f to init and the first item from the
+  channel, then applying f to that result and the 2nd item, etc. If
+  the channel closes without yielding items, returns init and f is not
+  called. ch must close before reduce produces a result."
+  [f init ch]
+  (go-loop [ret init]
+    (let [v (<! ch)]
+      (if (nil? v)
+        ret
+        (recur (f ret v))))))
+
+
+#_(defn- bounded-count
+  "Returns the smaller of n or the count of coll, without examining
+  more than n items if coll is not counted"
+  [n coll]
+  (if (counted? coll)
+    (min n (count coll))
+    (loop [i 0 s (seq coll)]
+      (if (and s (< i n))
+        (recur (inc i) (next s))
+        i))))
+
+(defn onto-chan
+  "Puts the contents of coll into the supplied channel.
+
+  By default the channel will be closed after the items are copied,
+  but can be determined by the close? parameter.
+
+  Returns a channel which will close after the items are copied."
+  ([ch coll] (onto-chan ch coll true))
+  ([ch coll close?]
+     (go-loop [vs (seq coll)]
+       (if vs
+         (do (>! ch (first vs))
+             (recur (next vs)))
+         (when close?
+           (close! ch))))))
+
+
+(defn to-chan
+  "Creates and returns a channel which contains the contents of coll,
+  closing when exhausted."
+  [coll]
+  (let [ch (chan (bounded-count 100 coll))]
+    (onto-chan ch coll)
+    ch))
+
+
+(defn into
+  "Returns a channel containing the single (collection) result of the
+  items taken from the channel conjoined to the supplied
+  collection. ch must close before into produces a result."
+  [coll ch]
+  (reduce conj coll ch))

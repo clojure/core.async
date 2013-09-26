@@ -42,7 +42,7 @@
                     (dispatch/run (fn [] (take-cb val)))
                     (box nil))
                   (recur))
-              
+
               (if (not (or (nil? buf)
                            ^boolean (impl/full? buf)))
                 (let [_ (impl/commit handler)]
@@ -85,14 +85,14 @@
                     (if (> dirty-takes MAX_DIRTY)
                       (do (set! dirty-takes 0)
                           (.cleanup takes impl/active?))
-                      (set! dirty-takes (inc dirty-takes)))                    
+                      (set! dirty-takes (inc dirty-takes)))
 
                     (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
                             (str "No more than " impl/MAX-QUEUE-SIZE
                                  " pending takes are allowed on a single channel."))
                     (.unbounded-unshift takes handler)
                     nil))))))))
-  
+
   impl/Channel
   (close! [this]
     (if ^boolean closed
@@ -109,4 +109,3 @@
 
 (defn chan [buf]
   (ManyToManyChannel. (buffers/ring-buffer 32) 0 (buffers/ring-buffer 32) 0 buf nil))
-

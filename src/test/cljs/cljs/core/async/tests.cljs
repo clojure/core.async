@@ -104,3 +104,81 @@
 
 
 
+;;;; ops tests
+
+
+(deftest ops-tests
+  (testing "map<"
+    (go
+     (is= [2 3 4 5]
+          (<! (async/into [] (async/map< inc (async/to-chan [1 2 3 4])))))))
+  (testing "map>"
+    (go
+     (is= [2 3 4 5]
+          (let [out (chan)
+                in (async/map> inc out)]
+            (async/onto-chan in [1 2 3 4])
+            (<! (async/into [] out))))))
+  (testing "filter<"
+    (go
+     (is= [2 4 6]
+          (<! (async/into [] (async/filter< even? (async/to-chan [1 2 3 4 5 6])))))))
+  (testing "remove<"
+    (go
+     (is= [1 3 5]
+          (<! (async/into [] (async/remove< even? (async/to-chan [1 2 3 4 5 6])))))))
+  (testing "filter>"
+    (go
+     (is= [2 4 6]
+          (let [out (chan)
+                in (async/filter> even? out)]
+            (async/onto-chan in [1 2 3 4 5 6])
+            (<! (async/into [] out))))))
+  (testing "remove>"
+    (go
+     (is= [1 3 5]
+          (let [out (chan)
+                in (async/remove> even? out)]
+            (async/onto-chan in [1 2 3 4 5 6])
+            (<! (async/into [] out))))))
+  (comment (testing mapcat<
+             (is (= [0 0 1 0 1 2]
+                    (<!! (a/into [] (mapcat< range
+                                             (a/to-chan [1 2 3])))))))
+           (testing mapcat>
+             (is (= [0 0 1 0 1 2]
+                    (let [out (chan)
+                          in (mapcat> range out)]
+                      (onto-chan in [1 2 3])
+                      (<!! (a/into [] out))))))
+           (testing pipe
+             (is (= [1 2 3 4 5]
+                    (let [out (chan)]
+                      (pipe (a/to-chan [1 2 3 4 5])
+                            out)
+                      (<!! (a/into [] out))))))
+           (testing split
+             ;; Must provide buffers for channels else the tests won't complete
+             (let [[even odd] (a/split even? (a/to-chan [1 2 3 4 5 6]) 5 5)]
+               (is (= [2 4 6]
+                      (<!! (a/into [] even))))
+               (is (= [1 3 5]
+                      (<!! (a/into [] odd))))))
+           (testing map
+             (is (= [0 4 8 12]
+                    (<!! (a/into [] (a/map + [(a/to-chan (range 4))
+                                              (a/to-chan (range 4))
+                                              (a/to-chan (range 4))
+                                              (a/to-chan (range 4))]))))))
+           (testing merge
+             ;; merge uses alt, so results can be in any order, we're using
+             ;; frequencies as a way to make sure we get the right result.
+             (is (= {0 4
+                     1 4
+                     2 4
+                     3 4}
+                    (frequencies (<!! (a/into [] (a/merge [(a/to-chan (range 4))
+                                                           (a/to-chan (range 4))
+                                                           (a/to-chan (range 4))
+                                                           (a/to-chan (range 4))])))))))
+))

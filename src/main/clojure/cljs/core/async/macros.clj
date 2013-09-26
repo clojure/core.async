@@ -25,7 +25,7 @@
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
   (let [clauses (partition 2 clauses)
-        opt? #(keyword? (first %)) 
+        opt? #(keyword? (first %))
         opts (filter opt? clauses)
         clauses (remove opt? clauses)
         [clauses bindings]
@@ -55,7 +55,7 @@
                                    `(= ~gch ~(if (vector? port) (first port) port)))
                                  ports))
                      (if (and (seq? expr) (vector? (first expr)))
-                       `(let [~(first expr) ~gret] ~@(rest expr)) 
+                       `(let [~(first expr) ~gret] ~@(rest expr))
                        expr)])
                   clauses)
         (= ~gch :default) val#))))
@@ -90,3 +90,9 @@
 
   [& clauses]
   (do-alt 'alts! clauses))
+
+
+(defmacro go-loop
+  "Like (go (loop ...))"
+  [bindings & body]
+  `(go (loop ~bindings ~@body)))
