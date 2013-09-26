@@ -1,6 +1,6 @@
 (ns clojure.core.async-test
-  (:use clojure.test
-        clojure.core.async))
+  (:require [clojure.core.async :refer :all :as a]
+            [clojure.test :refer :all]))
 
 
 (defn default-chan []
@@ -8,7 +8,7 @@
 
 (defn drain [c]
   (close! c)
-  (dorun (take-while #(not (nil? %)) 
+  (dorun (take-while #(not (nil? %))
                      (repeatedly #(<!! c)))))
 
 
@@ -133,3 +133,63 @@
            (put! c :enqueues #(deliver p :proceeded))  ;; enqueue a put
            (<!! c)        ;; make room in the buffer
            (deref p 250 :timeout)))))
+
+
+
+(deftest ops-tests
+  (testing map<
+    (is (= [2 3 4 5]
+           (<!! (a/into [] (a/map< inc (a/to-chan [1 2 3 4])))))))
+  (testing map>
+    (is (= [2 3 4 5]
+           (let [out (chan)
+                 in (a/map> inc out)]
+             (onto-chan in [1 2 3 4])
+             (<!! (a/into [] out))))))
+  (testing filter<
+    (is (= [2 4 6]
+           (<!! (a/into [] (a/filter< even? (a/to-chan [1 2 3 4 5 6])))))))
+  (testing remove<
+    (is (= [1 3 5]
+           (<!! (a/into [] (a/remove< even? (a/to-chan [1 2 3 4 5 6])))))))
+  (testing filter>
+    (is (= [2 4 6]
+           (let [out (chan)
+                 in (filter> even? out)]
+             (onto-chan in [1 2 3 4 5 6])
+             (<!! (a/into [] out))))))
+  (testing remove>
+    (is (= [1 3 5]
+           (let [out (chan)
+                 in (remove> even? out)]
+             (onto-chan in [1 2 3 4 5 6])
+             (<!! (a/into [] out))))))
+  (testing mapcat<
+    (is (= [0 0 1 0 1 2]
+           (<!! (a/into [] (mapcat< range
+                                    (a/to-chan [1 2 3])))))))
+  (testing mapcat>
+    (is (= [0 0 1 0 1 2]
+           (let [out (chan)
+                 in (mapcat> range out)]
+             (onto-chan in [1 2 3])
+             (<!! (a/into [] out))))))
+  (testing pipe
+    (is (= [1 2 3 4 5]
+           (let [out (chan)]
+             (pipe (a/to-chan [1 2 3 4 5])
+                   out)
+             (<!! (a/into [] out))))))
+  (testing split
+    ;; Must provide buffers for channels else the tests won't complete
+    (let [[even odd] (a/split even? (a/to-chan [1 2 3 4 5 6]) 5 5)]
+      (is (= [2 4 6]
+             (<!! (a/into [] even))))
+      (is (= [1 3 5]
+             (<!! (a/into [] odd))))))
+  (testing map
+    (is (= [0 4 8 12]
+           (<!! (a/into [] (a/map + [(a/to-chan (range 4))
+                                     (a/to-chan (range 4))
+                                     (a/to-chan (range 4))
+                                     (a/to-chan (range 4))])))))))
