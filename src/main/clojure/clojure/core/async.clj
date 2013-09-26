@@ -496,7 +496,7 @@
         (close! out)
         (let [vals (f val)]
           (doseq [v vals]
-            (>! out val))
+            (>! out v))
           (recur))))))
 
 (defn mapcat<
