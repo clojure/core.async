@@ -141,44 +141,90 @@
                 in (async/remove> even? out)]
             (async/onto-chan in [1 2 3 4 5 6])
             (<! (async/into [] out))))))
-  (comment (testing mapcat<
-             (is (= [0 0 1 0 1 2]
-                    (<!! (a/into [] (mapcat< range
-                                             (a/to-chan [1 2 3])))))))
-           (testing mapcat>
-             (is (= [0 0 1 0 1 2]
-                    (let [out (chan)
-                          in (mapcat> range out)]
-                      (onto-chan in [1 2 3])
-                      (<!! (a/into [] out))))))
-           (testing pipe
-             (is (= [1 2 3 4 5]
-                    (let [out (chan)]
-                      (pipe (a/to-chan [1 2 3 4 5])
-                            out)
-                      (<!! (a/into [] out))))))
-           (testing split
-             ;; Must provide buffers for channels else the tests won't complete
-             (let [[even odd] (a/split even? (a/to-chan [1 2 3 4 5 6]) 5 5)]
-               (is (= [2 4 6]
-                      (<!! (a/into [] even))))
-               (is (= [1 3 5]
-                      (<!! (a/into [] odd))))))
-           (testing map
-             (is (= [0 4 8 12]
-                    (<!! (a/into [] (a/map + [(a/to-chan (range 4))
-                                              (a/to-chan (range 4))
-                                              (a/to-chan (range 4))
-                                              (a/to-chan (range 4))]))))))
-           (testing merge
-             ;; merge uses alt, so results can be in any order, we're using
-             ;; frequencies as a way to make sure we get the right result.
-             (is (= {0 4
-                     1 4
-                     2 4
-                     3 4}
-                    (frequencies (<!! (a/into [] (a/merge [(a/to-chan (range 4))
-                                                           (a/to-chan (range 4))
-                                                           (a/to-chan (range 4))
-                                                           (a/to-chan (range 4))])))))))
-))
+  (testing "mapcat<"
+    (go
+     (is= [0 0 1 0 1 2]
+          (<! (async/into [] (async/mapcat< range
+                                            (async/to-chan [1 2 3])))))))
+  (testing "mapcat>"
+    (go
+     (is= [0 0 1 0 1 2]
+          (let [out (chan)
+                in (async/mapcat> range out)]
+            (async/onto-chan in [1 2 3])
+            (<! (async/into [] out))))))
+  (testing "pipe"
+    (go
+     (is= [1 2 3 4 5]
+          (let [out (chan)]
+            (async/pipe (async/to-chan [1 2 3 4 5])
+                        out)
+            (<! (async/into [] out))))))
+  (testing "split"
+    ;; Must provide buffers for channels else the tests won't complete
+    (go
+     (let [[even odd] (async/split even? (async/to-chan [1 2 3 4 5 6]) 5 5)]
+       (is (= [2 4 6]
+              (<! (async/into [] even))))
+       (is (= [1 3 5]
+              (<! (async/into [] odd)))))))
+  (testing "map"
+    (go
+     (is (= [0 4 8 12]
+            (<! (async/into [] (async/map + [(async/to-chan (range 4))
+                                             (async/to-chan (range 4))
+                                             (async/to-chan (range 4))
+                                             (async/to-chan (range 4))])))))))
+  (testing "merge"
+    ;; merge uses alt, so results can be in any order, we're using
+    ;; frequencies as a way to make sure we get the right result.
+    (go
+     (is= {0 4
+           1 4
+           2 4
+           3 4}
+          (frequencies (<! (async/into [] (async/merge [(async/to-chan (range 4))
+                                                        (async/to-chan (range 4))
+                                                        (async/to-chan (range 4))
+                                                        (async/to-chan (range 4))])))))))
+
+  (testing "mult"
+    (go
+     (let [a (chan 4)
+           b (chan 4)
+           src (chan)
+           m (async/mult src)]
+       (async/tap m a)
+       (async/tap m b)
+       (async/pipe (async/to-chan (range 4)) src)
+       (is= [0 1 2 3]
+            (<! (async/into [] a)))
+       (is= [0 1 2 3]
+            (<! (async/into [] b))))))
+
+  (testing "pub-sub"
+    (go
+     (let [a-ints (chan 5)
+           a-strs (chan 5)
+           b-ints (chan 5)
+           b-strs (chan 5)
+           src (chan)
+           p (async/pub src (fn [x]
+                        (if (string? x)
+                          :string
+                          :int)))]
+       (async/sub p :string a-strs)
+       (async/sub p :string b-strs)
+       (async/sub p :int a-ints)
+       (async/sub p :int b-ints)
+       (async/pipe (async/to-chan [1 "a" 2 "b" 3 "c"]) src)
+       (is (= [1 2 3]
+              (<! (async/into [] a-ints))))
+       (is (= [1 2 3]
+              (<! (async/into [] b-ints))))
+       (is (= ["a" "b" "c"]
+              (<! (async/into [] a-strs))))
+       (is (= ["a" "b" "c"]
+              (<! (async/into [] b-strs)))))))
+
+  )

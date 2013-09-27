@@ -137,63 +137,63 @@
 
 
 (deftest ops-tests
-  (testing map<
+  (testing "map<"
     (is (= [2 3 4 5]
            (<!! (a/into [] (a/map< inc (a/to-chan [1 2 3 4])))))))
-  (testing map>
+  (testing "map>"
     (is (= [2 3 4 5]
            (let [out (chan)
                  in (a/map> inc out)]
              (onto-chan in [1 2 3 4])
              (<!! (a/into [] out))))))
-  (testing filter<
+  (testing "filter<"
     (is (= [2 4 6]
            (<!! (a/into [] (a/filter< even? (a/to-chan [1 2 3 4 5 6])))))))
-  (testing remove<
+  (testing "remove<"
     (is (= [1 3 5]
            (<!! (a/into [] (a/remove< even? (a/to-chan [1 2 3 4 5 6])))))))
-  (testing filter>
+  (testing "filter>"
     (is (= [2 4 6]
            (let [out (chan)
                  in (filter> even? out)]
              (onto-chan in [1 2 3 4 5 6])
              (<!! (a/into [] out))))))
-  (testing remove>
+  (testing "remove>"
     (is (= [1 3 5]
            (let [out (chan)
                  in (remove> even? out)]
              (onto-chan in [1 2 3 4 5 6])
              (<!! (a/into [] out))))))
-  (testing mapcat<
+  (testing "mapcat<"
     (is (= [0 0 1 0 1 2]
            (<!! (a/into [] (mapcat< range
                                     (a/to-chan [1 2 3])))))))
-  (testing mapcat>
+  (testing "mapcat>"
     (is (= [0 0 1 0 1 2]
            (let [out (chan)
                  in (mapcat> range out)]
              (onto-chan in [1 2 3])
              (<!! (a/into [] out))))))
-  (testing pipe
+  (testing "pipe"
     (is (= [1 2 3 4 5]
            (let [out (chan)]
              (pipe (a/to-chan [1 2 3 4 5])
                    out)
              (<!! (a/into [] out))))))
-  (testing split
+  (testing "split"
     ;; Must provide buffers for channels else the tests won't complete
     (let [[even odd] (a/split even? (a/to-chan [1 2 3 4 5 6]) 5 5)]
       (is (= [2 4 6]
              (<!! (a/into [] even))))
       (is (= [1 3 5]
              (<!! (a/into [] odd))))))
-  (testing map
+  (testing "map"
     (is (= [0 4 8 12]
            (<!! (a/into [] (a/map + [(a/to-chan (range 4))
                                      (a/to-chan (range 4))
                                      (a/to-chan (range 4))
                                      (a/to-chan (range 4))]))))))
-  (testing merge
+  (testing "merge"
     ;; merge uses alt, so results can be in any order, we're using
     ;; frequencies as a way to make sure we get the right result.
     (is (= {0 4
@@ -203,4 +203,41 @@
            (frequencies (<!! (a/into [] (a/merge [(a/to-chan (range 4))
                                                   (a/to-chan (range 4))
                                                   (a/to-chan (range 4))
-                                                  (a/to-chan (range 4))]))))))))
+                                                  (a/to-chan (range 4))])))))))
+
+  (testing "mult"
+    (let [a (chan 4)
+          b (chan 4)
+          src (chan)
+          m (mult src)]
+      (tap m a)
+      (tap m b)
+      (pipe (a/to-chan (range 4)) src)
+      (is (= [0 1 2 3]
+             (<!! (a/into [] a))))
+      (is (= [0 1 2 3]
+             (<!! (a/into [] b))))))
+
+  (testing "pub-sub"
+    (let [a-ints (chan 5)
+          a-strs (chan 5)
+          b-ints (chan 5)
+          b-strs (chan 5)
+          src (chan)
+          p (pub src (fn [x]
+                       (if (string? x)
+                         :string
+                         :int)))]
+      (sub p :string a-strs)
+      (sub p :string b-strs)
+      (sub p :int a-ints)
+      (sub p :int b-ints)
+      (pipe (a/to-chan [1 "a" 2 "b" 3 "c"]) src)
+      (is (= [1 2 3]
+             (<!! (a/into [] a-ints))))
+      (is (= [1 2 3]
+             (<!! (a/into [] b-ints))))
+      (is (= ["a" "b" "c"]
+             (<!! (a/into [] a-strs))))
+      (is (= ["a" "b" "c"]
+             (<!! (a/into [] b-strs)))))))

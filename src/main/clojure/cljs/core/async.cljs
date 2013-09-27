@@ -279,6 +279,82 @@
   ([p ch] (remove< p ch nil))
   ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
 
+(defn- mapcat* [f in out]
+  (go-loop []
+    (let [val (<! in)]
+      (if (nil? val)
+        (close! out)
+        (let [vals (f val)]
+          (doseq [v vals]
+            (>! out v))
+          (recur))))))
+
+(defn mapcat<
+  "Takes a function and a source channel, and returns a channel which
+  contains the values in each collection produced by applying f to
+  each value taken from the source channel. f must return a
+  collection.
+
+  The returned channel will be unbuffered by default, or a buf-or-n
+  can be supplied. The channel will close when the source channel
+  closes."
+  ([f in] (mapcat< f in nil))
+  ([f in buf-or-n]
+    (let [out (chan buf-or-n)]
+      (mapcat* f in out)
+      out)))
+
+(defn mapcat>
+  "Takes a function and a target channel, and returns a channel which
+  applies f to each value put, then supplies each element of the result
+  to the target channel. f must return a collection.
+
+  The returned channel will be unbuffered by default, or a buf-or-n
+  can be supplied. The target channel will be closed when the source
+  channel closes."
+
+  ([f out] (mapcat> f out nil))
+  ([f out buf-or-n]
+     (let [in (chan buf-or-n)]
+       (mapcat* f in out)
+       in)))
+
+(defn pipe
+  "Takes elements from the from channel and supplies them to the to
+  channel. By default, the to channel will be closed when the
+  from channel closes, but can be determined by the close?
+  parameter."
+  ([from to] (pipe from to true))
+  ([from to close?]
+     (go-loop []
+      (let [v (<! from)]
+        (if (nil? v)
+          (when close? (close! to))
+          (do (>! to v)
+              (recur)))))
+     to))
+
+(defn split
+  "Takes a predicate and a source channel and returns a vector of two
+  channels, the first of which will contain the values for which the
+  predicate returned true, the second those for which it returned
+  false.
+
+  The out channels will be unbuffered by default, or two buf-or-ns can
+  be supplied. The channels will close after the source channel has
+  closed."
+  ([p ch] (split p ch nil nil))
+  ([p ch t-buf-or-n f-buf-or-n]
+     (let [tc (chan t-buf-or-n)
+           fc (chan f-buf-or-n)]
+       (go-loop []
+         (let [v (<! ch)]
+           (if (nil? v)
+             (do (close! tc) (close! fc))
+             (do (>! (if (p v) tc fc) v)
+                 (recur)))))
+       [tc fc])))
+
 (defn reduce
   "f should be a function of 2 arguments. Returns a channel containing
   the single result of applying f to init and the first item from the
@@ -292,17 +368,6 @@
         ret
         (recur (f ret v))))))
 
-
-#_(defn- bounded-count
-  "Returns the smaller of n or the count of coll, without examining
-  more than n items if coll is not counted"
-  [n coll]
-  (if (counted? coll)
-    (min n (count coll))
-    (loop [i 0 s (seq coll)]
-      (if (and s (< i n))
-        (recur (inc i) (next s))
-        i))))
 
 (defn onto-chan
   "Puts the contents of coll into the supplied channel.
@@ -329,6 +394,209 @@
     (onto-chan ch coll)
     ch))
 
+
+(defprotocol Mux
+  (muxch* [_]))
+
+(defprotocol Mult
+  (tap* [m ch close?])
+  (untap* [m ch])
+  (untap-all* [m]))
+
+(defn mult
+  "Creates and returns a mult(iple) of the supplied channel. Channels
+  containing copies of the channel can be created with 'tap', and
+  detached with 'untap'.
+
+  Each item is distributed to all taps in parallel and synchronously,
+  i.e. each tap must accept before the next item is distributed. Use
+  buffering/windowing to prevent slow taps from holding up the mult.
+
+  If a tap put throws an exception, it will be removed from the mult."
+  [ch]
+  (let [cs (atom {}) ;;ch->close?
+        m (reify
+           Mux
+           (muxch* [_] ch)
+
+           Mult
+           (tap* [_ ch close?] (swap! cs assoc ch close?) nil)
+           (untap* [_ ch] (swap! cs dissoc ch) nil)
+           (untap-all* [_] (reset! cs {}) nil))
+        dchan (chan 1)
+        dctr (atom nil)
+        done #(when (zero? (swap! dctr dec))
+                (put! dchan true))]
+    (go-loop []
+     (let [val (<! ch)]
+       (if (nil? val)
+         (doseq [[c close?] @cs]
+           (when close? (close! c)))
+         (let [chs (keys @cs)]
+           (reset! dctr (count chs))
+           (doseq [c chs]
+               (try
+                 (put! c val done)
+                 (catch js/Object e
+                   (swap! dctr dec)
+                   (untap* m c))))
+           ;;wait for all
+           (<! dchan)
+           (recur)))))
+    m))
+
+(defn tap
+  "Copies the mult source onto the supplied channel.
+
+  By default the channel will be closed when the source closes,
+  but can be determined by the close? parameter."
+  ([mult ch] (tap mult ch true))
+  ([mult ch close?] (tap* mult ch close?) ch))
+
+(defn untap
+  "Disconnects a target channel from a mult"
+  [mult ch]
+  (untap* mult ch))
+
+(defn untap-all
+  "Disconnects all target channels from a mult"
+  [mult] (untap-all* mult))
+
+
+(defprotocol Pub
+  (sub* [p v ch close?])
+  (unsub* [p v ch])
+  (unsub-all* [p] [p v]))
+
+(defn pub
+  "Creates and returns a pub(lication) of the supplied channel,
+  partitioned into topics by the topic-fn. topic-fn will be applied to
+  each value on the channel and the result will determine the 'topic'
+  on which that value will be put. Channels can be subscribed to
+  receive copies of topics using 'sub', and unsubscribed using
+  'unsub'. Each topic will be handled by an internal mult on a
+  dedicated channel. By default these internal channels are
+  unbuffered, but a buf-fn can be supplied which, given a topic,
+  creates a buffer with desired properties.
+
+  Each item is distributed to all subs in parallel and synchronously,
+  i.e. each sub must accept before the next item is distributed. Use
+  buffering/windowing to prevent slow subs from holding up the pub.
+
+  Note that if buf-fns are used then each topic is handled
+  asynchronously, i.e. if a channel is subscribed to more than one
+  topic it should not expect them to be interleaved identically with
+  the source."
+  ([ch topic-fn] (pub ch topic-fn (constantly nil)))
+  ([ch topic-fn buf-fn]
+     (let [mults (atom {}) ;;topic->mult
+           ensure-mult (fn [topic]
+                         (or (get @mults topic)
+                             (get (swap! mults
+                                         #(if (% topic) % (assoc % topic (mult (chan (buf-fn topic))))))
+                                  topic)))
+           p (reify
+              Mux
+              (muxch* [_] ch)
+
+              Pub
+              (sub* [p topic ch close?]
+                    (let [m (ensure-mult topic)]
+                      (tap m ch close?)))
+              (unsub* [p topic ch]
+                      (when-let [m (get @mults topic)]
+                        (untap m ch)))
+              (unsub-all* [_] (reset! mults {}))
+              (unsub-all* [_ topic] (swap! mults dissoc topic)))]
+       (go-loop []
+         (let [val (<! ch)]
+           (if (nil? val)
+             (doseq [m (vals @mults)]
+               (close! (muxch* m)))
+             (let [topic (topic-fn val)
+                   m (get @mults topic)]
+               (when m
+                 (try
+                   (>! (muxch* m) val)
+                   (catch js/Object e
+                     (swap! mults dissoc topic))))
+               (recur)))))
+       p)))
+
+(defn sub
+  "Subscribes a channel to a topic of a pub.
+
+  By default the channel will be closed when the source closes,
+  but can be determined by the close? parameter."
+  ([p topic ch] (sub p topic ch true))
+  ([p topic ch close?] (sub* p topic ch close?)))
+
+(defn unsub
+  "Unsubscribes a channel from a topic of a pub"
+  [p topic ch]
+  (unsub* p topic ch))
+
+(defn unsub-all
+  "Unsubscribes all channels from a pub, or a topic of a pub"
+  ([p] (unsub-all* p))
+  ([p topic] (unsub-all* p topic)))
+
+
+;;;;
+
+(defn map
+  "Takes a function and a collection of source channels, and returns a
+  channel which contains the values produced by applying f to the set
+  of first items taken from each source channel, followed by applying
+  f to the set of second items from each channel, until any one of the
+  channels is closed, at which point the output channel will be
+  closed. The returned channel will be unbuffered by default, or a
+  buf-or-n can be supplied"
+  ([f chs] (map f chs nil))
+  ([f chs buf-or-n]
+     (let [chs (vec chs)
+           out (chan buf-or-n)
+           cnt (count chs)
+           rets (object-array cnt)
+           dchan (chan 1)
+           dctr (atom nil)
+           done (mapv (fn [i]
+                         (fn [ret]
+                           (aset rets i ret)
+                           (when (zero? (swap! dctr dec))
+                             (put! dchan (java.util.Arrays/copyOf rets cnt)))))
+                       (range cnt))]
+       (go-loop []
+         (reset! dctr cnt)
+         (dotimes [i cnt]
+           (try
+             (take! (chs i) (done i))
+             (catch js/Object e
+               (swap! dctr dec))))
+         (let [rets (<! dchan)]
+           (if (some nil? rets)
+             (close! out)
+             (do (>! out (apply f rets))
+                 (recur)))))
+       out)))
+
+(defn merge
+  "Takes a collection of source channels and returns a channel which
+  contains all values taken from them. The returned channel will be
+  unbuffered by default, or a buf-or-n can be supplied. The channel
+  will close after all the source channels have closed."
+  ([chs] (merge chs nil))
+  ([chs buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go-loop [cs (vec chs)]
+         (if (pos? (count cs))
+           (let [[v c] (alts! cs)]
+             (if (nil? v)
+               (recur (filterv #(not= c %) cs))
+               (do (>! out v)
+                   (recur cs))))
+           (close! out)))
+       out)))
 
 (defn into
   "Returns a channel containing the single (collection) result of the
