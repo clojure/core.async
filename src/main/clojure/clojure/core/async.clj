@@ -7,7 +7,7 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.core.async
-  (:refer-clojure :exclude [reduce into merge map])
+  (:refer-clojure :exclude [reduce into merge map take])
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.channels :as channels]
             [clojure.core.async.impl.buffers :as buffers]
@@ -928,3 +928,42 @@
   collection. ch must close before into produces a result."
   [coll ch]
   (reduce conj coll ch))
+
+
+(defn take
+  "Returns a channel that will receive at most n items from ch. The
+   channel will be unbuffered by default, buf-or-n can be supplied.
+   the output chan will be closed after n items have been sent or ch
+   has been closed."
+  ([n ch]
+     (take n ch nil))
+  ([n ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go (loop [x 0]
+             (when (< x n)
+               (when-let [v (<! ch)]
+                 (>! out v)
+                 (recur (inc x)))))
+           (close! out))
+       out)))
+
+
+(defn unique
+  "Returns a channel that will be given unique items from ch. This is
+  done by only putting items into the output chan when they differ form
+  the last item put into the channel. Due to this there may be non-consecutive
+  duplicates in the output.
+
+  The output channel is unbuffered, unless buf-or-n is given"
+  ([ch]
+     (unique ch nil))
+  ([ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go (loop [last ::nothing]
+             (when-let [v (<! ch)]
+               (if (= v last)
+                 (recur last)
+                 (do (>! out v)
+                     (recur v)))))
+           (close! out))
+       out)))

@@ -1,5 +1,5 @@
 (ns clojure.core.async-test
-  (:refer-clojure :exclude [map into reduce merge])
+  (:refer-clojure :exclude [map into reduce merge take])
   (:require [clojure.core.async :refer :all :as a]
             [clojure.test :refer :all]))
 
@@ -222,16 +222,12 @@
 
   (testing "mix"
     (let [out (chan)
-          mx (mix out)
-          take-out (chan)
-          take6 (go (dotimes [x 6]
-                      (>! take-out (<! out)))
-                    (close! take-out))]
+          mx (mix out)]
       (admix mx (a/to-chan [1 2 3]))
       (admix mx (a/to-chan [4 5 6]))
 
       (is (= #{1 2 3 4 5 6}
-             (<!! (a/into #{} take-out))))))
+             (<!! (a/into #{} (a/take 6 out)))))))
 
   (testing "pub-sub"
     (let [a-ints (chan 5)
@@ -255,4 +251,8 @@
       (is (= ["a" "b" "c"]
              (<!! (a/into [] a-strs))))
       (is (= ["a" "b" "c"]
-             (<!! (a/into [] b-strs)))))))
+             (<!! (a/into [] b-strs))))))
+
+  (testing "unique"
+    (is (= [1 2 3 4]
+           (<!! (a/into [] (a/unique (a/to-chan [1 1 2 2 3 3 3 3 4]))))))))
