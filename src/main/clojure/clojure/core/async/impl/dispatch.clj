@@ -60,9 +60,6 @@
         class-checks (map #(when (class-check-fn %) %) checks)
         best-class (first (drop-while nil? class-checks))
         executor-symbol (class-to-executor-ns best-class)]
-    (println "best-class" best-class)
-    (println "executor" (class-to-executor-ns best-class))
-    (println "resolved" (resolve (class-to-executor-ns best-class)))
     (require (symbol (namespace executor-symbol)))
     ((resolve executor-symbol))))
 
