@@ -202,6 +202,19 @@
        (is= [0 1 2 3]
             (<! (async/into [] b))))))
 
+  (testing "mix"
+    (go
+     (let [out (chan)
+           mx (async/mix out)
+           take-out (chan)
+           take6 (go (dotimes [x 6]
+                       (>! take-out (<! out)))
+                     (close! take-out))]
+       (async/admix mx (async/to-chan [1 2 3]))
+       (async/admix mx (async/to-chan [4 5 6]))
+       (is= #{1 2 3 4 5 6}
+            (<! (async/into #{} take-out))))))
+
   (testing "pub-sub"
     (go
      (let [a-ints (chan 5)

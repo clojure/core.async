@@ -218,6 +218,20 @@
       (is (= [0 1 2 3]
              (<!! (a/into [] b))))))
 
+
+  (testing "mix"
+    (let [out (chan)
+          mx (mix out)
+          take-out (chan)
+          take6 (go (dotimes [x 6]
+                      (>! take-out (<! out)))
+                    (close! take-out))]
+      (admix mx (a/to-chan [1 2 3]))
+      (admix mx (a/to-chan [4 5 6]))
+
+      (is (= #{1 2 3 4 5 6}
+             (<!! (a/into #{} take-out))))))
+
   (testing "pub-sub"
     (let [a-ints (chan 5)
           a-strs (chan 5)
