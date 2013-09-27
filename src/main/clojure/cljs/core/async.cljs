@@ -157,7 +157,7 @@
 
 (defn alts!
   "Completes at most one of several channel operations. Must be called
-  inside a (go ...) block. ports is a set of channel endpoints, which
+  inside a (go ...) block. ports is a vector of channel endpoints, which
   can be either a channel to take from or a vector of
   [channel-to-put-to val-to-put], in any combination. Takes will be
   made as if by <!, and puts will be made as if by >!. Unless

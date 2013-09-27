@@ -31,7 +31,7 @@
    Lock
    (lock [_])
    (unlock [_])
-   
+
    impl/Handler
    (active? [_] true)
    (lock-id [_] 0)
@@ -225,7 +225,7 @@
 
 (defn alts!
   "Completes at most one of several channel operations. Must be called
-  inside a (go ...) block. ports is a set of channel endpoints, which
+  inside a (go ...) block. ports is a vector of channel endpoints, which
   can be either a channel to take from or a vector of
   [channel-to-put-to val-to-put], in any combination. Takes will be
   made as if by <!, and puts will be made as if by >!. Unless
@@ -251,7 +251,7 @@
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
   (let [clauses (partition 2 clauses)
-        opt? #(keyword? (first %)) 
+        opt? #(keyword? (first %))
         opts (filter opt? clauses)
         clauses (remove opt? clauses)
         [clauses bindings]
@@ -281,7 +281,7 @@
                                    `(= ~gch ~(if (vector? port) (first port) port)))
                                  ports))
                      (if (and (seq? expr) (vector? (first expr)))
-                       `(let [~(first expr) ~gret] ~@(rest expr)) 
+                       `(let [~(first expr) ~gret] ~@(rest expr))
                        expr)])
                   clauses)
         (= ~gch :default) val#))))
@@ -403,7 +403,7 @@
           Lock
           (lock [_] (.lock ^Lock fn1))
           (unlock [_] (.unlock ^Lock fn1))
-          
+
           impl/Handler
           (active? [_] (impl/active? fn1))
           (lock-id [_] (impl/lock-id fn1))
@@ -413,7 +413,7 @@
        (if (and ret (not (nil? @ret)))
          (channels/box (f @ret))
          ret)))
-   
+
    impl/WritePort
    (put! [_ val fn0] (impl/put! ch val fn0))))
 
@@ -424,10 +424,10 @@
   (reify
    impl/Channel
    (close! [_] (impl/close! ch))
-   
+
    impl/ReadPort
    (take! [_ fn1] (impl/take! ch fn1))
-   
+
    impl/WritePort
    (put! [_ val fn0]
     (impl/put! ch (f val) fn0))))
@@ -448,7 +448,7 @@
 
    impl/ReadPort
    (take! [_ fn1] (impl/take! ch fn1))
-   
+
    impl/WritePort
    (put! [_ val fn0]
     (if (p val)
@@ -522,7 +522,7 @@
   The returned channel will be unbuffered by default, or a buf-or-n
   can be supplied. The target channel will be closed when the source
   channel closes."
-  
+
   ([f out] (mapcat> f out nil))
   ([f out buf-or-n]
      (let [in (chan buf-or-n)]
@@ -636,7 +636,7 @@
         m (reify
            Mux
            (muxch* [_] ch)
-           
+
            Mult
            (tap* [_ ch close?] (swap! cs assoc ch close?) nil)
            (untap* [_ ch] (swap! cs dissoc ch) nil)
@@ -823,7 +823,7 @@
            p (reify
               Mux
               (muxch* [_] ch)
-              
+
               Pub
               (sub* [p topic ch close?]
                     (let [m (ensure-mult topic)]
@@ -878,7 +878,7 @@
   buf-or-n can be supplied"
   ([f chs] (map f chs nil))
   ([f chs buf-or-n]
-     (let [chs (vec chs) 
+     (let [chs (vec chs)
            out (chan buf-or-n)
            cnt (count chs)
            rets (object-array cnt)
