@@ -343,7 +343,7 @@
 (defn item-to-ssa [x]
   (-item-to-ssa x))
 
-;; given an sexpr, dispatch on the first item 
+;; given an sexpr, dispatch on the first item
 (defmulti sexpr-to-ssa (fn [[x & _]]
                          x))
 
@@ -447,7 +447,7 @@
                                       (no-op))]
                                  blk-id))
                               (map second clauses)))
-      default-block (if default
+      default-block (if (odd? (count body))
                       (gen-plan
                        [blk-id (add-block)
                         _ (set-block blk-id)
@@ -545,7 +545,7 @@
     else-blk (add-block)
     final-blk (add-block)
     _ (add-instruction (->CondBr test-id then-blk else-blk))
-    
+
     _ (set-block then-blk)
     then-id (item-to-ssa then)
     _ (if (not= then-id ::terminated)
@@ -809,4 +809,3 @@
   (-> (parse-to-state-machine body env user-transitions)
       second
       (emit-state-machine num-user-params user-transitions)))
-

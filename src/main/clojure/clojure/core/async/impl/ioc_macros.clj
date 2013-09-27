@@ -445,7 +445,7 @@
                                       (no-op))]
                                  blk-id))
                               (map second clauses)))
-      default-block (if default
+      default-block (if (odd? (count body))
                       (gen-plan
                        [blk-id (add-block)
                         _ (set-block blk-id)

@@ -57,7 +57,7 @@
   (testing "quote"
     (is (= '(1 2 3)
            (runner (pause '(1 2 3))))))
-  
+
   (testing "loop expressions"
     (is (= 100
            (runner (loop [x 0]
@@ -78,12 +78,12 @@
            (runner (loop [x 0
                           y (inc x)]
                      y)))))
-  
+
   (testing "let expressions"
     (is (= 3
            (runner (let [x 1 y 2]
                      (+ x y))))))
-  
+
   (testing "vector destructuring"
     (is (= 3
            (runner (let [[x y] [1 2]]
@@ -94,7 +94,7 @@
            (runner (let [{:keys [x y] x2 :x y2 :y :as foo} {:x 1 :y 2}]
                      (assert (and foo (pause x) y x2 y2 foo))
                      (+ x y))))))
-  
+
   (testing "hash-map literals"
     (is (= {:1 1 :2 2 :3 3}
            (runner {:1 (pause 1)
@@ -110,7 +110,7 @@
            (runner [(pause 1)
                     (pause 2)
                     (pause 3)]))))
-  
+
   (testing "keywords as functions"
     (is (= :bar
            (runner (:foo (pause {:foo :bar}))))))
@@ -118,13 +118,13 @@
   (testing "vectors as functions"
     (is (= 2
            (runner ([1 2] 1)))))
-  
+
   (testing "dotimes"
     (is (= 42 (runner
                (dotimes [x 10]
                  (pause x))
                42))))
-  
+
   (testing "fn closures"
     (is (= 42
            (runner
@@ -150,6 +150,11 @@
             (case :baz
               :foo 44
               :default))))
+    (is (= nil
+           (runner
+            (case true
+              false false
+              nil))))
     (is (= 42
            (runner
             (loop [x 0]
@@ -184,7 +189,7 @@
                (finally (reset! a true))))]
       (is (and @a v)))))
 
-(defn identity-chan 
+(defn identity-chan
   "Defines a channel that instantly writes the given value"
   [x]
   (let [c (chan 1)]
@@ -323,7 +328,3 @@
     (let [c (identity-chan 42)]
       (is (= [42 c] (<!! (go (async/alts! [c]))))
           "symbol translations apply to resolved symbols")))
-
-
-
-
