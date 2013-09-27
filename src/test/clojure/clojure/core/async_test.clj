@@ -1,4 +1,5 @@
 (ns clojure.core.async-test
+  (:refer-clojure :exclude [map into reduce merge])
   (:require [clojure.core.async :refer :all :as a]
             [clojure.test :refer :all]))
 
@@ -144,7 +145,7 @@
     (is (= [2 3 4 5]
            (let [out (chan)
                  in (a/map> inc out)]
-             (onto-chan in [1 2 3 4])
+             (a/onto-chan in [1 2 3 4])
              (<!! (a/into [] out))))))
   (testing "filter<"
     (is (= [2 4 6]
@@ -156,13 +157,13 @@
     (is (= [2 4 6]
            (let [out (chan)
                  in (filter> even? out)]
-             (onto-chan in [1 2 3 4 5 6])
+             (a/onto-chan in [1 2 3 4 5 6])
              (<!! (a/into [] out))))))
   (testing "remove>"
     (is (= [1 3 5]
            (let [out (chan)
                  in (remove> even? out)]
-             (onto-chan in [1 2 3 4 5 6])
+             (a/onto-chan in [1 2 3 4 5 6])
              (<!! (a/into [] out))))))
   (testing "mapcat<"
     (is (= [0 0 1 0 1 2]
@@ -172,7 +173,7 @@
     (is (= [0 0 1 0 1 2]
            (let [out (chan)
                  in (mapcat> range out)]
-             (onto-chan in [1 2 3])
+             (a/onto-chan in [1 2 3])
              (<!! (a/into [] out))))))
   (testing "pipe"
     (is (= [1 2 3 4 5]
