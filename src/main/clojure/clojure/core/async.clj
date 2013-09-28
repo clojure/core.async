@@ -7,7 +7,8 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.core.async
-  (:refer-clojure :exclude [reduce into merge map take])
+  (:refer-clojure :exclude [reduce into merge map take partition
+                            partition-by] :as core)
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.channels :as channels]
             [clojure.core.async.impl.buffers :as buffers]
@@ -19,7 +20,8 @@
             )
   (:import [clojure.core.async ThreadLocalRandom]
            [java.util.concurrent.locks Lock]
-           [java.util.concurrent Executors Executor]))
+           [java.util.concurrent Executors Executor]
+           [java.util ArrayList]))
 
 (alias 'core 'clojure.core)
 
@@ -250,7 +252,7 @@
 
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
-  (let [clauses (partition 2 clauses)
+  (let [clauses (core/partition 2 clauses)
         opt? #(keyword? (first %))
         opts (filter opt? clauses)
         clauses (remove opt? clauses)
@@ -959,11 +961,63 @@
      (unique ch nil))
   ([ch buf-or-n]
      (let [out (chan buf-or-n)]
-       (go (loop [last ::nothing]
+       (go (loop [last nil]
              (when-let [v (<! ch)]
                (if (= v last)
                  (recur last)
                  (do (>! out v)
                      (recur v)))))
            (close! out))
+       out)))
+
+
+(defn partition
+  "Returns a channel that will be given vectors of n size as taken from ch.
+   If ch is closed before a given vector reaches n size, the remaining items
+   in the vector will be populated with nil.
+
+   The output channel is unbuffered, unless buf-or-n is given"
+  ([n ch]
+     (partition n ch nil))
+  ([n ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go  (loop [arr (make-array Object n)
+                   idx 0]
+              (if-let [v (<! ch)]
+                (do (aset ^objects arr idx v)
+                    (let [new-idx (inc idx)]
+                      (if (< new-idx n)
+                        (recur arr new-idx)
+                        (do (>! out (vec arr))
+                            (recur (make-array Object n) 0)))))
+                (do (when (> idx 0)
+                      (>! out (vec arr)))
+                    (close! out)))))
+       out)))
+
+
+(defn partition-by
+  "Same as partition, but usese the result returned by f to mark the start
+   of a new vector.
+
+  The output channel is unbuffered, unless buf-or-n is given"
+  ([f ch]
+     (partition-by f ch nil))
+  ([f ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go (loop [lst (ArrayList.)
+                  last ::nothing]
+             (if-let [v (<! ch)]
+               (let [new-itm (f v)]
+                 (if (or (= new-itm last)
+                         (identical? last ::nothing))
+                   (do (.add ^ArrayList lst v)
+                       (recur lst new-itm))
+                   (do (>! out (vec lst))
+                       (let [new-lst (ArrayList.)]
+                         (.add ^ArrayList new-lst v)
+                         (recur new-lst new-itm)))))
+               (do (when (> (.size ^ArrayList lst) 0)
+                     (>! out (vec lst)))
+                   (close! out)))))
        out)))

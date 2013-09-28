@@ -1,5 +1,5 @@
 (ns clojure.core.async-test
-  (:refer-clojure :exclude [map into reduce merge take])
+  (:refer-clojure :exclude [map into reduce merge take partition partition-by])
   (:require [clojure.core.async :refer :all :as a]
             [clojure.test :refer :all]))
 
@@ -255,4 +255,11 @@
 
   (testing "unique"
     (is (= [1 2 3 4]
-           (<!! (a/into [] (a/unique (a/to-chan [1 1 2 2 3 3 3 3 4]))))))))
+           (<!! (a/into [] (a/unique (a/to-chan [1 1 2 2 3 3 3 3 4])))))))
+
+  (testing "partition"
+    (is (= [[1 2] [2 3]]
+           (<!! (a/into [] (a/partition 2 (a/to-chan [1 2 2 3])))))))
+  (testing "partition-by"
+    (is (= [["a" "b"] [1 :2 3] ["c"]]
+           (<!! (a/into [] (a/partition-by string? (a/to-chan ["a" "b" 1 :2 3 "c"]))))))))

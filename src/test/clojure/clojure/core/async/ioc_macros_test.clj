@@ -1,5 +1,6 @@
 (ns clojure.core.async.ioc-macros-test
-  (:refer-clojure :exclude [map into reduce merge take])
+  (:refer-clojure :exclude [map into reduce merge take partition
+                            partition-by])
   (:require [clojure.core.async.impl.ioc-macros :as ioc]
             [clojure.core.async :refer :all :as async]
             [clojure.test :refer :all]))
