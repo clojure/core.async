@@ -288,6 +288,15 @@
       (let [~@(interleave local-names local-refs)]
         ~@fn-expr)]))
 
+(defrecord Dot [cls-or-instance method args]
+  IInstruction
+  (reads-from [this] `[~cls-or-instance ~method ~@args])
+  (writes-to [this] [(:id this)])
+  (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~(:id this) (. ~cls-or-instance ~method ~@args)]))
+
 (defrecord Jmp [value block]
   IInstruction
   (reads-from [this] [value])
@@ -326,6 +335,8 @@
            (aset-all! ~state-sym
                       ~STATE-IDX ~else-block))
          :recur)))
+
+
 
 ;; Dispatch clojure forms based on data type
 (defmulti -item-to-ssa (fn [x]
@@ -467,6 +478,20 @@
   (gen-plan
    [ret-id (add-instruction (->Const expr))]
    ret-id))
+
+(defmethod sexpr-to-ssa '.
+  [[_ cls-or-instance method & args]]
+  (let [args (if (seq? method)
+               (drop 1 method)
+               args)
+        method (if (seq? method)
+                 (first method)
+                 method)]
+    (gen-plan
+     [cls-id (item-to-ssa cls-or-instance)
+      args-ids (all (map item-to-ssa args))
+      ret-id (add-instruction (->Dot cls-id method args-ids))]
+     ret-id)))
 
 (defmethod sexpr-to-ssa 'try
   [[_ & body]]

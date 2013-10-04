@@ -56,6 +56,10 @@
            (runner (when (pause false)
                      (pause true))))))
 
+  (testing "dot forms"
+    (is (= 42 (runner (. Long (parseLong "42")))))
+    (is (= 42 (runner (. Long parseLong "42")))))
+
   (testing "quote"
     (is (= '(1 2 3)
            (runner (pause '(1 2 3))))))
