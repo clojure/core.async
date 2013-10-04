@@ -1,5 +1,5 @@
 (ns cljs.core.async.tests
-  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close!] :as async]
+  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close! take partition partition-by] :as async]
             [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.timers :as timers :refer [timeout]]
@@ -223,9 +223,9 @@
            b-strs (chan 5)
            src (chan)
            p (async/pub src (fn [x]
-                        (if (string? x)
-                          :string
-                          :int)))]
+                              (if (string? x)
+                                :string
+                                :int)))]
        (async/sub p :string a-strs)
        (async/sub p :string b-strs)
        (async/sub p :int a-ints)
@@ -240,4 +240,16 @@
        (is (= ["a" "b" "c"]
               (<! (async/into [] b-strs)))))))
 
-  )
+  (testing "unique"
+    (go
+     (is= [1 2 3 4]
+          (<! (async/into [] (async/unique (async/to-chan [1 1 2 2 3 3 3 3 4])))))))
+
+  (testing "partition"
+    (go
+     (is= [[1 2] [2 3]]
+          (<! (async/into [] (async/partition 2 (async/to-chan [1 2 2 3])))))))
+  (testing "partition-by"
+    (go
+     (is= [["a" "b"] [1 :2 3] ["c"]]
+          (<! (async/into [] (async/partition-by string? (async/to-chan ["a" "b" 1 :2 3 "c"]))))))))

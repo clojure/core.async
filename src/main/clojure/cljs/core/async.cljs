@@ -1,5 +1,5 @@
 (ns cljs.core.async
-    (:refer-clojure :exclude [reduce into merge map])
+    (:refer-clojure :exclude [reduce into merge map take partition partition-by])
     (:require [cljs.core.async.impl.protocols :as impl]
               [cljs.core.async.impl.channels :as channels]
               [cljs.core.async.impl.buffers :as buffers]
@@ -712,3 +712,94 @@
   collection. ch must close before into produces a result."
   [coll ch]
   (reduce conj coll ch))
+
+
+(defn take
+  "Returns a channel that will receive at most n items from ch. The
+   channel will be unbuffered by default, buf-or-n can be supplied.
+   the output chan will be closed after n items have been sent or ch
+   has been closed."
+  ([n ch]
+     (take n ch nil))
+  ([n ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go (loop [x 0]
+             (when (< x n)
+               (when-let [v (<! ch)]
+                 (>! out v)
+                 (recur (inc x)))))
+           (close! out))
+       out)))
+
+
+(defn unique
+  "Returns a channel that will be given unique items from ch. This is
+  done by only putting items into the output chan when they differ form
+  the last item put into the channel. Due to this there may be non-consecutive
+  duplicates in the output.
+
+  The output channel is unbuffered, unless buf-or-n is given"
+  ([ch]
+     (unique ch nil))
+  ([ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go (loop [last nil]
+             (when-let [v (<! ch)]
+               (if (= v last)
+                 (recur last)
+                 (do (>! out v)
+                     (recur v)))))
+           (close! out))
+       out)))
+
+
+(defn partition
+  "Returns a channel that will be given vectors of n size as taken from ch.
+   If ch is closed before a given vector reaches n size, the remaining items
+   in the vector will be populated with nil.
+
+   The output channel is unbuffered, unless buf-or-n is given"
+  ([n ch]
+     (partition n ch nil))
+  ([n ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go  (loop [arr (make-array n)
+                   idx 0]
+              (if-let [v (<! ch)]
+                (do (aset ^objects arr idx v)
+                    (let [new-idx (inc idx)]
+                      (if (< new-idx n)
+                        (recur arr new-idx)
+                        (do (>! out (vec arr))
+                            (recur (make-array n) 0)))))
+                (do (when (> idx 0)
+                      (>! out (vec arr)))
+                    (close! out)))))
+       out)))
+
+
+(defn partition-by
+  "Same as partition, but usese the result returned by f to mark the start
+   of a new vector.
+
+  The output channel is unbuffered, unless buf-or-n is given"
+  ([f ch]
+     (partition-by f ch nil))
+  ([f ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go (loop [lst (make-array 0)
+                  last ::nothing]
+             (if-let [v (<! ch)]
+               (let [new-itm (f v)]
+                 (if (or (= new-itm last)
+                         (keyword-identical? last ::nothing))
+                   (do (.push lst v)
+                       (recur lst new-itm))
+                   (do (>! out (vec lst))
+                       (let [new-lst (make-array 0)]
+                         (.push new-lst v)
+                         (recur new-lst new-itm)))))
+               (do (when (> (alength lst) 0)
+                     (>! out (vec lst)))
+                   (close! out)))))
+       out)))
