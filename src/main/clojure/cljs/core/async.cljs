@@ -672,7 +672,7 @@
                          (fn [ret]
                            (aset rets i ret)
                            (when (zero? (swap! dctr dec))
-                             (put! dchan (java.util.Arrays/copyOf rets cnt)))))
+                             (put! dchan (.slice rets 0)))))
                        (range cnt))]
        (go-loop []
          (reset! dctr cnt)
