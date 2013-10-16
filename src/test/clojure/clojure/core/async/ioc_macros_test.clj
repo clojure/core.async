@@ -193,7 +193,47 @@
                (assert false)
                (catch Throwable ex true)
                (finally (reset! a true))))]
-      (is (and @a v)))))
+      (is (and @a v)))
+
+    (let [a (atom false)
+          v (try (runner
+                  (try
+                    (assert false)
+                    (finally (reset! a true))))
+                 (catch Throwable ex ex))]
+      (is (and @a v)))
+
+
+    (let [a (atom 0)
+          v (runner
+             (try
+               (try
+                 42
+                 (finally (swap! a inc)))
+               (finally (swap! a inc))))]
+      (is (= @a 2)))
+
+    (let [a (atom 0)
+          v (try (runner
+                  (try
+                    (try
+                      (throw (AssertionError. 42))
+                      (finally (swap! a inc)))
+                    (finally (swap! a inc))))
+                 (catch AssertionError ex ex))]
+      (is (= @a 2)))
+
+    (let [a (atom 0)
+          v (try (runner
+                  (try
+                    (try
+                      (throw (AssertionError. 42))
+                      (catch Throwable ex (throw ex))
+                      (finally (swap! a inc)))
+                    (catch Throwable ex (throw ex))
+                    (finally (swap! a inc))))
+                 (catch AssertionError ex ex))]
+      (is (= @a 2)))))
 
 (defn identity-chan
   "Defines a channel that instantly writes the given value"
