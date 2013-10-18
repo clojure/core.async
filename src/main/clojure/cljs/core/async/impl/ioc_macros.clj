@@ -27,7 +27,9 @@
 (def ^:const STATE-IDX 1)
 (def ^:const VALUE-IDX 2)
 (def ^:const BINDINGS-IDX 3)
-(def ^:const USER-START-IDX 4)
+(def ^:const EXCEPTION-FRAMES 4)
+(def ^:const CURRENT-EXCEPTION 5)
+(def ^:const USER-START-IDX 6)
 
 (defmacro aset-all!
   [arr & more]
@@ -330,6 +332,45 @@
                       ~STATE-IDX ~else-block))
          :recur)))
 
+
+(defrecord Try [catch-block catch-exception finally-block continue-block]
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] [catch-block finally-block continue-block])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~'_ (cljs.core.async.impl.ioc-helpers/add-exception-frame ~state-sym
+                                                                ~catch-block
+                                                                ~catch-exception
+                                                                ~finally-block
+                                                                ~continue-block)]))
+
+(defrecord ProcessExceptionWithValue [value]
+  IInstruction
+  (reads-from [this] [value])
+  (writes-to [this] [])
+  (block-references [this] [])
+  ITerminator
+  (terminate-block [this state-sym _]
+    `(do (aset-all! ~state-sym
+                    ~VALUE-IDX
+                    ~value)
+         (cljs.core.async.impl.ioc-helpers/process-exception ~state-sym)
+         :recur)))
+
+(defrecord EndCatchFinally []
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] [])
+  ITerminator
+  (terminate-block [this state-sym _]
+    `(do (cljs.core.async.impl.ioc-helpers/process-exception ~state-sym)
+         :recur)))
+
+
+
 ;; Dispatch clojure forms based on data type
 (defmulti -item-to-ssa (fn [x]
                          (cond
@@ -488,7 +529,7 @@
                       _ (set-block blk)
                       value-id (add-instruction (->Const ::value))
                       _ (all (map item-to-ssa finally))
-                      _ (add-instruction (->Jmp value-id end-blk))
+                      _ (add-instruction (->EndCatchFinally))
                       _ (set-block cur-blk)]
                      blk)
                     (no-op))
@@ -500,9 +541,7 @@
                     ex-id (add-instruction (->Const ::value))
                     _ (push-alter-binding :locals assoc ex-bind ex-id)
                     ids (all (map item-to-ssa catch-body))
-                    _ (add-instruction (->Jmp (last ids) (if finally-blk
-                                                           finally-blk
-                                                           end-blk)))
+                    _ (add-instruction (->ProcessExceptionWithValue (last ids)))
                     _ (pop-binding :locals)
                     _ (set-block cur-blk)
                     _ (push-alter-binding :catch (fnil conj []) [ex blk])]
@@ -511,13 +550,12 @@
       body-blk (add-block)
       _ (add-instruction (->Jmp nil body-blk))
       _ (set-block body-blk)
+      _ (add-instruction (->Try catch-blk ex finally-blk end-blk))
       ids (all (map item-to-ssa body))
       _ (if catch
           (pop-binding :catch)
           (no-op))
-      _ (add-instruction (->Jmp (last ids) (if finally-blk
-                                             finally-blk
-                                             end-blk)))
+      _ (add-instruction (->ProcessExceptionWithValue (last ids)))
       _ (set-block end-blk)
       ret (add-instruction (->Const ::value))]
      ret)))
@@ -750,18 +788,6 @@
       `(aset-all! ~state-sym ~@results)
       state-sym)))
 
-(defn- wrap-with-tries [body state-sym tries]
-  (if tries
-    (-> (reduce
-         (fn [acc [ex blk]]
-           `(try
-              ~acc
-              (catch ~ex ex# (do (aset-all! ~state-sym ~STATE-IDX ~blk ~VALUE-IDX ex#)
-                                 :recur))))
-         body
-         tries))
-    body))
-
 (defn- emit-state-machine [machine num-user-params custom-terminators]
   (let [index (index-state-machine machine)
         state-sym (with-meta (gensym "state_")
@@ -774,25 +800,31 @@
     `(let [switch# (fn [~state-sym]
                      (let [~state-val-sym (aget ~state-sym ~STATE-IDX)]
                        (cond
-                         ~@(mapcat
-                             (fn [[id blk]]
-                               [`(== ~state-val-sym ~id)
-                                 (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                                (build-block-body state-sym blk))
-                                             ~state-sym ~(build-new-state local-map index state-sym blk)]
-                                        ~(terminate-block (last blk) state-sym custom-terminators))
-                                   (wrap-with-tries state-sym (get block-catches id)))])
-                             (:blocks machine)))))]
+                        ~@(mapcat
+                           (fn [[id blk]]
+                             [`(== ~state-val-sym ~id)
+                              `(let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                               (build-block-body state-sym blk))
+                                     ~state-sym ~(build-new-state local-map index state-sym blk)]
+                                 ~(terminate-block (last blk) state-sym custom-terminators))])
+                           (:blocks machine)))))]
        (fn state-machine#
          ([] (aset-all! (make-array ~state-arr-size)
-               ~FN-IDX state-machine#
-               ~STATE-IDX ~(:start-block machine)))
+                        ~FN-IDX state-machine#
+                        ~STATE-IDX ~(:start-block machine)))
          ([~state-sym]
-           (loop []
-             (let [result# (switch# ~state-sym)]
-               (if (cljs.core/keyword-identical? result# :recur)
-                 (recur)
-                 result#))))))))
+            (let [ret-value# (try (loop []
+                                    (let [result# (switch# ~state-sym)]
+                                      (if (cljs.core/keyword-identical? result# :recur)
+                                        (recur)
+                                        result#)))
+                                  (catch js/Object ex#
+                                    (aset-all! ~state-sym ~CURRENT-EXCEPTION ex#)
+                                    (cljs.core.async.impl.ioc-helpers/process-exception ~state-sym)
+                                    :recur))]
+              (if (cljs.core/keyword-identical? ret-value# :recur)
+                (recur ~state-sym)
+                ret-value#)))))))
 
 
 (def async-custom-terminators

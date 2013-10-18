@@ -236,6 +236,18 @@
                     (catch Throwable ex (throw ex))
                     (finally (swap! a inc))))
                  (catch AssertionError ex ex))]
+      (is (= @a 2)))
+
+    (let [a (atom 0)
+          v (try (runner
+                  (try
+                    (try
+                      (throw (AssertionError. (pause 42)))
+                      (catch Throwable ex (pause (throw ex)))
+                      (finally (pause (swap! a inc))))
+                    (catch Throwable ex (pause (throw ex)))
+                    (finally (pause (swap! a inc)))))
+                 (catch AssertionError ex ex))]
       (is (= @a 2)))))
 
 (defn identity-chan

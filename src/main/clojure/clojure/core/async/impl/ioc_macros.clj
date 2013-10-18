@@ -885,19 +885,6 @@
       `(aset-all! ~state-sym ~@results)
       state-sym)))
 
-(defn- wrap-with-tries [body state-sym tries]
-  body
-  #_(if tries
-    (-> (reduce
-         (fn [acc [ex blk]]
-           `(try
-              ~acc
-              (catch ~ex ex# (do (aset-all! ~state-sym ~STATE-IDX ~blk ~VALUE-IDX ex#)
-                                 :recur))))
-         body
-         tries))
-    body))
-
 (defn- emit-state-machine [machine num-user-params custom-terminators]
   (let [index (index-state-machine machine)
         state-sym (with-meta (gensym "state_")
@@ -918,11 +905,10 @@
                                (let [result# (case (int (aget-object ~state-sym ~STATE-IDX))
                                                ~@(mapcat
                                                   (fn [[id blk]]
-                                                    [id (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                                                             (build-block-body state-sym blk))
-                                                                   ~state-sym ~(build-new-state local-map index state-sym blk)]
-                                                               ~(terminate-block (last blk) state-sym custom-terminators))
-                                                            (wrap-with-tries state-sym (get block-catches id)))])
+                                                    [id `(let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                                                         (build-block-body state-sym blk))
+                                                               ~state-sym ~(build-new-state local-map index state-sym blk)]
+                                                           ~(terminate-block (last blk) state-sym custom-terminators))])
                                                   (:blocks machine)))]
                                  (if (identical? result# :recur)
                                    (recur)

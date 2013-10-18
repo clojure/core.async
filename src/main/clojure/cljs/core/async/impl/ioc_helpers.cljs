@@ -6,7 +6,9 @@
 (def ^:const STATE-IDX 1)
 (def ^:const VALUE-IDX 2)
 (def ^:const BINDINGS-IDX 3)
-(def ^:const USER-START-IDX 4)
+(def ^:const EXCEPTION-FRAMES 4)
+(def ^:const CURRENT-EXCEPTION 5)
+(def ^:const USER-START-IDX 6)
 
 (defn aset-object [arr idx o]
   (aget arr idx o))
@@ -73,4 +75,81 @@
            (impl/close! c)
            c))
 
+(defrecord ExceptionFrame [catch-block
+                           ^Class catch-exception
+                           finally-block
+                           continue-block
+                           prev])
 
+(defn add-exception-frame [state catch-block catch-exception finally-block continue-block]
+  (ioc/aset-all! state
+                 EXCEPTION-FRAMES
+                 (->ExceptionFrame catch-block
+                                   catch-exception
+                                   finally-block
+                                   continue-block
+                                   (aget-object state EXCEPTION-FRAMES))))
+
+(defn process-exception [state]
+  (let [exception-frame (aget-object state EXCEPTION-FRAMES)
+        catch-block (:catch-block exception-frame)
+        catch-exception (:catch-exception exception-frame)
+        exception (aget-object state CURRENT-EXCEPTION)]
+    (cond
+     (and exception
+          (not exception-frame))
+     (throw exception)
+
+     (and exception
+          catch-block
+          (instance? catch-exception exception))
+     (ioc/aset-all! state
+                    STATE-IDX
+                    catch-block
+                    VALUE-IDX
+                    exception
+                    CURRENT-EXCEPTION
+                    nil
+                    EXCEPTION-FRAMES
+                    (assoc exception-frame
+                      :catch-block nil
+                      :catch-exception nil))
+
+
+     (and exception
+          (not catch-block)
+          (not (:finally-block exception-frame)))
+
+     (do (ioc/aset-all! state
+                        EXCEPTION-FRAMES
+                        (:prev exception-frame))
+         (recur state))
+
+     (and exception
+          (not catch-block)
+          (:finally-block exception-frame))
+     (ioc/aset-all! state
+                    STATE-IDX
+                    (:finally-block exception-frame)
+                    EXCEPTION-FRAMES
+                    (assoc exception-frame
+                      :finally-block nil))
+
+     (and (not exception)
+          (:finally-block exception-frame))
+     (do (ioc/aset-all! state
+                        STATE-IDX
+                        (:finally-block exception-frame)
+                        EXCEPTION-FRAMES
+                        (assoc exception-frame
+                          :finally-block nil)))
+
+     (and (not exception)
+          (not (:finally-block exception-frame)))
+     (do (ioc/aset-all! state
+                   STATE-IDX
+                   (:continue-block exception-frame)
+                   EXCEPTION-FRAMES
+                   (:prev exception-frame)))
+
+     :else (assert false "No matching clause"))))
