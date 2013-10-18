@@ -15,9 +15,12 @@
   only really useful for testing."
   [& body]
   (let [terminators {'pause `pause}]
-    `(let [state# (~(ioc/state-machine body 0 &env terminators))]
+    `(let [captured-bindings# (clojure.lang.Var/getThreadBindingFrame)
+           state# (~(ioc/state-machine body 0 &env terminators))]
+       (ioc/aset-all! state#
+                  ~ioc/BINDINGS-IDX
+                  captured-bindings#)
        (ioc/run-state-machine state#)
-       (assert (ioc/finished? state#) "state did not return finished")
        (ioc/aget-object state# ioc/VALUE-IDX))))
 
 (defmacro locals-test []
@@ -374,3 +377,10 @@
     (let [c (identity-chan 42)]
       (is (= [42 c] (<!! (go (async/alts! [c]))))
           "symbol translations apply to resolved symbols")))
+
+
+
+
+(runner
+            (try 42
+                 (catch Throwable ex ex)))

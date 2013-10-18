@@ -28,7 +28,9 @@
 (def ^:const STATE-IDX 1)
 (def ^:const VALUE-IDX 2)
 (def ^:const BINDINGS-IDX 3)
-(def ^:const USER-START-IDX 4)
+(def ^:const EXCEPTION-FRAMES 4)
+(def ^:const CURRENT-EXCEPTION 5)
+(def ^:const USER-START-IDX 6)
 
 (defn aset-object [^AtomicReferenceArray arr idx ^Object o]
   (.set arr idx o))
@@ -190,6 +192,21 @@
 ;; and then translate the instructions for this
 ;; virtual-virtual-machine back into Clojure data.
 
+(defrecord ExceptionFrame [catch-block
+                           ^Class catch-exception
+                           finally-block
+                           continue-block
+                           prev])
+
+(defn add-exception-frame [state catch-block catch-exception finally-block continue-block]
+  (aset-all! state
+             EXCEPTION-FRAMES
+             (->ExceptionFrame catch-block
+                               catch-exception
+                               finally-block
+                               continue-block
+                               (aget-object state EXCEPTION-FRAMES))))
+
 ;; Here we define the instructions:
 
 (defprotocol IInstruction
@@ -336,6 +353,112 @@
                       ~STATE-IDX ~else-block))
          :recur)))
 
+(defrecord Try [catch-block catch-exception finally-block continue-block]
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] [catch-block finally-block continue-block])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~'_ (add-exception-frame ~state-sym ~catch-block ~catch-exception ~finally-block ~continue-block)]))
+
+(defrecord ProcessExceptionWithValue [value]
+  IInstruction
+  (reads-from [this] [value])
+  (writes-to [this] [])
+  (block-references [this] [])
+  ITerminator
+  (terminate-block [this state-sym _]
+    `(do (aset-all! ~state-sym
+                    VALUE-IDX
+                    ~value)
+         (process-exception ~state-sym)
+         :recur)))
+
+(defrecord EndCatchFinally []
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] [])
+  ITerminator
+  (terminate-block [this state-sym _]
+    `(do (process-exception ~state-sym)
+         :recur)))
+
+(defn process-exception [state]
+  (let [exception-frame (aget-object state EXCEPTION-FRAMES)
+        catch-block (:catch-block exception-frame)
+        catch-exception (:catch-exception exception-frame)
+        exception (aget-object state CURRENT-EXCEPTION)]
+    (cond
+     (and exception
+          (not exception-frame))
+     (throw exception)
+
+     (and exception
+          catch-block
+          (instance? catch-exception exception))
+     (aset-all! state
+                STATE-IDX
+                catch-block
+                VALUE-IDX
+                exception
+                CURRENT-EXCEPTION
+                nil
+                EXCEPTION-FRAMES
+                (assoc exception-frame
+                  :catch-block nil
+                  :catch-exception nil))
+
+
+     (and exception
+          (not catch-block)
+          (not (:finally-block exception-frame)))
+
+     (do (aset-all! state
+                    EXCEPTION-FRAMES
+                    (:prev exception-frame))
+         (recur state))
+
+     (and exception
+          (not catch-block)
+          (:finally-block exception-frame))
+     (aset-all! state
+                STATE-IDX
+                (:finally-block exception-frame)
+                EXCEPTION-FRAMES
+                (assoc exception-frame
+                  :finally-block nil))
+
+     (and (not exception)
+          (:finally-block exception-frame))
+     (do (aset-all! state
+                    STATE-IDX
+                    (:finally-block exception-frame)
+                    EXCEPTION-FRAMES
+                    (assoc exception-frame
+                      :finally-block nil)))
+
+     (and (not exception)
+          (not (:finally-block exception-frame)))
+     (do (aset-all! state
+                   STATE-IDX
+                   (:continue-block exception-frame)
+                   EXCEPTION-FRAMES
+                   (:prev exception-frame))))))
+
+(defrecord EndTry []
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~'_ (aset-all! ~state-sym
+                 ~EXCEPTION-FRAMES
+                 (-> (aget-object ~state-sym
+                                  ~EXCEPTION-FRAMES)
+                     :prev))]))
 
 
 ;; Dispatch clojure forms based on data type
@@ -400,7 +523,7 @@
         syms (map first parted)
         inits (map second parted)]
     (gen-plan
-     [local-val-ids (all (map ; parallel bind
+     [local-val-ids (all (map ; not parallel bind
                           (fn [sym init]
                             (gen-plan
                              [itm-id (item-to-ssa init)
@@ -511,7 +634,7 @@
                       _ (set-block blk)
                       value-id (add-instruction (->Const ::value))
                       _ (all (map item-to-ssa finally))
-                      _ (add-instruction (->Jmp value-id end-blk))
+                      _ (add-instruction (->EndCatchFinally))
                       _ (set-block cur-blk)]
                      blk)
                     (no-op))
@@ -523,9 +646,7 @@
                     ex-id (add-instruction (->Const ::value))
                     _ (push-alter-binding :locals assoc ex-bind ex-id)
                     ids (all (map item-to-ssa catch-body))
-                    _ (add-instruction (->Jmp (last ids) (if finally-blk
-                                                           finally-blk
-                                                           end-blk)))
+                    _ (add-instruction (->ProcessExceptionWithValue (last ids)))
                     _ (pop-binding :locals)
                     _ (set-block cur-blk)
                     _ (push-alter-binding :catch (fnil conj []) [ex blk])]
@@ -534,13 +655,12 @@
       body-blk (add-block)
       _ (add-instruction (->Jmp nil body-blk))
       _ (set-block body-blk)
+      _ (add-instruction (->Try catch-blk ex finally-blk end-blk))
       ids (all (map item-to-ssa body))
       _ (if catch
           (pop-binding :catch)
           (no-op))
-      _ (add-instruction (->Jmp (last ids) (if finally-blk
-                                             finally-blk
-                                             end-blk)))
+      _ (add-instruction (->ProcessExceptionWithValue (last ids)))
       _ (set-block end-blk)
       ret (add-instruction (->Const ::value))]
      ret)))
@@ -780,7 +900,8 @@
       state-sym)))
 
 (defn- wrap-with-tries [body state-sym tries]
-  (if tries
+  body
+  #_(if tries
     (-> (reduce
          (fn [acc [ex blk]]
            `(try
@@ -804,24 +925,31 @@
                       ~FN-IDX state-machine#
                       ~STATE-IDX ~(:start-block machine)))
        ([~state-sym]
-          (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)]
-            (try
-              (clojure.lang.Var/resetThreadBindingFrame (aget-object ~state-sym ~BINDINGS-IDX))
-              (loop []
-                (let [result# (case (int (aget-object ~state-sym ~STATE-IDX))
-                                ~@(mapcat
-                                   (fn [[id blk]]
-                                     [id (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                                              (build-block-body state-sym blk))
-                                                    ~state-sym ~(build-new-state local-map index state-sym blk)]
-                                                ~(terminate-block (last blk) state-sym custom-terminators))
-                                             (wrap-with-tries state-sym (get block-catches id)))])
-                                   (:blocks machine)))]
-                  (if (identical? result# :recur)
-                    (recur)
-                    result#)))
-              (finally
-                (clojure.lang.Var/resetThreadBindingFrame old-frame#))))))))
+          (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)
+                ret-value# (try
+                             (clojure.lang.Var/resetThreadBindingFrame (aget-object ~state-sym ~BINDINGS-IDX))
+                             (loop []
+                               (let [result# (case (int (aget-object ~state-sym ~STATE-IDX))
+                                               ~@(mapcat
+                                                  (fn [[id blk]]
+                                                    [id (-> `(let [~@(concat (build-block-preamble local-map index state-sym blk)
+                                                                             (build-block-body state-sym blk))
+                                                                   ~state-sym ~(build-new-state local-map index state-sym blk)]
+                                                               ~(terminate-block (last blk) state-sym custom-terminators))
+                                                            (wrap-with-tries state-sym (get block-catches id)))])
+                                                  (:blocks machine)))]
+                                 (if (identical? result# :recur)
+                                   (recur)
+                                   result#)))
+                             (catch Throwable ex#
+                               (aset-all! ~state-sym CURRENT-EXCEPTION ex#)
+                               (process-exception ~state-sym)
+                               :recur)
+                             (finally
+                               (clojure.lang.Var/resetThreadBindingFrame old-frame#)))]
+            (if (identical? ret-value# :recur)
+              (recur ~state-sym)
+              ret-value#))))))
 
 (defn finished?
   "Returns true if the machine is in a finished state"
