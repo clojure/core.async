@@ -447,20 +447,6 @@
                    EXCEPTION-FRAMES
                    (:prev exception-frame))))))
 
-(defrecord EndTry []
-  IInstruction
-  (reads-from [this] [])
-  (writes-to [this] [])
-  (block-references [this] [])
-  IEmittableInstruction
-  (emit-instruction [this state-sym]
-    `[~'_ (aset-all! ~state-sym
-                 ~EXCEPTION-FRAMES
-                 (-> (aget-object ~state-sym
-                                  ~EXCEPTION-FRAMES)
-                     :prev))]))
-
-
 ;; Dispatch clojure forms based on data type
 (defmulti -item-to-ssa (fn [x]
                          (cond
