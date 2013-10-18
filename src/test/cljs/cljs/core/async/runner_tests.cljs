@@ -166,4 +166,57 @@
                (assert false)
                (catch js/Error ex true)
                (finally (reset! a true))))]
-      (is (and @a v)))))
+      (is (and @a v)))
+
+
+    (let [a (atom false)
+          v (try (runner
+                  (try
+                    (assert false)
+                    (finally (reset! a true))))
+                 (catch js/Error ex ex))]
+      (is (and @a v)))
+
+
+    (let [a (atom 0)
+          v (runner
+             (try
+               (try
+                 42
+                 (finally (swap! a inc)))
+               (finally (swap! a inc))))]
+      (is (= @a 2)))
+
+    (let [a (atom 0)
+          v (try (runner
+                  (try
+                    (try
+                      (assert false)
+                      (finally (swap! a inc)))
+                    (finally (swap! a inc))))
+                 (catch js/Error ex ex))]
+      (is (= @a 2)))
+
+    (let [a (atom 0)
+          v (try (runner
+                  (try
+                    (try
+                      (assert false)
+                      (catch js/Error ex (throw ex))
+                      (finally (swap! a inc)))
+                    (catch js/Error ex (throw ex))
+                    (finally (swap! a inc))))
+                 (catch js/Error ex ex))]
+      (is (= @a 2)))
+
+    (let [a (atom 0)
+          v (try (runner
+                  (try
+                    (try
+                      (assert false)
+                      (catch js/Error ex (pause (throw ex)))
+                      (finally (pause (swap! a inc))))
+                    (catch js/Error ex (pause (throw ex)))
+                    (finally (pause (swap! a inc)))))
+                 (catch js/Error ex ex))]
+      (is (= @a 2)))))
