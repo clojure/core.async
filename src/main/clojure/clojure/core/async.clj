@@ -57,6 +57,12 @@
   [n]
   (buffers/sliding-buffer n))
 
+(defn unblocking-buffer?
+  "Returns true if a channel created with buff will never block. That is to say,
+   puts into this buffer will never cause the buffer to be full. "
+  [buff]
+  (extends? impl/UnblockingBuffer (class buff)))
+
 (defn chan
   "Creates a channel with an optional buffer. If buf-or-n is a number,
   will create and use a fixed buffer of that size."
@@ -938,72 +944,76 @@
 
 
 (defn take
-  "Returns a channel that will receive at most n items from ch. The
-   channel will be unbuffered by default, buf-or-n can be supplied.
-   the output chan will be closed after n items have been sent or ch
-   has been closed."
+  "Returns a channel that will return, at most, n items from ch. After n items
+   have been returned, or ch has been closed, the return chanel will close.
+
+  The output channel is unbuffered by default, unless buf-or-n is given."
   ([n ch]
      (take n ch nil))
   ([n ch buf-or-n]
      (let [out (chan buf-or-n)]
        (go (loop [x 0]
              (when (< x n)
-               (when-let [v (<! ch)]
-                 (>! out v)
-                 (recur (inc x)))))
+               (let [v (<! ch)]
+                 (when (not (nil? v))
+                   (>! out v)
+                   (recur (inc x))))))
            (close! out))
        out)))
 
 
 (defn unique
-  "Returns a channel that will be given unique items from ch. This is
-  done by only putting items into the output chan when they differ form
-  the last item put into the channel. Due to this there may be non-consecutive
-  duplicates in the output.
+  "Returns a channel that will contain values from ch. Consecutive duplicate
+   values will be dropped.
 
-  The output channel is unbuffered, unless buf-or-n is given"
+  The output channel is unbuffered by default, unless buf-or-n is given."
   ([ch]
      (unique ch nil))
   ([ch buf-or-n]
      (let [out (chan buf-or-n)]
        (go (loop [last nil]
-             (when-let [v (<! ch)]
-               (if (= v last)
-                 (recur last)
-                 (do (>! out v)
-                     (recur v)))))
+             (let [v (<! ch)]
+               (when (not (nil? v))
+                 (if (= v last)
+                   (recur last)
+                   (do (>! out v)
+                       (recur v))))))
            (close! out))
        out)))
 
 
 (defn partition
-  "Returns a channel that will be given vectors of n size as taken from ch.
-   If ch is closed before a given vector reaches n size, the remaining items
-   in the vector will be populated with nil.
+  "Returns a channel that will contain vectors of n items taken from ch. The
+   final vector in the return channel may be smaller than n if ch closed before
+   the vector could be completely filled.
 
-   The output channel is unbuffered, unless buf-or-n is given"
+   The output channel is unbuffered by default, unless buf-or-n is given"
   ([n ch]
      (partition n ch nil))
   ([n ch buf-or-n]
      (let [out (chan buf-or-n)]
        (go  (loop [arr (make-array Object n)
                    idx 0]
-              (if-let [v (<! ch)]
-                (do (aset ^objects arr idx v)
-                    (let [new-idx (inc idx)]
-                      (if (< new-idx n)
-                        (recur arr new-idx)
-                        (do (>! out (vec arr))
-                            (recur (make-array Object n) 0)))))
-                (do (when (> idx 0)
-                      (>! out (vec arr)))
-                    (close! out)))))
+              (let [v (<! ch)]
+                (if (not (nil? v))
+                  (do (aset ^objects arr idx v)
+                      (let [new-idx (inc idx)]
+                        (if (< new-idx n)
+                          (recur arr new-idx)
+                          (do (>! out (vec arr))
+                              (recur (make-array Object n) 0)))))
+                  (do (when (> idx 0)
+                        (let [narray (make-array Object idx)]
+                          (System/arraycopy arr 0 narray 0 idx)
+                          (>! out (vec narray))))
+                      (close! out))))))
        out)))
 
 
 (defn partition-by
-  "Same as partition, but usese the result returned by f to mark the start
-   of a new vector.
+  "Returns a channel that will contain vectors of items taken from ch. New
+   vectors will be created whenever (f itm) returns a value that differs from
+   the previous item's (f itm).
 
   The output channel is unbuffered, unless buf-or-n is given"
   ([f ch]
@@ -1012,17 +1022,18 @@
      (let [out (chan buf-or-n)]
        (go (loop [lst (ArrayList.)
                   last ::nothing]
-             (if-let [v (<! ch)]
-               (let [new-itm (f v)]
-                 (if (or (= new-itm last)
-                         (identical? last ::nothing))
-                   (do (.add ^ArrayList lst v)
-                       (recur lst new-itm))
-                   (do (>! out (vec lst))
-                       (let [new-lst (ArrayList.)]
-                         (.add ^ArrayList new-lst v)
-                         (recur new-lst new-itm)))))
-               (do (when (> (.size ^ArrayList lst) 0)
-                     (>! out (vec lst)))
-                   (close! out)))))
+             (let [v (<! ch)]
+               (if (not (nil? v))
+                 (let [new-itm (f v)]
+                   (if (or (= new-itm last)
+                           (identical? last ::nothing))
+                     (do (.add ^ArrayList lst v)
+                         (recur lst new-itm))
+                     (do (>! out (vec lst))
+                         (let [new-lst (ArrayList.)]
+                           (.add ^ArrayList new-lst v)
+                           (recur new-lst new-itm)))))
+                 (do (when (> (.size ^ArrayList lst) 0)
+                       (>! out (vec lst)))
+                     (close! out))))))
        out)))

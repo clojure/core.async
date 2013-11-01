@@ -33,3 +33,6 @@
 
 (defprotocol Executor
   (exec [e runnable] "execute runnable asynchronously"))
+
+;; Defines a buffer that will never block (return true to full?)
+(defprotocol UnblockingBuffer)

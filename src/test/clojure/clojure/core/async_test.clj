@@ -13,6 +13,11 @@
                      (repeatedly #(<!! c)))))
 
 
+(deftest buffers-tests
+  (is (not (unblocking-buffer? (buffer 1))))
+  (is (unblocking-buffer? (dropping-buffer 1)))
+  (is (unblocking-buffer? (sliding-buffer 1))))
+
 (deftest basic-channel-test
   (let [c (default-chan)
         f (future (<!! c))]
