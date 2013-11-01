@@ -59,7 +59,7 @@
            (set! tail 0)
            (set! head length)
            (set! arr new-arr))
-       
+
        (== tail head)
        (do (set! tail 0)
            (set! head 0)
@@ -94,6 +94,7 @@
   (FixedBuffer. (ring-buffer n) n))
 
 (deftype DroppingBuffer [buf n]
+  impl/UnblockingBuffer
   impl/Buffer
   (full? [this]
     false)
@@ -110,6 +111,7 @@
   (DroppingBuffer. (ring-buffer n) n))
 
 (deftype SlidingBuffer [buf n]
+  impl/UnblockingBuffer
   impl/Buffer
   (full? [this]
     false)
@@ -125,4 +127,3 @@
 
 (defn sliding-buffer [n]
   (SlidingBuffer. (ring-buffer n) n))
-         
