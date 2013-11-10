@@ -104,6 +104,10 @@
     (is (= 2
            (runner ([1 2] 1)))))
 
+  (testing "dot forms"
+    (is (= 8 (runner (. js/Math (pow 2 3)))))
+    (is (= 8 (runner (. js/Math pow 2 3)))))
+
   (testing "quote"
     (is= '(1 2 3)
          (runner (pause '(1 2 3)))))
