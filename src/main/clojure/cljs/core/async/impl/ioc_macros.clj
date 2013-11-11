@@ -173,10 +173,14 @@
   [inst]
   (let [inst-id (with-meta (gensym "inst_")
                   {::instruction true})
-        inst (assoc inst :id inst-id)]
+        inst (assoc inst
+               :id inst-id)]
     (gen-plan
      [blk-id (get-block)
-      _ (update-in-plan [:blocks blk-id] (fnil conj []) inst)]
+      meta (get-binding :meta)
+      _ (update-in-plan [:blocks blk-id]
+                        (fnil conj [])
+                        (assoc inst :orig-meta meta))]
      inst-id)))
 
 ;;
@@ -382,7 +386,11 @@
                           :else :default)))
 
 (defn item-to-ssa [x]
-  (-item-to-ssa x))
+  (gen-plan
+   [_ (push-binding :meta (meta x))
+    id (-item-to-ssa x)
+    _ (pop-binding :meta)]
+   id))
 
 ;; given an sexpr, dispatch on the first item
 (defmulti sexpr-to-ssa (fn [[x & _]]
@@ -771,10 +779,27 @@
              `[~sym (aget ~state-sym ~(id-for-inst local-map sym))])
               args))))
 
-(defn- build-block-body [state-sym blk]
-  (mapcat
-   #(emit-instruction % state-sym)
-   (butlast blk)))
+(defn build-block-body [state-sym blk]
+  (doall (mapcat
+          (fn [inst]
+            (let [frm (emit-instruction inst state-sym)]
+              (binding [*out* *err*]
+                (println (pr-str (:orig-meta inst))
+                         (type inst)
+                         (pr-str frm)))
+              ;; attempt to update the bound forms with the original metadata
+              (reduce
+               (fn [acc idx]
+                 (assoc acc
+                   idx
+                   (let [old (get acc idx)]
+                     (if (instance? clojure.lang.IObj old)
+                       (with-meta old
+                         (merge (:orig-meta inst (meta old))))
+                       old))))
+               (vec frm)
+               (range 1 (count frm) 2))))
+          (butlast blk))))
 
 (defn- build-new-state [local-map idx state-sym blk]
   (let [results (->> blk
@@ -806,7 +831,16 @@
                               `(let [~@(concat (build-block-preamble local-map index state-sym blk)
                                                (build-block-body state-sym blk))
                                      ~state-sym ~(build-new-state local-map index state-sym blk)]
-                                 ~(terminate-block (last blk) state-sym custom-terminators))])
+                                 ~(let [inst (last blk)
+                                        form (terminate-block (last blk) state-sym custom-terminators)]
+                                    (binding [*out* *err*]
+                                      (println (pr-str (:orig-meta inst))
+                                               (type inst)))
+
+
+                                    (with-meta form
+                                      (merge (:orig-meta inst)
+                                             (meta form)))))])
                            (:blocks machine)))))]
        (fn state-machine#
          ([] (aset-all! (make-array ~state-arr-size)
