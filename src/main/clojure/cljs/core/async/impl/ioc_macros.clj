@@ -19,7 +19,8 @@
   (:import [java.util.concurrent.locks Lock]))
 
 (defn debug [x]
-  (binding [*out* *err*]
+  (binding [*out* *err*
+            *print-meta* true]
     (pprint x))
   x)
 
@@ -788,17 +789,16 @@
                          (type inst)
                          (pr-str frm)))
               ;; attempt to update the bound forms with the original metadata
-              (reduce
-               (fn [acc idx]
-                 (assoc acc
-                   idx
-                   (let [old (get acc idx)]
-                     (if (instance? clojure.lang.IObj old)
-                       (with-meta old
-                         (merge (:orig-meta inst (meta old))))
-                       old))))
-               (vec frm)
-               (range 1 (count frm) 2))))
+              (let [frm (map
+                         (fn [itm]
+                           (if (instance? clojure.lang.IObj itm)
+                             (with-meta itm
+                               (merge (:orig-meta inst)
+                                      (meta itm)))
+                             itm))
+                         frm)]
+                (debug (map meta frm))
+                frm)))
           (butlast blk))))
 
 (defn- build-new-state [local-map idx state-sym blk]
@@ -874,4 +874,5 @@
 (defn state-machine [body num-user-params env user-transitions]
   (-> (parse-to-state-machine body env user-transitions)
       second
-      (emit-state-machine num-user-params user-transitions)))
+      (emit-state-machine num-user-params user-transitions)
+      debug))
