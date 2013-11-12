@@ -784,20 +784,18 @@
   (doall (mapcat
           (fn [inst]
             (let [frm (emit-instruction inst state-sym)]
-              (binding [*out* *err*]
-                (println (pr-str (:orig-meta inst))
-                         (type inst)
-                         (pr-str frm)))
               ;; attempt to update the bound forms with the original metadata
               (let [frm (map
                          (fn [itm]
-                           (if (instance? clojure.lang.IObj itm)
-                             (with-meta itm
-                               (merge (:orig-meta inst)
-                                      (meta itm)))
+                           (if (and (seq? itm)
+                                    (instance? clojure.lang.IObj (first itm)))
+                             (let [[head & body] itm]
+                               `(~(with-meta head
+                                    (merge (:orig-meta inst)
+                                           (meta head)))
+                                 ~@body))
                              itm))
                          frm)]
-                (debug (map meta frm))
                 frm)))
           (butlast blk))))
 
@@ -833,11 +831,6 @@
                                      ~state-sym ~(build-new-state local-map index state-sym blk)]
                                  ~(let [inst (last blk)
                                         form (terminate-block (last blk) state-sym custom-terminators)]
-                                    (binding [*out* *err*]
-                                      (println (pr-str (:orig-meta inst))
-                                               (type inst)))
-
-
                                     (with-meta form
                                       (merge (:orig-meta inst)
                                              (meta form)))))])
@@ -874,5 +867,4 @@
 (defn state-machine [body num-user-params env user-transitions]
   (-> (parse-to-state-machine body env user-transitions)
       second
-      (emit-state-machine num-user-params user-transitions)
-      debug))
+      (emit-state-machine num-user-params user-transitions)))
