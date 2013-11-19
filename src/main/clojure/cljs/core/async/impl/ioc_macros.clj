@@ -324,8 +324,9 @@
   (block-references [this] [])
   IEmittableInstruction
   (emit-instruction [this state-sym]
-    `[~(:id this)
-      (set! (~field ~object) ~val)]))
+    (if field
+      `[~(:id this) (set! (~field ~object) ~val)]
+      `[~(:id this) (set! ~object          ~val)])))
 
 (defrecord CondBr [test then-block else-block]
   IInstruction
@@ -466,12 +467,26 @@
      ret-id)))
 
 (defmethod sexpr-to-ssa 'set!
-  [[_ [field obj] val]]
-  (gen-plan
-   [obj-id (item-to-ssa obj)
-    val-id (item-to-ssa val)
-    ret-id (add-instruction (->Set! field obj-id val-id))]
-   ret-id))
+  [[_ assignee val]]
+  (let [target (cond
+                 (symbol? assignee)
+                 assignee
+                 (and (list? assignee)
+                      (= (count assignee) 2))
+                 (second assignee))
+        field (if (list? assignee)
+                (first assignee))]
+    (gen-plan
+     [locals (get-binding :locals)
+
+      target-id (if (contains? locals target)
+                  (fn [p]
+                    [(get locals target) p])
+                  (item-to-ssa target))
+      val-id    (item-to-ssa val)
+
+      ret-id (add-instruction (->Set! field target-id val-id))]
+     ret-id)))
 
 (defmethod sexpr-to-ssa 'do
   [[_ & body]]
