@@ -1,5 +1,5 @@
 (ns cljs.core.async.tests
-  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close! take partition partition-by] :as async]
+  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close! take partition partition-by alts!] :as async]
             [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.timers :as timers :refer [timeout]]
@@ -253,3 +253,20 @@
     (go
      (is= [["a" "b"] [1 :2 3] ["c"]]
           (<! (async/into [] (async/partition-by string? (async/to-chan ["a" "b" 1 :2 3 "c"]))))))))
+
+;;;; regression tests
+
+(deftest regression-tests
+  (testing "ASYNC-41: mult should drop values when there are no taps"
+    (let [source (async/chan)
+          mult (async/mult source)
+          tap (async/chan)]
+      (go (>! source 42)
+          (js/setTimeout
+            (fn []
+              (go (async/tap mult tap)
+                  (>! source 43)))
+            0)
+          (alt!
+            tap ([v] (is= 43 v))
+            (timeout 500) ([v] (assert false "Value did not get put")))))))
