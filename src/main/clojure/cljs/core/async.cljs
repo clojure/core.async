@@ -447,7 +447,8 @@
                    (swap! dctr dec)
                    (untap* m c))))
            ;;wait for all
-           (<! dchan)
+           (when (seq chs)
+             (<! dchan))
            (recur)))))
     m))
 
