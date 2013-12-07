@@ -102,7 +102,8 @@
 
      (and exception
           catch-block
-          (instance? catch-exception exception))
+          (or (= :default catch-exception)
+              (instance? catch-exception exception)))
      (ioc/aset-all! state
                     STATE-IDX
                     catch-block
