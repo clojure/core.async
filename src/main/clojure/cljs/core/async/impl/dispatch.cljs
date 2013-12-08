@@ -36,6 +36,7 @@
     (cond
      (exists? js/MessageChannel) (.postMessage (.-port2 message-channel) 0)
      (exists? js/setImmediate) (js/setImmediate process-messages)
+     (and (exists? js/process) (exists? (.-nextTick js/process))) (.nextTick js/process process-messages)
      :else (js/setTimeout process-messages 0))))
 
 (defn run [f]
