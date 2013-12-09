@@ -600,6 +600,8 @@
   i.e. each sub must accept before the next item is distributed. Use
   buffering/windowing to prevent slow subs from holding up the pub.
 
+  Items received when there are no matching subs get dropped.
+
   Note that if buf-fns are used then each topic is handled
   asynchronously, i.e. if a channel is subscribed to more than one
   topic it should not expect them to be interleaved identically with
