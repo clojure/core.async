@@ -418,6 +418,8 @@
   i.e. each tap must accept before the next item is distributed. Use
   buffering/windowing to prevent slow taps from holding up the mult.
 
+  Items received when there are no taps get dropped.
+
   If a tap put throws an exception, it will be removed from the mult."
   [ch]
   (let [cs (atom {}) ;;ch->close?
@@ -447,7 +449,8 @@
                    (swap! dctr dec)
                    (untap* m c))))
            ;;wait for all
-           (<! dchan)
+           (when (seq chs)
+             (<! dchan))
            (recur)))))
     m))
 
