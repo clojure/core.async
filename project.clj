@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :parent [org.clojure/pom.contrib "0.1.2"]
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-1978"]]
+                 [org.clojure/clojurescript "0.0-2080" :scope "provided"]]
   :global-vars {*warn-on-reflection* true}
   :source-paths ["src/main/clojure"]
   :test-paths ["src/test/clojure"]
@@ -13,7 +13,7 @@
   :java-source-paths ["src/main/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
-  :plugins [[lein-cljsbuild "0.3.2"]]
+  :plugins [[lein-cljsbuild "1.0.0"]]
 
   :cljsbuild
   {:builds
