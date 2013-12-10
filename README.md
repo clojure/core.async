@@ -5,7 +5,7 @@ A Clojure library designed to provide facilities for async programming and commu
 
 ## Releases and Dependency Information
 
-Latest release: 0.1.242.0-44b1e3-alpha
+Latest release: 0.1.262.0-151b23-alpha
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
@@ -13,7 +13,7 @@ Latest release: 0.1.242.0-44b1e3-alpha
 
 ```clj
  [org.clojure/clojure "1.5.1"]
- [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]
+ [org.clojure/core.async "0.1.262.0-151b23-alpha"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
