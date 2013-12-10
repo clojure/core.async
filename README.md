@@ -37,6 +37,10 @@ Latest release: 0.1.262.0-151b23-alpha
 * [Rich Hickey on core.async](http://www.infoq.com/presentations/clojure-core-async)
 * Tim Baldridge on go macro internals - [part 1](https://www.youtube.com/watch?v=R3PZMIwXN_g) [part 2](https://www.youtube.com/watch?v=SI7qtuuahhU)
 
+## Contributing 
+
+[Contributing to Clojure projects](http://clojure.org/contributing) requires a signed Contributor Agreement. Pull requests and GitHub issues are not accepted; please use the [core.async JIRA project](http://dev.clojure.org/jira/browse/ASYNC) to report problems or enhancements.
+
 ## License
 
 Copyright © 2013 Rich Hickey and contributors
