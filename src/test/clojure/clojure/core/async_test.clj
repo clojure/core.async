@@ -145,7 +145,7 @@
 (deftest thread-tests
   (testing "bindings"
     (binding [test-dyn true]
-      (is (<! (thread test-dyn))))))
+      (is (<!! (thread test-dyn))))))
 
 
 (deftest ops-tests
