@@ -140,6 +140,12 @@
            (<!! c)        ;; make room in the buffer
            (deref p 250 :timeout)))))
 
+(def ^:dynamic test-dyn false)
+
+(deftest thread-tests
+  (testing "bindings"
+    (binding [test-dyn true]
+      (is (<! (thread test-dyn))))))
 
 
 (deftest ops-tests
