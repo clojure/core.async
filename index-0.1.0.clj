@@ -1,6 +1,6 @@
 {:namespaces
  ({:source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async/clojure.core.async-api.html",
    :name "clojure.core.async",
@@ -17,9 +17,9 @@
    :name "<!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L87",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L87",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/<!",
    :doc
@@ -31,9 +31,9 @@
    :name "<!!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L77",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L77",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/<!!",
    :doc
@@ -45,9 +45,9 @@
    :name ">!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L118",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L118",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/>!",
    :doc
@@ -59,9 +59,9 @@
    :name ">!!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L108",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L108",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/>!!",
    :doc
@@ -73,22 +73,22 @@
    :name "admix",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L770",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L772",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/admix",
    :doc "Adds ch as an input to the mix",
    :var-type "function",
-   :line 770,
+   :line 772,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([& clauses]),
    :name "alt!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L304",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L304",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/alt!",
    :doc
@@ -100,9 +100,9 @@
    :name "alt!!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L297",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L297",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/alt!!",
    :doc
@@ -114,9 +114,9 @@
    :name "alts!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L234",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L234",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/alts!",
    :doc
@@ -128,9 +128,9 @@
    :name "alts!!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L223",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L223",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/alts!!",
    :doc
@@ -142,9 +142,9 @@
    :name "buffer",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L42",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L42",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/buffer",
    :doc
@@ -156,9 +156,9 @@
    :name "chan",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L66",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L66",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/chan",
    :doc
@@ -170,9 +170,9 @@
    :name "close!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L141",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L141",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/close!",
    :doc
@@ -184,9 +184,9 @@
    :name "do-alts",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L194",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L194",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/do-alts",
    :doc "returns derefable [val port] if immediate, nil if enqueued",
@@ -197,9 +197,9 @@
    :name "dropping-buffer",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L47",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L47",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/dropping-buffer",
    :doc
@@ -211,37 +211,37 @@
    :name "filter<",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L473",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L475",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/filter<",
    :doc
    "Takes a predicate and a source channel, and returns a channel which\ncontains only the values taken from the source channel for which the\npredicate returns true. The returned channel will be unbuffered by\ndefault, or a buf-or-n can be supplied. The channel will close\nwhen the source channel closes.",
    :var-type "function",
-   :line 473,
+   :line 475,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([p ch]),
    :name "filter>",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L448",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L450",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/filter>",
    :doc
    "Takes a predicate and a target channel, and returns a channel which\nsupplies only the values for which the predicate returns true to the\ntarget channel.",
    :var-type "function",
-   :line 448,
+   :line 450,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([& body]),
    :name "go",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L347",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L347",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/go",
    :doc
@@ -253,218 +253,218 @@
    :name "go-loop",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L443",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L445",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/go-loop",
    :doc "Like (go (loop ...))",
    :var-type "macro",
-   :line 443,
+   :line 445,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([coll ch]),
    :name "into",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L938",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L940",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/into",
    :doc
    "Returns a channel containing the single (collection) result of the\nitems taken from the channel conjoined to the supplied\ncollection. ch must close before into produces a result.",
    :var-type "function",
-   :line 938,
+   :line 940,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([f chs] [f chs buf-or-n]),
    :name "map",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L884",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L886",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/map",
    :doc
    "Takes a function and a collection of source channels, and returns a\nchannel which contains the values produced by applying f to the set\nof first items taken from each source channel, followed by applying\nf to the set of second items from each channel, until any one of the\nchannels is closed, at which point the output channel will be\nclosed. The returned channel will be unbuffered by default, or a\nbuf-or-n can be supplied",
    :var-type "function",
-   :line 884,
+   :line 886,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([f ch]),
    :name "map<",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L397",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L399",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/map<",
    :doc
    "Takes a function and a source channel, and returns a channel which\ncontains the values produced by applying f to each value taken from\nthe source channel",
    :var-type "function",
-   :line 397,
+   :line 399,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([f ch]),
    :name "map>",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L428",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L430",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/map>",
    :doc
    "Takes a function and a target channel, and returns a channel which\napplies f to each value before supplying it to the target channel.",
    :var-type "function",
-   :line 428,
+   :line 430,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([f in] [f in buf-or-n]),
    :name "mapcat<",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L510",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L512",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/mapcat<",
    :doc
    "Takes a function and a source channel, and returns a channel which\ncontains the values in each collection produced by applying f to\neach value taken from the source channel. f must return a\ncollection.\n\nThe returned channel will be unbuffered by default, or a buf-or-n\ncan be supplied. The channel will close when the source channel\ncloses.",
    :var-type "function",
-   :line 510,
+   :line 512,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([f out] [f out buf-or-n]),
    :name "mapcat>",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L525",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L527",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/mapcat>",
    :doc
    "Takes a function and a target channel, and returns a channel which\napplies f to each value put, then supplies each element of the result\nto the target channel. f must return a collection.\n\nThe returned channel will be unbuffered by default, or a buf-or-n\ncan be supplied. The target channel will be closed when the source\nchannel closes.",
    :var-type "function",
-   :line 525,
+   :line 527,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([chs] [chs buf-or-n]),
    :name "merge",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L920",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L922",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/merge",
    :doc
    "Takes a collection of source channels and returns a channel which\ncontains all values taken from them. The returned channel will be\nunbuffered by default, or a buf-or-n can be supplied. The channel\nwill close after all the source channels have closed.",
    :var-type "function",
-   :line 920,
+   :line 922,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([out]),
    :name "mix",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L701",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L703",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/mix",
    :doc
    "Creates and returns a mix of one or more input channels which will\nbe put on the supplied out channel. Input sources can be added to\nthe mix with 'admix', and removed with 'unmix'. A mix supports\nsoloing, muting and pausing multiple inputs atomically using\n'toggle', and can solo using either muting or pausing as determined\nby 'solo-mode'.\n\nEach channel can have zero or more boolean modes set via 'toggle':\n\n:solo - when true, only this (ond other soloed) channel(s) will appear\n        in the mix output channel. :mute and :pause states of soloed\n        channels are ignored. If solo-mode is :mute, non-soloed\n        channels are muted, if :pause, non-soloed channels are\n        paused.\n\n:mute - muted channels will have their contents consumed but not included in the mix\n:pause - paused channels will not have their contents consumed (and thus also not included in the mix)",
    :var-type "function",
-   :line 701,
+   :line 703,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([ch]),
    :name "mult",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L632",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L634",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/mult",
    :doc
    "Creates and returns a mult(iple) of the supplied channel. Channels\ncontaining copies of the channel can be created with 'tap', and\ndetached with 'untap'.\n\nEach item is distributed to all taps in parallel and synchronously,\ni.e. each tap must accept before the next item is distributed. Use\nbuffering/windowing to prevent slow taps from holding up the mult.\n\nItems received when there are no taps get dropped.\n\nIf a tap put throws an exception, it will be removed from the mult.",
    :var-type "function",
-   :line 632,
+   :line 634,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([ch coll] [ch coll close?]),
    :name "onto-chan",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L600",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L602",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/onto-chan",
    :doc
    "Puts the contents of coll into the supplied channel.\n\nBy default the channel will be closed after the items are copied,\nbut can be determined by the close? parameter.\n\nReturns a channel which will close after the items are copied.",
    :var-type "function",
-   :line 600,
+   :line 602,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([n ch] [n ch buf-or-n]),
    :name "partition",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L985",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L987",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/partition",
    :doc
    "Returns a channel that will contain vectors of n items taken from ch. The\nfinal vector in the return channel may be smaller than n if ch closed before\nthe vector could be completely filled.\n\nThe output channel is unbuffered by default, unless buf-or-n is given",
    :var-type "function",
-   :line 985,
+   :line 987,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([f ch] [f ch buf-or-n]),
    :name "partition-by",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L1013",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L1015",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/partition-by",
    :doc
    "Returns a channel that will contain vectors of items taken from ch. New\n vectors will be created whenever (f itm) returns a value that differs from\n the previous item's (f itm).\n\nThe output channel is unbuffered, unless buf-or-n is given",
    :var-type "function",
-   :line 1013,
+   :line 1015,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([from to] [from to close?]),
    :name "pipe",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L540",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L542",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/pipe",
    :doc
    "Takes elements from the from channel and supplies them to the to\nchannel. By default, the to channel will be closed when the\nfrom channel closes, but can be determined by the close?\nparameter.",
    :var-type "function",
-   :line 540,
+   :line 542,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([ch topic-fn] [ch topic-fn buf-fn]),
    :name "pub",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L807",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L809",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/pub",
    :doc
    "Creates and returns a pub(lication) of the supplied channel,\npartitioned into topics by the topic-fn. topic-fn will be applied to\neach value on the channel and the result will determine the 'topic'\non which that value will be put. Channels can be subscribed to\nreceive copies of topics using 'sub', and unsubscribed using\n'unsub'. Each topic will be handled by an internal mult on a\ndedicated channel. By default these internal channels are\nunbuffered, but a buf-fn can be supplied which, given a topic,\ncreates a buffer with desired properties.\n\nEach item is distributed to all subs in parallel and synchronously,\ni.e. each sub must accept before the next item is distributed. Use\nbuffering/windowing to prevent slow subs from holding up the pub.\n\nItems received when there are no matching subs get dropped.\n\nNote that if buf-fns are used then each topic is handled\nasynchronously, i.e. if a channel is subscribed to more than one\ntopic it should not expect them to be interleaved identically with\nthe source.",
    :var-type "function",
-   :line 807,
+   :line 809,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([port val] [port val fn0] [port val fn0 on-caller?]),
    :name "put!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L126",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L126",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/put!",
    :doc
@@ -476,51 +476,51 @@
    :name "reduce",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L576",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L578",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/reduce",
    :doc
    "f should be a function of 2 arguments. Returns a channel containing\nthe single result of applying f to init and the first item from the\nchannel, then applying f to that result and the 2nd item, etc. If\nthe channel closes without yielding items, returns init and f is not\ncalled. ch must close before reduce produces a result.",
    :var-type "function",
-   :line 576,
+   :line 578,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([p ch] [p ch buf-or-n]),
    :name "remove<",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L491",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L493",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/remove<",
    :doc
    "Takes a predicate and a source channel, and returns a channel which\ncontains only the values taken from the source channel for which the\npredicate returns false. The returned channel will be unbuffered by\ndefault, or a buf-or-n can be supplied. The channel will close\nwhen the source channel closes.",
    :var-type "function",
-   :line 491,
+   :line 493,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([p ch]),
    :name "remove>",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L466",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L468",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/remove>",
    :doc
    "Takes a predicate and a target channel, and returns a channel which\nsupplies only the values for which the predicate returns false to the\ntarget channel.",
    :var-type "function",
-   :line 466,
+   :line 468,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([n]),
    :name "sliding-buffer",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L53",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L53",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/sliding-buffer",
    :doc
@@ -532,65 +532,65 @@
    :name "solo-mode",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L797",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L799",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/solo-mode",
    :doc
    "Sets the solo mode of the mix. mode must be one of :mute or :pause",
    :var-type "function",
-   :line 797,
+   :line 799,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([p ch] [p ch t-buf-or-n f-buf-or-n]),
    :name "split",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L555",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L557",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/split",
    :doc
    "Takes a predicate and a source channel and returns a vector of two\nchannels, the first of which will contain the values for which the\npredicate returned true, the second those for which it returned\nfalse.\n\nThe out channels will be unbuffered by default, or two buf-or-ns can\nbe supplied. The channels will close after the source channel has\nclosed.",
    :var-type "function",
-   :line 555,
+   :line 557,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([p topic ch] [p topic ch close?]),
    :name "sub",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L864",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L866",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/sub",
    :doc
    "Subscribes a channel to a topic of a pub.\n\nBy default the channel will be closed when the source closes,\nbut can be determined by the close? parameter.",
    :var-type "function",
-   :line 864,
+   :line 866,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([n ch] [n ch buf-or-n]),
    :name "take",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L946",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L948",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/take",
    :doc
    "Returns a channel that will return, at most, n items from ch. After n items\n have been returned, or ch has been closed, the return chanel will close.\n\nThe output channel is unbuffered by default, unless buf-or-n is given.",
    :var-type "function",
-   :line 946,
+   :line 948,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([port fn1] [port fn1 on-caller?]),
    :name "take!",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L93",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L93",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/take!",
    :doc
@@ -602,37 +602,37 @@
    :name "tap",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L677",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L679",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/tap",
    :doc
    "Copies the mult source onto the supplied channel.\n\nBy default the channel will be closed when the source closes,\nbut can be determined by the close? parameter.",
    :var-type "function",
-   :line 677,
+   :line 679,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([& body]),
    :name "thread",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L388",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L390",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/thread",
    :doc
    "Executes the body in another thread, returning immediately to the\ncalling thread. Returns a channel which will receive the result of\nthe body when completed.",
    :var-type "macro",
-   :line 388,
+   :line 390,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([f]),
    :name "thread-call",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L372",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L372",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/thread-call",
    :doc
@@ -644,9 +644,9 @@
    :name "timeout",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L72",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L72",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/timeout",
    :doc "Returns a channel that will close after msecs",
@@ -657,37 +657,37 @@
    :name "to-chan",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L616",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L618",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/to-chan",
    :doc
    "Creates and returns a channel which contains the contents of coll,\nclosing when exhausted.",
    :var-type "function",
-   :line 616,
+   :line 618,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([mix state-map]),
    :name "toggle",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L785",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L787",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/toggle",
    :doc
    "Atomically sets the state(s) of one or more channels in a mix. The\nstate map is a map of channels -> channel-state-map. A\nchannel-state-map is a map of attrs -> boolean, where attr is one or\nmore of :mute, :pause or :solo. Any states supplied are merged with\nthe current state.\n\nNote that channels can be added to a mix via toggle, which can be\nused to add channels in a particular (e.g. paused) state.",
    :var-type "function",
-   :line 785,
+   :line 787,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([buff]),
    :name "unblocking-buffer?",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L60",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L60",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/unblocking-buffer?",
    :doc
@@ -699,93 +699,93 @@
    :name "unique",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L965",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L967",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/unique",
    :doc
    "Returns a channel that will contain values from ch. Consecutive duplicate\n values will be dropped.\n\nThe output channel is unbuffered by default, unless buf-or-n is given.",
    :var-type "function",
-   :line 965,
+   :line 967,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([mix ch]),
    :name "unmix",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L775",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L777",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/unmix",
    :doc "Removes ch as an input to the mix",
    :var-type "function",
-   :line 775,
+   :line 777,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([mix]),
    :name "unmix-all",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L780",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L782",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/unmix-all",
    :doc "removes all inputs from the mix",
    :var-type "function",
-   :line 780,
+   :line 782,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([p topic ch]),
    :name "unsub",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L872",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L874",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/unsub",
    :doc "Unsubscribes a channel from a topic of a pub",
    :var-type "function",
-   :line 872,
+   :line 874,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([p] [p topic]),
    :name "unsub-all",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L877",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L879",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/unsub-all",
    :doc "Unsubscribes all channels from a pub, or a topic of a pub",
    :var-type "function",
-   :line 877,
+   :line 879,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([mult ch]),
    :name "untap",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L685",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L687",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/untap",
    :doc "Disconnects a target channel from a mult",
    :var-type "function",
-   :line 685,
+   :line 687,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([mult]),
    :name "untap-all",
    :namespace "clojure.core.async",
    :source-url
-   "https://github.com/clojure/core.async/blob/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj#L690",
+   "https://github.com/clojure/core.async/blob/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj#L692",
    :raw-source-url
-   "https://github.com/clojure/core.async/raw/76317035d386ce2a1d98c2c349da9b898b480c55/src/main/clojure/clojure/core/async.clj",
+   "https://github.com/clojure/core.async/raw/1228888a17d0ee60b2d8ca669a723203ab70861c/src/main/clojure/clojure/core/async.clj",
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async/untap-all",
    :doc "Disconnects all target channels from a mult",
    :var-type "function",
-   :line 690,
+   :line 692,
    :file "src/main/clojure/clojure/core/async.clj"}
   {:arglists ([write-ports]),
    :name "->BroadcastingWritePort",
