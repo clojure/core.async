@@ -360,7 +360,7 @@
 (deftest close-on-exception-tests
   (testing "threads"
     (is (nil? (<!! (thread (assert false "This exception is expected")))))
-    (is (nil? (<!! (thread (alts! [(identity-chan 42)])
+    (is (nil? (<!! (thread (alts!! [(identity-chan 42)])
                            (assert false "This exception is expected"))))))
   (testing "go blocks"
     (is (nil? (<!! (go (assert false "This exception is expected")))))

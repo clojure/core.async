@@ -390,6 +390,7 @@
                   (clojure.lang.Var/resetThreadBindingFrame binds)
                   (let [ret (try (f)
                                  (catch Throwable t
+                                   (println t)
                                    nil))]
                     (when-not (nil? ret)
                       (>!! c ret))
@@ -473,6 +474,7 @@
 
    impl/WritePort
    (put! [_ val fn1]
+     (println (impl/closed? ch))
     (if (p val)
       (impl/put! ch val fn1)
       (channels/box (impl/closed? ch))))))
@@ -516,10 +518,10 @@
     (let [val (<! in)]
       (if (nil? val)
         (close! out)
-        (let [vals (f val)
-              ok (core/reduce #(>! out %2) (impl/closed? out) vals)]
-          (when ok
-            (recur)))))))
+        (do (doseq [v (f val)]
+              (>! out v))
+            (when-not (impl/closed? out)
+              (recur)))))))
 
 (defn mapcat<
   "Takes a function and a source channel, and returns a channel which
@@ -621,11 +623,10 @@
   ([ch coll] (onto-chan ch coll true))
   ([ch coll close?]
      (go-loop [vs (seq coll)]
-       (if vs
-         (when (>! ch (first vs))
-           (recur (next vs)))
-         (when close?
-           (close! ch))))))
+              (if (and vs (>! ch (first vs)))
+                (recur (next vs))
+                (when close?
+                  (close! ch))))))
 
 (defn to-chan
   "Creates and returns a channel which contains the contents of coll,
@@ -667,8 +668,8 @@
            (untap-all* [_] (reset! cs {}) nil))
         dchan (chan 1)
         dctr (atom nil)
-        done #(when (zero? (swap! dctr dec))
-                (put! dchan true))]
+        done (fn [_] (when (zero? (swap! dctr dec))
+                      (put! dchan true)))]
     (go-loop []
      (let [val (<! ch)]
        (if (nil? val)

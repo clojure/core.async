@@ -26,6 +26,8 @@
   ([^Executor executor-svc]
      (reify impl/Executor
        (impl/exec [this r]
-         (.execute executor-svc ^Runnable r)))))
-
-
+         (.execute executor-svc ^Runnable (fn []
+                                            (try
+                                              (r)
+                                              (catch Throwable ex
+                                                (println ex)))))))))

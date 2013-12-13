@@ -7,12 +7,6 @@
 (defn default-chan []
   (chan 1))
 
-(defn drain [c]
-  (close! c)
-  (dorun (take-while #(not (nil? %))
-                     (repeatedly #(<!! c)))))
-
-
 (deftest buffers-tests
   (is (not (unblocking-buffer? (buffer 1))))
   (is (unblocking-buffer? (dropping-buffer 1)))
@@ -30,8 +24,7 @@
   (let [c (default-chan)
         _ (>!! c 42)
         blocking (deref (future (>!! c 43)) DEREF_WAIT :blocked)]
-    (is (= blocking :blocked))
-    #_(drain c)))
+    (is (= blocking :blocked))))
 
 (deftest unfulfilled-readers-block
   (let [c (default-chan)
@@ -46,7 +39,7 @@
 (deftest test-<!!-and-put!
   (let [executed (promise)
         test-channel (chan nil)]
-    (put! test-channel :test-val #(deliver executed true))
+    (put! test-channel :test-val (fn [_] (deliver executed true)))
     (is (not (realized? executed)) "The provided callback does not execute until
     a reader can consume the written value.")
     (is (= :test-val (<!! test-channel))
@@ -65,27 +58,27 @@
 
 (deftest take!-on-caller?
   (is (apply not= (let [starting-thread (Thread/currentThread)
-                      test-channel (chan nil)
-                      read-promise (promise)]
-                  (take! test-channel (fn [_] (deliver read-promise (Thread/currentThread))) true)
-                  (>!! test-channel :foo)
-                  [starting-thread @read-promise]))
+                        test-channel (chan nil)
+                        read-promise (promise)]
+                    (take! test-channel (fn [_] (deliver read-promise (Thread/currentThread))) true)
+                    (>!! test-channel :foo)
+                    [starting-thread @read-promise]))
       "When on-caller? requested, but no value is immediately
       available, take!'s callback executes on another thread.")
   (is (apply = (let [starting-thread (Thread/currentThread)
-                      test-channel (chan nil)
-                      read-promise (promise)]
-                  (put! test-channel :foo (constantly nil))
-                  (take! test-channel (fn [_] (deliver read-promise (Thread/currentThread))) true)
-                  [starting-thread @read-promise]))
+                     test-channel (chan nil)
+                     read-promise (promise)]
+                 (put! test-channel :foo (constantly nil))
+                 (take! test-channel (fn [_] (deliver read-promise (Thread/currentThread))) true)
+                 [starting-thread @read-promise]))
       "When on-caller? requested, and a value is ready to read,
       take!'s callback executes on the same thread.")
   (is (apply not= (let [starting-thread (Thread/currentThread)
-                      test-channel (chan nil)
-                      read-promise (promise)]
-                  (put! test-channel :foo (constantly nil))
-                  (take! test-channel (fn [_] (deliver read-promise (Thread/currentThread))) false)
-                  [starting-thread @read-promise]))
+                        test-channel (chan nil)
+                        read-promise (promise)]
+                    (put! test-channel :foo (constantly nil))
+                    (take! test-channel (fn [_] (deliver read-promise (Thread/currentThread))) false)
+                    [starting-thread @read-promise]))
       "When on-caller? is false, and a value is ready to read,
       take!'s callback executes on a different thread."))
 
@@ -94,7 +87,7 @@
                      test-channel (chan nil)
                      write-promise (promise)]
                  (take! test-channel (fn [_] nil))
-                 (put! test-channel :foo #(deliver write-promise (Thread/currentThread)) true)
+                 (put! test-channel :foo (fn [_] (deliver write-promise (Thread/currentThread))) true)
                  [starting-thread @write-promise]))
       "When on-caller? requested, and a reader can consume the value,
       put!'s callback executes on the same thread.")
@@ -102,18 +95,19 @@
                         test-channel (chan nil)
                         write-promise (promise)]
                     (take! test-channel (fn [_] nil))
-                    (put! test-channel :foo #(deliver write-promise (Thread/currentThread)) false)
+                    (put! test-channel :foo (fn [_] (deliver write-promise (Thread/currentThread))) false)
                     [starting-thread @write-promise]))
       "When on-caller? is false, but a reader can consume the value,
       put!'s callback executes on a different thread.")
   (is (apply not= (let [starting-thread (Thread/currentThread)
                         test-channel (chan nil)
                         write-promise (promise)]
-                    (put! test-channel :foo #(deliver write-promise (Thread/currentThread)) true)
+                    (put! test-channel :foo (fn [_] (deliver write-promise (Thread/currentThread))) true)
                     (take! test-channel (fn [_] nil))
                     [starting-thread @write-promise]))
       "When on-caller? requested, but no reader can consume the value,
       put!'s callback executes on a different thread."))
+
 
 (deftest limit-async-take!-put!
   (testing "async put! limit"
@@ -129,14 +123,14 @@
         (take! c (fn [x])))
       (is (thrown? AssertionError
                    (take! c (fn [x]))))
-      (is (nil? (>!! c 42)))))) ;; make sure the channel unlocks
+      (is (true? (>!! c 42)))))) ;; make sure the channel unlocks
 
 (deftest puts-fulfill-when-buffer-available
   (is (= :proceeded
          (let [c (chan 1)
                p (promise)]
            (>!! c :full)  ;; fill up the channel
-           (put! c :enqueues #(deliver p :proceeded))  ;; enqueue a put
+           (put! c :enqueues (fn [_] (deliver p :proceeded)))  ;; enqueue a put
            (<!! c)        ;; make room in the buffer
            (deref p 250 :timeout)))))
 
@@ -164,6 +158,11 @@
   (testing "remove<"
     (is (= [1 3 5]
            (<!! (a/into [] (a/remove< even? (a/to-chan [1 2 3 4 5 6])))))))
+
+  (testing "onto-chan"
+    (is (= (range 10)
+           (<!! (a/into [] (a/to-chan (range 10)))))))
+
   (testing "filter>"
     (is (= [2 4 6]
            (let [out (chan)
@@ -186,6 +185,8 @@
                  in (mapcat> range out)]
              (a/onto-chan in [1 2 3])
              (<!! (a/into [] out))))))
+
+
   (testing "pipe"
     (is (= [1 2 3 4 5]
            (let [out (chan)]
@@ -273,4 +274,5 @@
            (<!! (a/into [] (a/partition 2 (a/to-chan [1 2 2 3])))))))
   (testing "partition-by"
     (is (= [["a" "b"] [1 :2 3] ["c"]]
-           (<!! (a/into [] (a/partition-by string? (a/to-chan ["a" "b" 1 :2 3 "c"]))))))))
+           (<!! (a/into [] (a/partition-by string? (a/to-chan ["a" "b" 1 :2 3 "c"])))))))
+  )

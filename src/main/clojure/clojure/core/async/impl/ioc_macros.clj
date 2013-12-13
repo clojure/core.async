@@ -961,8 +961,8 @@
     nil))
 
 (defn put! [state blk c val]
-  (if-let [cb (impl/put! c val (fn-handler (fn []
-                                             (aset-all! state VALUE-IDX nil STATE-IDX blk)
+  (if-let [cb (impl/put! c val (fn-handler (fn [ret-val]
+                                             (aset-all! state VALUE-IDX ret-val STATE-IDX blk)
                                              (run-state-machine-wrapped state))))]
     (do (aset-all! state VALUE-IDX @cb STATE-IDX blk)
         :recur)
