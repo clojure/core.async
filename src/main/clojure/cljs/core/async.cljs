@@ -418,6 +418,8 @@
   i.e. each tap must accept before the next item is distributed. Use
   buffering/windowing to prevent slow taps from holding up the mult.
 
+  Items received when there are no taps get dropped.
+
   If a tap put throws an exception, it will be removed from the mult."
   [ch]
   (let [cs (atom {}) ;;ch->close?
@@ -447,7 +449,8 @@
                    (swap! dctr dec)
                    (untap* m c))))
            ;;wait for all
-           (<! dchan)
+           (when (seq chs)
+             (<! dchan))
            (recur)))))
     m))
 
@@ -596,6 +599,8 @@
   Each item is distributed to all subs in parallel and synchronously,
   i.e. each sub must accept before the next item is distributed. Use
   buffering/windowing to prevent slow subs from holding up the pub.
+
+  Items received when there are no matching subs get dropped.
 
   Note that if buf-fns are used then each topic is handled
   asynchronously, i.e. if a channel is subscribed to more than one

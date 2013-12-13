@@ -72,6 +72,7 @@
 (defn timeout
   "Returns a channel that will close after msecs"
   [msecs]
+  {:pre [(integer? msecs)]}
   (timers/timeout msecs))
 
 (defn <!!
@@ -383,14 +384,16 @@
   f when completed."
   [f]
   (let [c (chan 1)]
-    (.execute thread-macro-executor
-              (fn []
-                (let [ret (try (f)
-                               (catch Throwable t
-                                 nil))]
-                  (when-not (nil? ret)
-                    (>!! c ret))
-                  (close! c))))
+    (let [binds (clojure.lang.Var/getThreadBindingFrame)]
+      (.execute thread-macro-executor
+                (fn []
+                  (clojure.lang.Var/resetThreadBindingFrame binds)
+                  (let [ret (try (f)
+                                 (catch Throwable t
+                                   nil))]
+                    (when-not (nil? ret)
+                      (>!! c ret))
+                    (close! c)))))
     c))
 
 (defmacro thread

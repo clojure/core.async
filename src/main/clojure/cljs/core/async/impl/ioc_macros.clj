@@ -290,7 +290,9 @@
   (block-references [this] [])
   IEmittableInstruction
   (emit-instruction [this state-sym]
-    `[~(:id this) (. ~target ~(cons method args))]))
+    (if (.startsWith (name method) "-")
+      `[~(:id this) (. ~target ~method)]
+      `[~(:id this) (. ~target ~(cons method args))])))
 
 (defrecord Jmp [value block]
   IInstruction
