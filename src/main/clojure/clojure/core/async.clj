@@ -474,10 +474,9 @@
 
    impl/WritePort
    (put! [_ val fn1]
-     (println (impl/closed? ch))
     (if (p val)
       (impl/put! ch val fn1)
-      (channels/box (impl/closed? ch))))))
+      (channels/box (not (impl/closed? ch)))))))
 
 (defn remove>
   "Takes a predicate and a target channel, and returns a channel which

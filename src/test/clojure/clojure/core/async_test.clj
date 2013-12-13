@@ -274,5 +274,4 @@
            (<!! (a/into [] (a/partition 2 (a/to-chan [1 2 2 3])))))))
   (testing "partition-by"
     (is (= [["a" "b"] [1 :2 3] ["c"]]
-           (<!! (a/into [] (a/partition-by string? (a/to-chan ["a" "b" 1 :2 3 "c"])))))))
-  )
+           (<!! (a/into [] (a/partition-by string? (a/to-chan ["a" "b" 1 :2 3 "c"]))))))))
