@@ -56,7 +56,7 @@
     (cleanup this)
     (if @closed
       (do (.unlock mutex)
-          (box nil))
+          (box false))
       (let [^Lock handler handler
             iter (.iterator takes)
             [put-cb take-cb] (when (.hasNext iter)
@@ -78,7 +78,7 @@
           (do
             (.unlock mutex)
             (dispatch/run (fn [] (take-cb val)))
-            (box nil))
+            (box true))
           (if (and buf (not (impl/full? buf)))
             (do
               (.lock handler)
@@ -87,7 +87,7 @@
                 (if put-cb
                   (do (impl/add! buf val)
                       (.unlock mutex)
-                      (box nil))
+                      (box true))
                   (do (.unlock mutex)
                       nil))))
             (do
@@ -130,7 +130,7 @@
                                (recur (.next iter)))))))]
               (.unlock mutex)
               (when cb
-                (dispatch/run cb))
+                (dispatch/run #(cb true)))
               (box val))
             (do (.unlock mutex)
                 nil)))
@@ -156,7 +156,7 @@
           (if (and put-cb take-cb)
             (do
               (.unlock mutex)
-              (dispatch/run put-cb)
+              (dispatch/run #(put-cb true))
               (box val))
             (if @closed
               (do
@@ -174,6 +174,7 @@
                 nil)))))))
 
   impl/Channel
+  (closed? [_] @closed)
   (close!
     [this]
     (.lock mutex)
@@ -198,5 +199,5 @@
         nil))))
 
 (defn chan [buf]
- (ManyToManyChannel. (LinkedList.) (LinkedList.) buf (atom nil) (mutex/mutex)))
+ (ManyToManyChannel. (LinkedList.) (LinkedList.) buf (atom false) (mutex/mutex)))
 
