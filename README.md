@@ -37,6 +37,7 @@ Latest release: 0.1.267.0-0d7780-alpha
 * [Rich Hickey on core.async](http://www.infoq.com/presentations/clojure-core-async)
 * [Tim Baldridge on core.async](http://www.youtube.com/watch?v=enwIIGzhahw) from Clojure/conj 2013 ([code](https://github.com/halgari/clojure-conj-2013-core.async-examples)).
 * Tim Baldridge on go macro internals - [part 1](https://www.youtube.com/watch?v=R3PZMIwXN_g) [part 2](https://www.youtube.com/watch?v=SI7qtuuahhU)
+* [Tim Baldridge gives a tour of core.async Clojure/conj 2013](http://www.youtube.com/watch?v=enwIIGzhahw) -- code seen in this talk can be found [here](https://github.com/halgari/clojure-conj-2013-core.async-examples).
 
 ## Contributing 
 
