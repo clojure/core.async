@@ -15,7 +15,10 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
-            [clojure.set :refer (intersection)])
+            [clojure.set :refer (intersection)]
+            [clojure.tools.analyzer.jvm :as an-jvm]
+            [clojure.tools.analyzer.ast :as ast]
+            [clojure.tools.analyzer :as an])
   (:import [java.util.concurrent.locks Lock]
            [java.util.concurrent.atomic AtomicReferenceArray]))
 
@@ -160,7 +163,7 @@
   "Adds a new block, returns its id, but does not change the current block (does not call set-block)."
   []
   (gen-plan
-   [_ (update-in-plan [:block-id] (fnil inc 0))
+   [_ (update-in-plan [:block-id] (fnil inc -1))
     blk-id (get-in-plan [:block-id])
     cur-blk (get-block)
     _ (assoc-in-plan [:blocks blk-id] [])
@@ -447,546 +450,218 @@
                    EXCEPTION-FRAMES
                    (:prev exception-frame))))))
 
-;; Dispatch clojure forms based on data type
-(defmulti -item-to-ssa (fn [x]
-                         (cond
-                          (symbol? x) :symbol
-                          (instance? clojure.lang.IRecord x) :record
-                          (seq? x) :list
-                          (map? x) :map
-                          (set? x) :set
-                          (vector? x) :vector
-                          :else :default)))
+(defmulti -emit :op)
 
-(defn item-to-ssa [x]
-  (fn [p]
-    (let [[itm p :as result] ((-item-to-ssa x) p)]
-      (if (and (instance? clojure.lang.IObj x)
-               (instance? clojure.lang.IObj itm))
-        [(with-meta itm
-           (merge (meta itm)
-                  (meta x)))
-         p]
-        result))))
-
-;; given an sexpr, dispatch on the first item
-(defmulti sexpr-to-ssa (fn [[x & _]]
-                         x))
-
-(defn is-special? [x]
-  (let [^clojure.lang.MultiFn mfn sexpr-to-ssa]
-    (.getMethod mfn x)))
-
-
-
-(defn default-sexpr [args]
-  (gen-plan
-   [args-ids (all (map item-to-ssa args))
-    inst-id (add-instruction (->Call args-ids))]
-   inst-id))
-
-(defn let-binding-to-ssa
-  [[sym bind]]
-  (gen-plan
-   [bind-id (item-to-ssa bind)
-    _ (push-alter-binding :locals assoc sym bind-id)]
-   bind-id))
-
-(defmethod sexpr-to-ssa 'let*
-  [[_ binds & body]]
-  (let [parted (partition 2 binds)]
+(defn emit [x]
+  (if (= (:ssa-transform? x) false)
     (gen-plan
-     [let-ids (all (map let-binding-to-ssa parted))
-      body-ids (all (map item-to-ssa body))
-      _ (all (map (fn [x]
-                    (pop-binding :locals))
-                  (range (count parted))))]
-     (last body-ids))))
+     [resid (add-instruction {:op :ssa-inline-expr
+                              :expr x})]
+     resid)
+    (-emit x)))
 
-(defmethod sexpr-to-ssa 'loop*
-  [[_ locals & body]]
-  (let [parted (partition 2 locals)
-        syms (map first parted)
-        inits (map second parted)]
-    (gen-plan
-     [local-val-ids (all (map ; not parallel bind
-                          (fn [sym init]
-                            (gen-plan
-                             [itm-id (item-to-ssa init)
-                              _ (push-alter-binding :locals assoc sym itm-id)]
-                             itm-id))
-                          syms
-                          inits))
-      _ (all (for [x syms]
-               (pop-binding :locals)))
-      local-ids (all (map (comp add-instruction ->Const) local-val-ids))
-      body-blk (add-block)
-      final-blk (add-block)
-      _ (add-instruction (->Jmp nil body-blk))
 
-      _ (set-block body-blk)
-      _ (push-alter-binding :locals merge (zipmap syms local-ids))
-      _ (push-binding :recur-point body-blk)
-      _ (push-binding :recur-nodes local-ids)
+(defmethod -emit :const
+  [{:as op}]
+  (add-instruction op))
 
-      body-ids (all (map item-to-ssa body))
-
-      _ (pop-binding :recur-nodes)
-      _ (pop-binding :recur-point)
-      _ (pop-binding :locals)
-      _ (if (not= (last body-ids) ::terminated)
-          (add-instruction (->Jmp (last body-ids) final-blk))
-          (no-op))
-      _ (set-block final-blk)
-      ret-id (add-instruction (->Const ::value))]
-     ret-id)))
-
-(defmethod sexpr-to-ssa 'do
-  [[_ & body]]
+(defmethod -emit :if
+  [{:keys [test then else] :as op}]
+  (println (keys op))
   (gen-plan
-   [ids (all (map item-to-ssa body))]
-   (last ids)))
+   [then-block (add-block)
+    else-block (add-block)
+    end-block (add-block)
 
-(defmethod sexpr-to-ssa 'case
-  [[_ val & body]]
-  (let [clauses (partition 2 body)
-        default (when (odd? (count body))
-                  (last body))]
-    (gen-plan
-     [end-blk (add-block)
-      start-blk (get-block)
-      clause-blocks (all (map (fn [expr]
-                                (gen-plan
-                                 [blk-id (add-block)
-                                  _ (set-block blk-id)
-                                  expr-id (item-to-ssa expr)
-                                  _ (if (not= expr-id ::terminated)
-                                      (add-instruction (->Jmp expr-id end-blk))
-                                      (no-op))]
-                                 blk-id))
-                              (map second clauses)))
-      default-block (if (odd? (count body))
-                      (gen-plan
-                       [blk-id (add-block)
-                        _ (set-block blk-id)
-                        expr-id (item-to-ssa default)
-                        _ (if (not= expr-id ::terminated)
-                            (add-instruction (->Jmp expr-id end-blk))
-                            (no-op))]
-                       blk-id)
-                      (no-op))
-      _ (set-block start-blk)
-      val-id (item-to-ssa val)
-      case-id (add-instruction (->Case val-id (map first clauses) clause-blocks default-block))
-      _ (set-block end-blk)
-      ret-id (add-instruction (->Const ::value))]
-     ret-id)))
+    test-result (emit test)
 
-(defmethod sexpr-to-ssa 'quote
-  [expr]
+    _ (add-instruction {:op :cond-jmp
+                        :test test-result
+                        :true then-block
+                        :false else-block
+                        :terminator? true})
+    _ (set-block then-block)
+
+    then-val (emit then)
+    _ (add-instruction {:op :jmp
+                        :block end-block
+                        :terminator? true})
+    _ (set-block else-block)
+
+    else-val (emit else)
+    _ (add-instruction {:op :jmp
+                        :block end-block
+                        :terminator? true})
+    _ (set-block end-block)
+
+    phi-val (add-instruction {:op :phi
+                              :inbound {then-block then-val
+                                        else-block else-val}})]
+   phi-val))
+
+(defmethod -emit :binding
+  [{:keys [name init] :as op}]
+  (println (keys op) "binding" init)
   (gen-plan
-   [ret-id (add-instruction (->Const expr))]
-   ret-id))
+   [v (emit init)
+    _ (push-alter-binding :locals assoc name v)]
+   v))
 
-(defmethod sexpr-to-ssa '.
-  [[_ cls-or-instance method & args]]
-  (let [args (if (seq? method)
-               (drop 1 method)
-               args)
-        method (if (seq? method)
-                 (first method)
-                 method)]
-    (gen-plan
-     [cls-id (item-to-ssa cls-or-instance)
-      args-ids (all (map item-to-ssa args))
-      ret-id (add-instruction (->Dot cls-id method args-ids))]
-     ret-id)))
-
-(defmethod sexpr-to-ssa 'try
-  [[_ & body]]
-  (let [finally-fn (every-pred seq? (comp (partial = 'finally) first))
-        catch-fn (every-pred seq? (comp (partial = 'catch) first))
-        finally (next (first (filter finally-fn body)))
-        body (remove finally-fn body)
-        catch (next (first (filter catch-fn body)))
-        [ex ex-bind & catch-body] catch
-        body (remove catch-fn body)]
-    (gen-plan
-     [end-blk (add-block)
-      finally-blk (if finally
-                    (gen-plan
-                     [cur-blk (get-block)
-                      blk (add-block)
-                      _ (set-block blk)
-                      value-id (add-instruction (->Const ::value))
-                      _ (all (map item-to-ssa finally))
-                      _ (add-instruction (->EndCatchFinally))
-                      _ (set-block cur-blk)]
-                     blk)
-                    (no-op))
-      catch-blk (if catch
-                  (gen-plan
-                   [cur-blk (get-block)
-                    blk (add-block)
-                    _ (set-block blk)
-                    ex-id (add-instruction (->Const ::value))
-                    _ (push-alter-binding :locals assoc ex-bind ex-id)
-                    ids (all (map item-to-ssa catch-body))
-                    _ (add-instruction (->ProcessExceptionWithValue (last ids)))
-                    _ (pop-binding :locals)
-                    _ (set-block cur-blk)
-                    _ (push-alter-binding :catch (fnil conj []) [ex blk])]
-                   blk)
-                  (no-op))
-      body-blk (add-block)
-      _ (add-instruction (->Jmp nil body-blk))
-      _ (set-block body-blk)
-      _ (add-instruction (->Try catch-blk ex finally-blk end-blk))
-      ids (all (map item-to-ssa body))
-      _ (if catch
-          (pop-binding :catch)
-          (no-op))
-      _ (add-instruction (->ProcessExceptionWithValue (last ids)))
-      _ (set-block end-blk)
-      ret (add-instruction (->Const ::value))]
-     ret)))
-
-(defmethod sexpr-to-ssa 'recur
-  [[_ & vals]]
+(defmethod -emit :let
+  [{:keys [bindings body] :as op}]
+  (println (keys op) body)
   (gen-plan
-   [val-ids (all (map item-to-ssa vals))
-    recurs (get-binding :recur-nodes)
-    _ (do (assert (= (count val-ids)
-                     (count recurs))
-                  "Wrong number of arguments to recur")
-          (no-op))
-    _ (add-instruction (->Recur recurs val-ids))
+   [bindings (all (map emit bindings))
+    body-ids (emit body)
+    _ (all (map (fn [_](pop-binding :locals))
+                (range (count bindings))))]
+   body-ids))
 
-    recur-point (get-binding :recur-point)
-
-    _ (add-instruction (->Jmp nil recur-point))]
-   ::terminated))
-
-(defmethod sexpr-to-ssa 'if
-  [[_ test then else]]
+(defmethod -emit :local
+  [{:keys [name] :as op}]
+  (println (keys op) name)
   (gen-plan
-   [test-id (item-to-ssa test)
-    then-blk (add-block)
-    else-blk (add-block)
-    final-blk (add-block)
-    _ (add-instruction (->CondBr test-id then-blk else-blk))
+   [locals (get-binding :locals)]
+   (get locals name)))
 
-    _ (set-block then-blk)
-    then-id (item-to-ssa then)
-    _ (if (not= then-id ::terminated)
-        (gen-plan
-         [_ (add-instruction (->Jmp then-id final-blk))]
-         then-id)
-        (no-op))
-
-    _ (set-block else-blk)
-    else-id (item-to-ssa else)
-    _ (if (not= else-id ::terminated)
-        (gen-plan
-         [_ (add-instruction (->Jmp else-id final-blk))]
-         then-id)
-        (no-op))
-
-    _ (set-block final-blk)
-    val-id (add-instruction (->Const ::value))]
-   val-id))
-
-(defmethod sexpr-to-ssa 'fn*
-  [& fn-expr]
-  ;; For fn expressions we just want to record the expression as well
-  ;; as a list of all known renamed locals
+(defmethod -emit :invoke
+  [{:keys [args] :as op}]
+  (println (keys op) (:fn op))
   (gen-plan
-   [locals (get-binding :locals)
-    fn-id (add-instruction (->Fn fn-expr (keys locals) (vals locals)))]
-   fn-id))
+   [fn-id (emit (:fn op))
+    args-ids (all (map emit args))
+    result (add-instruction (assoc op :fn fn-id :args args-ids))]
+   result))
+
+(defn debug [x]
+  (clojure.pprint/pprint x)
+  x)
+
+(defn emit-ssa [ast]
+  (->> (gen-plan
+        [start-blk (add-block)
+         _ (set-block start-blk)
+         resid (emit ast)]
+        resid)
+       (get-plan)
+       second
+       :blocks
+       (assoc {:op :ssa
+               :children [:blocks]} :blocks)
+       debug))
+
+(def ^:dynamic *dfn* 32)
+
+(defn mark-ssa-transform-limits [transform? ast]
+  (if (or (transform? ast)
+          (some :ssa-transform? (ast/children ast)))
+    (assoc ast :ssa-transform? true)
+    (assoc ast :ssa-transform? false)))
 
 
-(def special-override? '#{case clojure.core/case})
+(defn analyze
+  [form env]
+  (binding [an/macroexpand-1 an-jvm/macroexpand-1
+            an/create-var    an-jvm/create-var
+            an/parse         an-jvm/parse
+            an/var?          var?]
+    (an/analyze form env)))
 
-(defn expand [locals form]
-  (loop [form form]
-    (if-not (seq? form)
-      form
-      (let [[s & r] form]
-        (if (symbol? s)
-          (if (or (get locals s)
-                  (special-override? s))
-            form
-            (let [LOCAL_ENV clojure.lang.Compiler/LOCAL_ENV
-                  expanded (try
-                             (push-thread-bindings
-                              {LOCAL_ENV  (merge @LOCAL_ENV locals)})
-                             (macroexpand-1 form)
-                             (finally
-                               (pop-thread-bindings)))]
-              (if (= expanded form)
-                form
-                (recur expanded))))
-          form)))))
-
-(defn terminate-custom [vals term]
-  (gen-plan
-   [blk (add-block)
-    vals (all (map item-to-ssa vals))
-    val (add-instruction (->CustomTerminator term blk vals))
-    _ (set-block blk)
-    res (add-instruction (->Const ::value))]
-   res))
-
-(defn fixup-aliases [sym]
-  (let [aliases (ns-aliases *ns*)]
-    (if-not (namespace sym)
-      sym
-      (if-let [^clojure.lang.Namespace ns (aliases (symbol (namespace sym)))]
-        (symbol (name (.getName ns)) (name sym))
-        sym))))
-
-(defmethod -item-to-ssa :list
-  [lst]
-  (gen-plan
-   [locals (get-binding :locals)
-    terminators (get-binding :terminators)
-    val (let [exp (expand locals lst)]
-          (if (seq? exp)
-            (if (symbol? (first exp))
-              (let [f (fixup-aliases (first exp))]
-                (cond
-                 (is-special? f) (sexpr-to-ssa exp)
-                 (get locals f) (default-sexpr exp)
-                 (get terminators f) (terminate-custom (next exp) (get terminators f))
-                 :else (default-sexpr exp)))
-              (default-sexpr exp))
-            (item-to-ssa exp)))]
-   val))
-
-(defmethod -item-to-ssa :default
-  [x]
-  (fn [plan]
-    [x plan]))
-
-(defmethod -item-to-ssa :symbol
-  [x]
-  (gen-plan
-   [locals (get-binding :locals)
-    inst-id (if (contains? locals x)
-              (fn [p]
-                [(locals x) p])
-              (fn [p]
-                [x p])
-              #_(add-instruction (->Const x)))]
-   inst-id))
-
-(defmethod -item-to-ssa :map
-  [x]
-  (-item-to-ssa `(hash-map ~@(mapcat identity x))))
-
-(defmethod -item-to-ssa :record
-  [x]
-  (-item-to-ssa `(~(symbol (.getName (class x)) "create")
-                  (hash-map ~@(mapcat identity x)))))
-
-(defmethod -item-to-ssa :vector
-  [x]
-  (-item-to-ssa `(vector ~@x)))
-
-(defmethod -item-to-ssa :set
-  [x]
-  (-item-to-ssa `(hash-set ~@x)))
-
-(defn parse-to-state-machine
-  "Takes an sexpr and returns a hashmap that describes the execution flow of the sexpr as
-   a series of SSA style blocks."
-  [body env terminators]
-  (-> (gen-plan
-       [_ (push-binding :locals (zipmap (keys env) (keys env)))
-        _ (push-binding :terminators terminators)
-        blk (add-block)
-        _ (set-block blk)
-        ids (all (map item-to-ssa body))
-        term-id (add-instruction (->Return (last ids)))
-        _ (pop-binding :terminators)
-        _ (pop-binding :locals)]
-       term-id)
-      get-plan))
+(defn ^:terminator foo [x y]
+  (+ x y))
 
 
-(defn index-instruction [blk-id idx inst]
-  (let [idx (reduce
-             (fn [acc id]
-               (update-in acc [id :read-in] (fnil conj #{}) blk-id))
-             idx
-             (filter instruction? (reads-from inst)))
-        idx (reduce
-             (fn [acc id]
-               (update-in acc [id :written-in] (fnil conj #{}) blk-id))
-             idx
-             (filter instruction? (writes-to inst)))]
-    idx))
-
-(defn index-block [idx [blk-id blk]]
-  (reduce (partial index-instruction blk-id) idx blk))
-
-(defn index-state-machine [machine]
-  (reduce index-block {} (:blocks machine)))
-
-(defn id-for-inst [m sym] ;; m :: symbols -> integers
-  (if-let [i (get @m sym)]
-    i
-    (let [next-idx (get @m ::next-idx)]
-      (swap! m assoc sym next-idx)
-      (swap! m assoc ::next-idx (inc next-idx))
-      next-idx)))
-
-(defn persistent-value?
-  "Returns true if this value should be saved in the state hash map"
-  [index value]
-  (or (not= (-> index value :read-in)
-            (-> index value :written-in))
-      (-> index value :read-in count (> 1))))
-
-(defn count-persistent-values
-  [index]
-  (->> (keys index)
-       (filter instruction?)
-       (filter (partial persistent-value? index))
-       count))
-
-(defn- build-block-preamble [local-map idx state-sym blk]
-  (let [args (->> (mapcat reads-from blk)
-                  (filter instruction?)
-                  (filter (partial persistent-value? idx))
-                  set
-                  vec)]
-    (if (empty? args)
-      []
-      (mapcat (fn [sym]
-             `[~sym (aget-object ~state-sym ~(id-for-inst local-map sym))])
-              args))))
-
-(defn- build-block-body [state-sym blk]
-  (mapcat
-   #(emit-instruction % state-sym)
-   (butlast blk)))
-
-(defn- build-new-state [local-map idx state-sym blk]
-  (let [results (->> blk
-                     (mapcat writes-to)
-                     (filter instruction?)
-                     (filter (partial persistent-value? idx))
-                     set
-                     vec)
-        results (interleave (map (partial id-for-inst local-map) results) results)]
-    (if-not (empty? results)
-      `(aset-all! ~state-sym ~@results)
-      state-sym)))
-
-(defn- emit-state-machine [machine num-user-params custom-terminators]
-  (let [index (index-state-machine machine)
-        state-sym (with-meta (gensym "state_")
-                    {:tag 'objects})
-        local-start-idx (+ num-user-params USER-START-IDX)
-        state-arr-size (+ local-start-idx (count-persistent-values index))
-        local-map (atom {::next-idx local-start-idx})
-        block-catches (:block-catches machine)]
-    `(fn state-machine#
-       ([] (aset-all! (AtomicReferenceArray. ~state-arr-size)
-                      ~FN-IDX state-machine#
-                      ~STATE-IDX ~(:start-block machine)))
-       ([~state-sym]
-          (let [old-frame# (clojure.lang.Var/getThreadBindingFrame)
-                ret-value# (try
-                             (clojure.lang.Var/resetThreadBindingFrame (aget-object ~state-sym ~BINDINGS-IDX))
-                             (loop []
-                               (let [result# (case (int (aget-object ~state-sym ~STATE-IDX))
-                                               ~@(mapcat
-                                                  (fn [[id blk]]
-                                                    [id `(let [~@(concat (build-block-preamble local-map index state-sym blk)
-                                                                         (build-block-body state-sym blk))
-                                                               ~state-sym ~(build-new-state local-map index state-sym blk)]
-                                                           ~(terminate-block (last blk) state-sym custom-terminators))])
-                                                  (:blocks machine)))]
-                                 (if (identical? result# :recur)
-                                   (recur)
-                                   result#)))
-                             (catch Throwable ex#
-                               (aset-all! ~state-sym CURRENT-EXCEPTION ex#)
-                               (process-exception ~state-sym)
-                               :recur)
-                             (finally
-                               (clojure.lang.Var/resetThreadBindingFrame old-frame#)))]
-            (if (identical? ret-value# :recur)
-              (recur ~state-sym)
-              ret-value#))))))
-
-(defn finished?
-  "Returns true if the machine is in a finished state"
-  [state-array]
-  (identical? (aget-object state-array STATE-IDX) ::finished))
-
-(defn- fn-handler
-  [f]
-  (reify
-   Lock
-   (lock [_])
-   (unlock [_])
-
-   impl/Handler
-   (active? [_] true)
-   (lock-id [_] 0)
-   (commit [_] f)))
 
 
-(defn run-state-machine [state]
-  ((aget-object state FN-IDX) state))
-
-(defn run-state-machine-wrapped [state]
-  (try
-    (run-state-machine state)
-    (catch Throwable ex
-      (impl/close! (aget-object state USER-START-IDX))
-      (throw ex))))
-
-(defn take! [state blk c]
-  (if-let [cb (impl/take! c (fn-handler
-                                   (fn [x]
-                                     (aset-all! state VALUE-IDX x STATE-IDX blk)
-                                     (run-state-machine-wrapped state))))]
-    (do (aset-all! state VALUE-IDX @cb STATE-IDX blk)
-        :recur)
-    nil))
-
-(defn put! [state blk c val]
-  (if-let [cb (impl/put! c val (fn-handler (fn []
-                                             (aset-all! state VALUE-IDX nil STATE-IDX blk)
-                                             (run-state-machine-wrapped state))))]
-    (do (aset-all! state VALUE-IDX @cb STATE-IDX blk)
-        :recur)
-    nil))
-
-(defn return-chan [state value]
-  (let [c (aget-object state USER-START-IDX)]
-           (when-not (nil? value)
-             (impl/put! c value (fn-handler (fn [] nil))))
-           (impl/close! c)
-           c))
 
 
-(def async-custom-terminators
-  {'<! `take!
-   'clojure.core.async/<! `take!
-   '>! `put!
-   'clojure.core.async/>! `put!
-   'alts! 'clojure.core.async/ioc-alts!
-   'clojure.core.async/alts! 'clojure.core.async/ioc-alts!
-   :Return `return-chan})
+
+(def -ast->state :b)
+(defmulti -ast->state (fn [{:keys [op]} _]
+                      op))
+
+(defprotocol ISSAState
+  (state-set-block! [this ^long block-id])
+  (state-get-block ^long [this])
+  (state-set-last-block! [this ^long block-id])
+  (state-get-last-block ^long [this])
+  (state-set-object! [this ^int idx object])
+  (state-get-object [this ^int idx])
+  (state-set-long! [this ^long idx ^long val])
+  (state-get-long [this ^long idx])
+  (state-set-double! [this ^long idx ^double val])
+  (state-get-double [this ^long idx]))
+
+(def -ast-clj :b)
+(defmulti -ast->clj (fn [{:keys [op]} _]
+                      op))
+
+(defn ast->clj [ast state]
+  (-ast->clj ast state))
+
+(defn ast->state [ast state]
+  (-ast->state ast state))
 
 
-(defn state-machine [body num-user-params env user-transitions]
-  (-> (parse-to-state-machine body env user-transitions)
-      second
-      (emit-state-machine num-user-params user-transitions)))
+
+
+
+
+(defmethod -ast->state :phi
+  [{:keys [inbound id]} {:keys [state-sym] :as state}]
+  `[~id (case (state-get-last-block ~state-sym)
+          ~@(mapcat
+             (fn [[id inst]]
+               [id inst])
+             inbound))])
+
+
+(defmethod -ast->state :ssa-inline-expr
+  [{:keys [id expr]} state]
+  [id (ast->clj expr state)])
+
+(defmethod -ast->state :invoke
+  [{:keys [id fn args]} _]
+  `[id (~fn ~@args)])
+
+(defmethod -ast->state :const
+  [{:keys [id val]} _]
+  [id val])
+
+(defmethod -ast->state :var
+  [{:keys [id var]} state]
+  [id var])
+
+
+
+(defmethod -ast->state :ssa
+  [{:keys [blocks]} {:keys [state-sym] :as state}]
+  `(loop []
+     (let [result# (case (get-block ~state-sym)
+                     ~@(mapcat
+                        (fn [[blockid insts]]
+                          [blockid `(let [~@(mapcat (fn [x]
+                                                      (ast->state x (assoc state :block-id blockid)))
+                                                    (butlast insts))])])
+                        blocks))]
+       (if (identical? ::recur result#)
+         (recur)
+         result#))))
+
+
+
+
+
+
+
+
+
+
+(-> (an-jvm/analyze '(if true (let [x 42] (foo x)) 43) (an-jvm/empty-env))
+    (ast/postwalk (partial mark-ssa-transform-limits
+                           (fn [x]
+                             (-> x :fn :var meta :terminator))))
+    (debug)
+    emit-ssa
+    (ast->clj {:state-sym ::statesym})
+    (clojure.pprint/pprint))
