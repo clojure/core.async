@@ -57,7 +57,8 @@
 
 (defn <!
   "takes a val from port. Must be called inside a (go ...) block. Will
-  return nil if closed. Will park if nothing is available."
+  return nil if closed. Will park if nothing is available.
+  Returns true unless port is already closed"
   [port]
   (assert nil "<! used not in (go ...) block"))
 
@@ -76,11 +77,13 @@
              (dispatch/run #(fn1 val)))))
        nil)))
 
-(defn- nop [])
+(defn- nop [_])
+(def ^:private fhnop (fn-handler nop))
 
 (defn >!
   "puts a val into port. nil values are not allowed. Must be called
-  inside a (go ...) block. Will park if no buffer space is available."
+  inside a (go ...) block. Will park if no buffer space is available.
+  Returns true unless port is already closed."
   [port val]
   (assert nil ">! used not in (go ...) block"))
 
@@ -89,15 +92,19 @@
    complete. nil values are not allowed. Will throw if closed. If
    on-caller? (default true) is true, and the put is immediately
    accepted, will call fn0 on calling thread.  Returns nil."
-  ([port val] (put! port val nop))
-  ([port val fn0] (put! port val fn0 true))
-  ([port val fn0 on-caller?]
-     (let [ret (impl/put! port val (fn-handler fn0))]
-       (when (and ret (not= fn0 nop))
+  ([port val]
+     (if-let [ret (impl/put! port val fhnop)]
+       @ret
+       true))
+  ([port val fn1] (put! port val fn1 true))
+  ([port val fn1 on-caller?]
+     (if-let [retb (impl/put! port val (fn-handler fn1))]
+       (let [ret @retb]
          (if on-caller?
-           (fn0)
-           (dispatch/run fn0)))
-       nil)))
+           (fn1 ret)
+           (dispatch/run #(fn1 ret)))
+         ret)
+       true)))
 
 (defn close!
   ([port]
@@ -150,7 +157,7 @@
                   wport (when (vector? port) (port 0))
                   vbox (if wport
                          (let [val (port 1)]
-                           (impl/put! wport val (alt-handler flag #(fret [nil wport]))))
+                           (impl/put! wport val (alt-handler flag #(fret [% wport]))))
                          (impl/take! port (alt-handler flag #(fret [% port]))))]
               (if vbox
                 (channels/box [@vbox (or wport port)])
@@ -163,8 +170,8 @@
 
 (defn alts!
   "Completes at most one of several channel operations. Must be called
-  inside a (go ...) block. ports is a vector of channel endpoints, which
-  can be either a channel to take from or a vector of
+   inside a (go ...) block. ports is a vector of channel endpoints,
+   which can be either a channel to take from or a vector of
   [channel-to-put-to val-to-put], in any combination. Takes will be
   made as if by <!, and puts will be made as if by >!. Unless
   the :priority option is true, if more than one port operation is
@@ -172,7 +179,8 @@
   ready and a :default value is supplied, [default-val :default] will
   be returned, otherwise alts! will park until the first operation to
   become ready completes. Returns [val port] of the completed
-  operation, where val is the value taken for takes, and nil for puts.
+  operation, where val is the value taken for takes, and a
+  boolean (true unless already closed, as per put!) for puts.
 
   opts are passed as :key val ... Supported options:
 
@@ -197,6 +205,7 @@
   (reify
    impl/Channel
    (close! [_] (impl/close! ch))
+   (closed? [_] (impl/closed? ch))
 
    impl/ReadPort
    (take! [_ fn1]
@@ -214,7 +223,7 @@
          ret)))
 
    impl/WritePort
-   (put! [_ val fn0] (impl/put! ch val fn0))))
+   (put! [_ val fn1] (impl/put! ch val fn1))))
 
 (defn map>
   "Takes a function and a target channel, and returns a channel which
@@ -228,8 +237,8 @@
    (take! [_ fn1] (impl/take! ch fn1))
 
    impl/WritePort
-   (put! [_ val fn0]
-     (impl/put! ch (f val) fn0))))
+   (put! [_ val fn1]
+     (impl/put! ch (f val) fn1))))
 
 
 
@@ -241,15 +250,16 @@
   (reify
    impl/Channel
    (close! [_] (impl/close! ch))
+   (closed? [_] (impl/closed? ch))
 
    impl/ReadPort
    (take! [_ fn1] (impl/take! ch fn1))
 
    impl/WritePort
-   (put! [_ val fn0]
+   (put! [_ val fn1]
     (if (p val)
-      (impl/put! ch val fn0)
-      (channels/box nil)))))
+      (impl/put! ch val fn1)
+      (channels/box (not (impl/closed? ch)))))))
 
 (defn remove>
   "Takes a predicate and a target channel, and returns a channel which
@@ -290,10 +300,10 @@
     (let [val (<! in)]
       (if (nil? val)
         (close! out)
-        (let [vals (f val)]
-          (doseq [v vals]
-            (>! out v))
-          (recur))))))
+        (do (doseq [v (f val)]
+              (>! out v))
+            (when-not (impl/closed? out)
+              (recur)))))))
 
 (defn mapcat<
   "Takes a function and a source channel, and returns a channel which
@@ -327,16 +337,17 @@
 
 (defn pipe
   "Takes elements from the from channel and supplies them to the to
-  channel. By default, the to channel will be closed when the
-  from channel closes, but can be determined by the close?
-  parameter."
+   channel. By default, the to channel will be closed when the from
+   channel closes, but can be determined by the close?  parameter. Will
+   stop consuming the from channel if the to channel closes"
+
   ([from to] (pipe from to true))
   ([from to close?]
      (go-loop []
       (let [v (<! from)]
         (if (nil? v)
           (when close? (close! to))
-          (do (>! to v)
+          (when (>! to v)
               (recur)))))
      to))
 
@@ -354,11 +365,11 @@
      (let [tc (chan t-buf-or-n)
            fc (chan f-buf-or-n)]
        (go-loop []
-         (let [v (<! ch)]
-           (if (nil? v)
-             (do (close! tc) (close! fc))
-             (do (>! (if (p v) tc fc) v)
-                 (recur)))))
+                (let [v (<! ch)]
+                  (if (nil? v)
+                    (do (close! tc) (close! fc))
+                    (when (>! (if (p v) tc fc) v)
+                      (recur)))))
        [tc fc])))
 
 (defn reduce
@@ -385,11 +396,10 @@
   ([ch coll] (onto-chan ch coll true))
   ([ch coll close?]
      (go-loop [vs (seq coll)]
-       (if vs
-         (do (>! ch (first vs))
-             (recur (next vs)))
-         (when close?
-           (close! ch))))))
+              (if (and vs (>! ch (first vs)))
+                (recur (next vs))
+                (when close?
+                  (close! ch))))))
 
 
 (defn to-chan
@@ -420,7 +430,7 @@
 
   Items received when there are no taps get dropped.
 
-  If a tap put throws an exception, it will be removed from the mult."
+  If a tap puts to a closed channel, it will be removed from the mult."
   [ch]
   (let [cs (atom {}) ;;ch->close?
         m (reify
@@ -433,8 +443,8 @@
            (untap-all* [_] (reset! cs {}) nil))
         dchan (chan 1)
         dctr (atom nil)
-        done #(when (zero? (swap! dctr dec))
-                (put! dchan true))]
+        done (fn [_] (when (zero? (swap! dctr dec))
+                      (put! dchan true)))]
     (go-loop []
      (let [val (<! ch)]
        (if (nil? val)
@@ -443,11 +453,9 @@
          (let [chs (keys @cs)]
            (reset! dctr (count chs))
            (doseq [c chs]
-               (try
-                 (put! c val done)
-                 (catch js/Object e
-                   (swap! dctr dec)
-                   (untap* m c))))
+               (when-not (put! c val done)
+                 (swap! dctr dec)
+                 (untap* m c)))
            ;;wait for all
            (when (seq chs)
              (<! dchan))
@@ -541,9 +549,10 @@
           (do (when (nil? v)
                 (swap! cs dissoc c))
               (recur (calc-state)))
-          (do (when (or (solos c)
-                        (and (empty? solos) (not (mutes c))))
-                (>! out v))
+          (if (or (solos c)
+                  (and (empty? solos) (not (mutes c))))
+            (when (>! out v)
+              (recur state))
             (recur state)))))
     m))
 
@@ -634,11 +643,8 @@
                (close! (muxch* m)))
              (let [topic (topic-fn val)
                    m (get @mults topic)]
-               (when m
-                 (try
-                   (>! (muxch* m) val)
-                   (catch js/Object e
-                     (swap! mults dissoc topic))))
+               (when-not (>! (muxch* m) val)
+                 (swap! mults dissoc topic))
                (recur)))))
        p)))
 

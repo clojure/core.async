@@ -50,8 +50,8 @@
     nil))
 
 (defn put! [state blk ^not-native c val]
-  (if-let [cb (impl/put! c val (fn-handler (fn []
-                                             (ioc/aset-all! state VALUE-IDX nil STATE-IDX blk)
+  (if-let [cb (impl/put! c val (fn-handler (fn [ret-val]
+                                             (ioc/aset-all! state VALUE-IDX ret-val STATE-IDX blk)
                                              (run-state-machine-wrapped state))))]
     (do (ioc/aset-all! state VALUE-IDX @cb STATE-IDX blk)
         :recur)

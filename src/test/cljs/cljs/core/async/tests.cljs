@@ -8,11 +8,11 @@
                    [cljs.core.async.macros :as m :refer [go alt!]]))
 
 (let [c (chan 1)]
-  (put! c 42 #(is true) true)
+  (put! c 42 (fn [_] (is true)) true)
   (take! c #(is (= 42 %)) true))
 
 (let [c (chan)]
-  (put! c 42 #(is true) true)
+  (put! c 42 (fn [_] (is true)) true)
   (take! c #(is (= 42 %)) true))
 
 (defn identity-chan

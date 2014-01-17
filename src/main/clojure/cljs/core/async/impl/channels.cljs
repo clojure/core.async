@@ -32,7 +32,7 @@
     (let [^boolean closed closed]
       (if (or closed
               (not ^boolean (impl/active? handler)))
-        (box nil)
+        (box (not closed))
         (loop []
           (let [^not-native taker (.pop takes)]
             (if-not (nil? taker)
@@ -40,14 +40,14 @@
                   (let [take-cb (impl/commit taker)
                         _ (impl/commit handler)]
                     (dispatch/run (fn [] (take-cb val)))
-                    (box nil))
+                    (box true))
                   (recur))
 
               (if (not (or (nil? buf)
                            ^boolean (impl/full? buf)))
                 (let [_ (impl/commit handler)]
                   (do (impl/add! buf val)
-                      (box nil)))
+                      (box true)))
                 (do
                   (if (> dirty-puts MAX_DIRTY)
                     (do (set! dirty-puts 0)
@@ -75,7 +75,7 @@
                 (if ^boolean (impl/active? put-handler)
                     (let [put-cb (impl/commit put-handler)
                           _ (impl/commit handler)]
-                      (dispatch/run put-cb)
+                      (dispatch/run #(put-cb true))
                       (box val))
                     (recur)))
               (if ^boolean closed
@@ -94,6 +94,7 @@
                     nil))))))))
 
   impl/Channel
+  (closed? [_] closed)
   (close! [this]
     (if ^boolean closed
         nil
@@ -108,4 +109,4 @@
             nil))))
 
 (defn chan [buf]
-  (ManyToManyChannel. (buffers/ring-buffer 32) 0 (buffers/ring-buffer 32) 0 buf nil))
+  (ManyToManyChannel. (buffers/ring-buffer 32) 0 (buffers/ring-buffer 32) 0 buf false))
