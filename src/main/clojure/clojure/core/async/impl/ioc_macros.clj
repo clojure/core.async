@@ -13,9 +13,12 @@
   clojure.core.async.impl.ioc-macros
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
+            [clojure.tools.analyzer :as an]
+            [clojure.tools.analyzer.ast :as ast]
+            [clojure.tools.analyzer.jvm :as an-jvm]
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
-            [clojure.set :refer (intersection)])
+            [clojure.set :refer (intersection union difference)])
   (:import [java.util.concurrent.locks Lock]
            [java.util.concurrent.atomic AtomicReferenceArray]))
 
@@ -232,6 +235,23 @@
       `[~(:id this) (aget-object ~state-sym ~VALUE-IDX)]
       `[~(:id this) ~value])))
 
+(defrecord RawCode [ast locals]
+  IInstruction
+  (reads-from [this]
+    (keep (or locals #{})
+          (map :name (::collected-locals ast))))
+  (writes-to [this] [(:id this)])
+  (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    (if (not-empty (reads-from this))
+      `[~(:id this) (let [~@(mapcat
+                             (fn [local]
+                               `[~(:form local) ~(get locals (:name local))])
+                             (::collected-locals ast))]
+                      ~(:form ast))]
+      `[~(:id this) ~(:form ast)])))
+
 (defrecord CustomTerminator [f blk values]
   IInstruction
   (reads-from [this] values)
@@ -276,6 +296,15 @@
   IEmittableInstruction
   (emit-instruction [this state-sym]
     `[~(:id this) ~(seq refs)]))
+
+(defrecord StaticCall [class method refs]
+  IInstruction
+  (reads-from [this] refs)
+  (writes-to [this] [(:id this)])
+  (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~(:id this) (. ~class ~method ~@(seq refs))]))
 
 (defrecord Case [val-id test-vals jmp-blocks default-block]
   IInstruction
@@ -447,27 +476,18 @@
                    EXCEPTION-FRAMES
                    (:prev exception-frame))))))
 
-;; Dispatch clojure forms based on data type
-(defmulti -item-to-ssa (fn [x]
-                         (cond
-                          (symbol? x) :symbol
-                          (instance? clojure.lang.IRecord x) :record
-                          (seq? x) :list
-                          (map? x) :map
-                          (set? x) :set
-                          (vector? x) :vector
-                          :else :default)))
+;; Dispatch clojure forms based on :op
+(def -item-to-ssa nil) ;; for help in the repl
+(defmulti -item-to-ssa :op)
 
-(defn item-to-ssa [x]
-  (fn [p]
-    (let [[itm p :as result] ((-item-to-ssa x) p)]
-      (if (and (instance? clojure.lang.IObj x)
-               (instance? clojure.lang.IObj itm))
-        [(with-meta itm
-           (merge (meta itm)
-                  (meta x)))
-         p]
-        result))))
+(defn item-to-ssa [ast]
+  (if (or (::transform? ast)
+          (contains? #{:local :const :quote} (:op ast)))
+    (-item-to-ssa ast)
+    (gen-plan
+     [locals (get-binding :locals)
+      id (add-instruction (->RawCode ast locals))]
+     id)))
 
 ;; given an sexpr, dispatch on the first item
 (defmulti sexpr-to-ssa (fn [[x & _]]
@@ -485,67 +505,103 @@
     inst-id (add-instruction (->Call args-ids))]
    inst-id))
 
-(defn let-binding-to-ssa
-  [[sym bind]]
+(defmethod -item-to-ssa :invoke
+  [{f :fn args :args}]
   (gen-plan
-   [bind-id (item-to-ssa bind)
-    _ (push-alter-binding :locals assoc sym bind-id)]
+   [arg-ids (all (map item-to-ssa (cons f args)))
+    inst-id (add-instruction (->Call arg-ids))]
+   inst-id))
+
+(defmethod -item-to-ssa :prim-invoke
+  [{f :fn args :args}]
+  (gen-plan
+   [arg-ids (all (map item-to-ssa (cons f args)))
+    inst-id (add-instruction (->Call arg-ids))]
+   inst-id))
+
+(defmethod -item-to-ssa :static-call
+  [{:keys [class method args]}]
+  (gen-plan
+   [arg-ids (all (map item-to-ssa args))
+    inst-id (add-instruction (->StaticCall class method arg-ids))]
+   inst-id))
+
+(defn var-name [v]
+  (let [nm (:name (meta v))
+        nsp (.getName ^clojure.lang.Namespace (:ns (meta v)))]
+    (symbol (name nsp) (name nm))))
+
+
+(defmethod -item-to-ssa :var
+  [{:keys [var]}]
+  (gen-plan
+   []
+   (var-name var)))
+
+(defmethod -item-to-ssa :const
+  [{:keys [form]}]
+  (gen-plan
+   []
+   form))
+
+(defn let-binding-to-ssa
+  [{:keys [name init]}]
+  (gen-plan
+   [bind-id (item-to-ssa init)
+    _ (push-alter-binding :locals assoc name bind-id)]
    bind-id))
 
-(defmethod sexpr-to-ssa 'let*
-  [[_ binds & body]]
-  (let [parted (partition 2 binds)]
-    (gen-plan
-     [let-ids (all (map let-binding-to-ssa parted))
-      body-ids (all (map item-to-ssa body))
-      _ (all (map (fn [x]
-                    (pop-binding :locals))
-                  (range (count parted))))]
-     (last body-ids))))
-
-(defmethod sexpr-to-ssa 'loop*
-  [[_ locals & body]]
-  (let [parted (partition 2 locals)
-        syms (map first parted)
-        inits (map second parted)]
-    (gen-plan
-     [local-val-ids (all (map ; not parallel bind
-                          (fn [sym init]
-                            (gen-plan
-                             [itm-id (item-to-ssa init)
-                              _ (push-alter-binding :locals assoc sym itm-id)]
-                             itm-id))
-                          syms
-                          inits))
-      _ (all (for [x syms]
-               (pop-binding :locals)))
-      local-ids (all (map (comp add-instruction ->Const) local-val-ids))
-      body-blk (add-block)
-      final-blk (add-block)
-      _ (add-instruction (->Jmp nil body-blk))
-
-      _ (set-block body-blk)
-      _ (push-alter-binding :locals merge (zipmap syms local-ids))
-      _ (push-binding :recur-point body-blk)
-      _ (push-binding :recur-nodes local-ids)
-
-      body-ids (all (map item-to-ssa body))
-
-      _ (pop-binding :recur-nodes)
-      _ (pop-binding :recur-point)
-      _ (pop-binding :locals)
-      _ (if (not= (last body-ids) ::terminated)
-          (add-instruction (->Jmp (last body-ids) final-blk))
-          (no-op))
-      _ (set-block final-blk)
-      ret-id (add-instruction (->Const ::value))]
-     ret-id)))
-
-(defmethod sexpr-to-ssa 'do
-  [[_ & body]]
+(defmethod -item-to-ssa :let
+  [{:keys [bindings body]}]
   (gen-plan
-   [ids (all (map item-to-ssa body))]
-   (last ids)))
+   [let-ids (all (map let-binding-to-ssa bindings))
+    body-id (item-to-ssa body)
+    _ (all (map (fn [x]
+                  (pop-binding :locals))
+                (range (count bindings))))]
+   body-id))
+
+(defmethod -item-to-ssa :loop
+  [{:keys [body bindings] :as ast}]
+  (gen-plan
+   [local-val-ids (all (map ; not parallel bind
+                        (fn [{:keys [name init]}]
+                          (gen-plan
+                           [itm-id (item-to-ssa init)
+                            _ (push-alter-binding :locals assoc name itm-id)]
+                           itm-id))
+                        bindings))
+    _ (all (for [_ bindings]
+             (pop-binding :locals)))
+    local-ids (all (map (comp add-instruction ->Const) local-val-ids))
+    body-blk (add-block)
+    final-blk (add-block)
+    _ (add-instruction (->Jmp nil body-blk))
+
+    _ (set-block body-blk)
+    _ (push-alter-binding :locals merge (zipmap (map :name bindings)
+                                                local-ids))
+    _ (push-binding :recur-point body-blk)
+    _ (push-binding :recur-nodes local-ids)
+
+    ret-id (item-to-ssa body)
+
+    _ (pop-binding :recur-nodes)
+    _ (pop-binding :recur-point)
+    _ (pop-binding :locals)
+    _ (if (not= ret-id ::terminated)
+        (add-instruction (->Jmp ret-id final-blk))
+        (no-op))
+    _ (set-block final-blk)
+    ret-id (add-instruction (->Const ::value))]
+   ret-id))
+
+(defmethod -item-to-ssa :do
+  [{:keys [statements ret] :as ast}]
+  (gen-plan
+   [_ (all (map item-to-ssa statements))
+    ret-id (item-to-ssa ret)]
+   ret-id))
 
 (defmethod sexpr-to-ssa 'case
   [[_ val & body]]
@@ -582,10 +638,10 @@
       ret-id (add-instruction (->Const ::value))]
      ret-id)))
 
-(defmethod sexpr-to-ssa 'quote
-  [expr]
+(defmethod -item-to-ssa :quote
+  [{:keys [form]}]
   (gen-plan
-   [ret-id (add-instruction (->Const expr))]
+   [ret-id (add-instruction (->Const form))]
    ret-id))
 
 (defmethod sexpr-to-ssa '.
@@ -651,10 +707,10 @@
       ret (add-instruction (->Const ::value))]
      ret)))
 
-(defmethod sexpr-to-ssa 'recur
-  [[_ & vals]]
+(defmethod -item-to-ssa :recur
+  [{:keys [exprs] :as ast}]
   (gen-plan
-   [val-ids (all (map item-to-ssa vals))
+   [val-ids (all (map item-to-ssa exprs))
     recurs (get-binding :recur-nodes)
     _ (do (assert (= (count val-ids)
                      (count recurs))
@@ -667,8 +723,8 @@
     _ (add-instruction (->Jmp nil recur-point))]
    ::terminated))
 
-(defmethod sexpr-to-ssa 'if
-  [[_ test then else]]
+(defmethod -item-to-ssa :if
+  [{:keys [test then else]}]
   (gen-plan
    [test-id (item-to-ssa test)
     then-blk (add-block)
@@ -729,11 +785,12 @@
                 (recur expanded))))
           form)))))
 
-(defn terminate-custom [vals term]
+(defmethod -item-to-ssa :transition
+  [{:keys [name args]}]
   (gen-plan
    [blk (add-block)
-    vals (all (map item-to-ssa vals))
-    val (add-instruction (->CustomTerminator term blk vals))
+    vals (all (map item-to-ssa args))
+    val (add-instruction (->CustomTerminator name blk vals))
     _ (set-block blk)
     res (add-instruction (->Const ::value))]
    res))
@@ -764,21 +821,16 @@
             (item-to-ssa exp)))]
    val))
 
-(defmethod -item-to-ssa :default
-  [x]
-  (fn [plan]
-    [x plan]))
 
-(defmethod -item-to-ssa :symbol
-  [x]
+(defmethod -item-to-ssa :local
+  [{:keys [name]}]
   (gen-plan
    [locals (get-binding :locals)
-    inst-id (if (contains? locals x)
+    inst-id (if (contains? locals name)
               (fn [p]
-                [(locals x) p])
+                [(locals name) p])
               (fn [p]
-                [x p])
-              #_(add-instruction (->Const x)))]
+                [name p]))]
    inst-id))
 
 (defmethod -item-to-ssa :map
@@ -801,16 +853,12 @@
 (defn parse-to-state-machine
   "Takes an sexpr and returns a hashmap that describes the execution flow of the sexpr as
    a series of SSA style blocks."
-  [body env terminators]
+  [body terminators]
   (-> (gen-plan
-       [_ (push-binding :locals (zipmap (keys env) (keys env)))
-        _ (push-binding :terminators terminators)
-        blk (add-block)
+       [blk (add-block)
         _ (set-block blk)
-        ids (all (map item-to-ssa body))
-        term-id (add-instruction (->Return (last ids)))
-        _ (pop-binding :terminators)
-        _ (pop-binding :locals)]
+        id (item-to-ssa body)
+        term-id (add-instruction (->Return id))]
        term-id)
       get-plan))
 
@@ -985,8 +1033,80 @@
    'clojure.core.async/alts! 'clojure.core.async/ioc-alts!
    :Return `return-chan})
 
+(defn analyze
+  [form env]
+  (binding [an/macroexpand-1 an-jvm/macroexpand-1
+            an/create-var    an-jvm/create-var
+            an/parse         an-jvm/parse
+            an/var?          var?]
+    (an/analyze form env)))
+
+
+#_(-> (an-jvm/analyze '(if true (let [x 42] (foo x)) 43) (an-jvm/empty-env))
+    (ast/postwalk (partial mark-ssa-transform-limits
+                           (fn [x]
+                             (-> x :fn :var meta :terminator))))
+    (debug)
+    emit-ssa
+    (ast->clj {:state-sym ::statesym})
+    (clojure.pprint/pprint))
+
+
+(defn mark-transitions
+  [transitions {:keys [op fn] :as ast}]
+  (if (and (= op :invoke)
+           (= (:op fn) :var)
+           (contains? transitions (var-name (:var fn))))
+    (merge ast
+           {:op :transition
+            :name (var-name (:var fn))})
+    ast))
+
+(defn propagate-transitions [ast]
+  (if (or (= (:op ast) :transition)
+          (some #(or (= (:op %) :transition)
+                     (::transform? %))
+                (ast/children ast)))
+    (assoc ast ::transform? true)
+    ast))
+
+(defn collect-locals [ast]
+  (let [collected-locals (->> ast
+                              ast/children
+                              (map ::collected-locals)
+                              (apply union #{}))
+        this-local (case (:op ast)
+                     :local ast
+                     nil)
+        #_collected-locals #_ (case (:op ast)
+                           :let (difference collected-locals
+                                            (set (map :name (:bindings ast))))
+                           :loop (difference collected-locals
+                                             (set (map :name (:bindings ast))))
+                           collected-locals)]
+    (if-let [val (not-empty (if this-local
+                              (conj collected-locals this-local)
+                              collected-locals))]
+      (assoc ast ::collected-locals val)
+      ast)))
+
+
+(defn make-env [input-env]
+  (assoc (an-jvm/empty-env)
+    :locals (into {} (for [local input-env]
+                       [local {:op :local
+                               :name local}]))))
+
+(defn pdebug [x]
+  (clojure.pprint/pprint x)
+  x)
 
 (defn state-machine [body num-user-params env user-transitions]
-  (-> (parse-to-state-machine body env user-transitions)
+  (-> (an-jvm/analyze body (make-env env))
+      (ast/postwalk (comp collect-locals
+                          propagate-transitions
+                          (partial mark-transitions user-transitions)))
+      pdebug
+      (parse-to-state-machine user-transitions)
       second
       (emit-state-machine num-user-params user-transitions)))
