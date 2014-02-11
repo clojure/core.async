@@ -512,6 +512,13 @@
     inst-id (add-instruction (->Call arg-ids))]
    inst-id))
 
+(defmethod -item-to-ssa :keyword-invoke
+  [{f :fn args :args}]
+  (gen-plan
+   [arg-ids (all (map item-to-ssa (cons f args)))
+    inst-id (add-instruction (->Call arg-ids))]
+   inst-id))
+
 (defmethod -item-to-ssa :prim-invoke
   [{f :fn args :args}]
   (gen-plan
@@ -603,40 +610,40 @@
     ret-id (item-to-ssa ret)]
    ret-id))
 
-(defmethod sexpr-to-ssa 'case
-  [[_ val & body]]
-  (let [clauses (partition 2 body)
-        default (when (odd? (count body))
-                  (last body))]
-    (gen-plan
-     [end-blk (add-block)
-      start-blk (get-block)
-      clause-blocks (all (map (fn [expr]
-                                (gen-plan
-                                 [blk-id (add-block)
-                                  _ (set-block blk-id)
-                                  expr-id (item-to-ssa expr)
-                                  _ (if (not= expr-id ::terminated)
-                                      (add-instruction (->Jmp expr-id end-blk))
-                                      (no-op))]
-                                 blk-id))
-                              (map second clauses)))
-      default-block (if (odd? (count body))
-                      (gen-plan
-                       [blk-id (add-block)
-                        _ (set-block blk-id)
-                        expr-id (item-to-ssa default)
-                        _ (if (not= expr-id ::terminated)
-                            (add-instruction (->Jmp expr-id end-blk))
-                            (no-op))]
-                       blk-id)
-                      (no-op))
-      _ (set-block start-blk)
-      val-id (item-to-ssa val)
-      case-id (add-instruction (->Case val-id (map first clauses) clause-blocks default-block))
-      _ (set-block end-blk)
-      ret-id (add-instruction (->Const ::value))]
-     ret-id)))
+(defmethod -item-to-ssa :case
+  [{:keys [test tests thens default] :as ast}]
+  (gen-plan
+   [end-blk (add-block)
+    start-blk (get-block)
+    clause-blocks (all (map (fn [expr]
+                              (assert expr)
+                              (gen-plan
+                               [blk-id (add-block)
+                                _ (set-block blk-id)
+                                expr-id (item-to-ssa expr)
+                                _ (if (not= expr-id ::terminated)
+                                    (add-instruction (->Jmp expr-id end-blk))
+                                    (no-op))]
+                               blk-id))
+                            (map :then thens)))
+    default-block (if default
+                    (gen-plan
+                     [blk-id (add-block)
+                      _ (set-block blk-id)
+                      expr-id (item-to-ssa default)
+                      _ (if (not= expr-id ::terminated)
+                          (add-instruction (->Jmp expr-id end-blk))
+                          (no-op))]
+                     blk-id)
+                    (no-op))
+    _ (set-block start-blk)
+    val-id (item-to-ssa test)
+    case-id (add-instruction (->Case val-id (map (comp :form :test) tests)
+                                     clause-blocks
+                                     default-block))
+    _ (set-block end-blk)
+    ret-id (add-instruction (->Const ::value))]
+   ret-id))
 
 (defmethod -item-to-ssa :quote
   [{:keys [form]}]
@@ -834,8 +841,13 @@
    inst-id))
 
 (defmethod -item-to-ssa :map
-  [x]
-  (-item-to-ssa `(hash-map ~@(mapcat identity x))))
+  [{:keys [keys vals]}]
+  (gen-plan
+   [keys-ids (all (map item-to-ssa keys))
+    vals-ids (all (map item-to-ssa vals))
+    id (add-instruction (->Call (cons 'clojure.core/hash-map
+                             (interleave keys-ids vals-ids))))]
+   id))
 
 (defmethod -item-to-ssa :record
   [x]
@@ -843,12 +855,20 @@
                   (hash-map ~@(mapcat identity x)))))
 
 (defmethod -item-to-ssa :vector
-  [x]
-  (-item-to-ssa `(vector ~@x)))
+  [{:keys [items]}]
+  (gen-plan
+   [item-ids (all (map item-to-ssa items))
+    id (add-instruction (->Call (cons 'clojure.core/vector
+                                      item-ids)))]
+   id))
 
 (defmethod -item-to-ssa :set
-  [x]
-  (-item-to-ssa `(hash-set ~@x)))
+  [{:keys [items]}]
+  (gen-plan
+   [item-ids (all (map item-to-ssa items))
+    id (add-instruction (->Call (cons 'clojure.core/hash-set
+                                      item-ids)))]
+   id))
 
 (defn parse-to-state-machine
   "Takes an sexpr and returns a hashmap that describes the execution flow of the sexpr as
@@ -1070,6 +1090,26 @@
     (assoc ast ::transform? true)
     ast))
 
+(defn propagate-recur [ast]
+  (cond
+   ;; If we are a loop and we need to transform, and
+   ;; one of our children is a recur, then we must transform everything
+   ;; that has a recur
+   (and (= (:op ast) :loop)
+        (::transform? ast)
+        (some ::has-recur? (ast/children ast)))
+   (ast/postwalk ast #(if (::has-recur? %)
+                        (assoc % ::transform? true)
+                        %))
+
+   (or (= (:op ast) :recur)
+          (some #(or (= (:op %) :recur)
+                     (::has-recur? %))
+                (ast/children ast)))
+   (assoc ast ::has-recur? true)
+
+   :else ast))
+
 (defn collect-locals [ast]
   (let [collected-locals (->> ast
                               ast/children
@@ -1104,9 +1144,11 @@
 (defn state-machine [body num-user-params env user-transitions]
   (-> (an-jvm/analyze body (make-env env))
       (ast/postwalk (comp collect-locals
+                          propagate-recur
                           propagate-transitions
                           (partial mark-transitions user-transitions)))
-      pdebug
+      #_pdebug
       (parse-to-state-machine user-transitions)
       second
-      (emit-state-machine num-user-params user-transitions)))
+      (emit-state-machine num-user-params user-transitions)
+      #_pdebug))

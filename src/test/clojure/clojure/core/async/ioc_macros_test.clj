@@ -90,17 +90,17 @@
                           y (inc x)]
                      y)))))
 
-  #_(testing "let expressions"
+  (testing "let expressions"
     (is (= 3
            (runner (let [x 1 y 2]
                      (+ x y))))))
 
-  #_(testing "vector destructuring"
+  (testing "vector destructuring"
     (is (= 3
            (runner (let [[x y] [1 2]]
                      (+ x y))))))
 
-  #_(testing "hash-map destructuring"
+  (testing "hash-map destructuring"
     (is (= 3
            (runner (let [{:keys [x y] x2 :x y2 :y :as foo} {:x 1 :y 2}]
                      (assert (and foo (pause x) y x2 y2 foo))
@@ -111,32 +111,32 @@
            (runner {:1 (pause 1)
                     :2 (pause 2)
                     :3 (pause 3)}))))
-  #_(testing "hash-set literals"
+  (testing "hash-set literals"
     (is (= #{1 2 3}
            (runner #{(pause 1)
                      (pause 2)
                      (pause 3)}))))
-  #_(testing "vector literals"
+  (testing "vector literals"
     (is (= [1 2 3]
            (runner [(pause 1)
                     (pause 2)
                     (pause 3)]))))
 
-  #_(testing "keywords as functions"
+  (testing "keywords as functions"
     (is (= :bar
            (runner (:foo (pause {:foo :bar}))))))
 
-  #_(testing "vectors as functions"
+  (testing "vectors as functions"
     (is (= 2
            (runner ([1 2] 1)))))
 
-  #_(testing "dotimes"
+  (testing "dotimes"
     (is (= 42 (runner
                (dotimes [x 10]
                  (pause x))
                42))))
 
-  #_(testing "fn closures"
+  (testing "fn closures"
     (is (= 42
            (runner
             (let [x 42
@@ -144,11 +144,11 @@
                   f (fn [] x)]
               (f))))))
 
-  #_(testing "specials cannot be shadowed"
+  (testing "specials cannot be shadowed"
     (is (= 3
            (let [let* :foo] (runner (let* [x 3] x))))))
 
-  #_(testing "case"
+  (testing "case"
     (is (= 43
            (runner
             (let [value :bar]
@@ -156,17 +156,17 @@
                 :foo (pause 42)
                 :bar (pause 43)
                 :baz (pause 44))))))
-    (is (= :default
+    #_(is (= :default
            (runner
             (case :baz
               :foo 44
               :default))))
-    (is (= nil
+    #_(is (= nil
            (runner
             (case true
               false false
               nil))))
-    (is (= 42
+    #_(is (= 42
            (runner
             (loop [x 0]
               (case (int x)
