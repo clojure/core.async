@@ -10,7 +10,7 @@
   clojure.core.async.impl.protocols)
 
 
-(def ^:const ^int MAX-QUEUE-SIZE 1024)
+(def ^:const ^{:tag 'int} MAX-QUEUE-SIZE 1024)
 
 (defprotocol ReadPort
   (take! [port fn1-handler] "derefable val if taken, nil if take was enqueued"))
