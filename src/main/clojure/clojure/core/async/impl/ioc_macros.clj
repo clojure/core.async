@@ -494,22 +494,6 @@
       id (add-instruction (->RawCode ast locals))]
      id)))
 
-;; given an sexpr, dispatch on the first item
-(defmulti sexpr-to-ssa (fn [[x & _]]
-                         x))
-
-(defn is-special? [x]
-  (let [^clojure.lang.MultiFn mfn sexpr-to-ssa]
-    (.getMethod mfn x)))
-
-
-
-(defn default-sexpr [args]
-  (gen-plan
-   [args-ids (all (map item-to-ssa args))
-    inst-id (add-instruction (->Call args-ids))]
-   inst-id))
-
 (defmethod -item-to-ssa :invoke
   [{f :fn args :args}]
   (gen-plan
@@ -656,20 +640,6 @@
    [ret-id (add-instruction (->Const form))]
    ret-id))
 
-(defmethod sexpr-to-ssa '.
-  [[_ cls-or-instance method & args]]
-  (let [args (if (seq? method)
-               (drop 1 method)
-               args)
-        method (if (seq? method)
-                 (first method)
-                 method)]
-    (gen-plan
-     [cls-id (item-to-ssa cls-or-instance)
-      args-ids (all (map item-to-ssa args))
-      ret-id (add-instruction (->Dot cls-id method args-ids))]
-     ret-id)))
-
 (defmethod -item-to-ssa :try
   [{:keys [catches body finally] :as ast}]
   (let [catch (first catches)
@@ -783,29 +753,6 @@
    fn-id))
 
 
-(def special-override? '#{case clojure.core/case})
-
-(defn expand [locals form]
-  (loop [form form]
-    (if-not (seq? form)
-      form
-      (let [[s & r] form]
-        (if (symbol? s)
-          (if (or (get locals s)
-                  (special-override? s))
-            form
-            (let [LOCAL_ENV clojure.lang.Compiler/LOCAL_ENV
-                  expanded (try
-                             (push-thread-bindings
-                              {LOCAL_ENV  (merge @LOCAL_ENV locals)})
-                             (macroexpand-1 form)
-                             (finally
-                               (pop-thread-bindings)))]
-              (if (= expanded form)
-                form
-                (recur expanded))))
-          form)))))
-
 (defmethod -item-to-ssa :transition
   [{:keys [name args form]}]
   (gen-plan
@@ -816,33 +763,6 @@
     _ (set-block blk)
     res (add-instruction (->Const ::value))]
    res))
-
-(defn fixup-aliases [sym]
-  (let [aliases (ns-aliases *ns*)]
-    (if-not (namespace sym)
-      sym
-      (if-let [^clojure.lang.Namespace ns (aliases (symbol (namespace sym)))]
-        (symbol (name (.getName ns)) (name sym))
-        sym))))
-
-#_(defmethod -item-to-ssa :list
-  [lst]
-  (gen-plan
-   [locals (get-binding :locals)
-    terminators (get-binding :terminators)
-    val (let [exp (expand locals lst)]
-          (if (seq? exp)
-            (if (symbol? (first exp))
-              (let [f (fixup-aliases (first exp))]
-                (cond
-                 (is-special? f) (sexpr-to-ssa exp)
-                 (get locals f) (default-sexpr exp)
-                 (get terminators f) (terminate-custom (next exp) (get terminators f))
-                 :else (default-sexpr exp)))
-              (default-sexpr exp))
-            (item-to-ssa exp)))]
-   val))
-
 
 (defmethod -item-to-ssa :local
   [{:keys [name]}]
