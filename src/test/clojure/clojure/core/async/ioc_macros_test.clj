@@ -37,9 +37,6 @@
     :fail))
 
 
-(runner (let [x 42]
-                     (pause (locals-test))))
-
 (deftest runner-tests
   (testing "macros add locals to the env"
     (is (= :pass
@@ -355,7 +352,7 @@
                        (chan) ([v] :failed)
                        :default 42))))))
 
-    #_(testing "alt obeys its random-array initialization"
+    (testing "alt obeys its random-array initialization"
       (is (= #{:two}
              (with-redefs [clojure.core.async/random-array
                            (constantly (int-array [1 2 0]))]
@@ -366,8 +363,8 @@
                                          (identity-chan :one) ([v] v)
                                          (identity-chan :two) ([v] v)
                                          (identity-chan :three) ([v] v))]
-                              (recur (conj acc label) (inc cnt))))
-                          acc))))))))
+                              (recur (conj acc label) (inc cnt)))
+                            acc)))))))))
 
   (deftest close-on-exception-tests
     (testing "threads"
