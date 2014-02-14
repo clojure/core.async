@@ -3,7 +3,8 @@
                             partition-by])
   (:require [clojure.core.async.impl.ioc-macros :as ioc]
             #_[clojure.core.async :refer :all :as async]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all])
+  (:import [java.io FileInputStream ByteArrayOutputStream File]))
 
 (defn pause [state blk val]
   (ioc/aset-all! state ioc/STATE-IDX blk ioc/VALUE-IDX val)
@@ -16,12 +17,13 @@
   [& body]
   (let [terminators #{`pause}]
     `(let [captured-bindings# (clojure.lang.Var/getThreadBindingFrame)
-           state# (~(ioc/state-machine `(do ~@body) 0 &env terminators))]
+           state# (~(ioc/state-machine `(do ~@body) 0 (keys &env) terminators))]
        (ioc/aset-all! state#
                   ~ioc/BINDINGS-IDX
                   captured-bindings#)
        (ioc/run-state-machine state#)
        (ioc/aget-object state# ioc/VALUE-IDX))))
+
 
 (defmacro locals-test []
   (if (if (contains? &env :locals)
@@ -32,20 +34,20 @@
 
 
 (deftest runner-tests
-  #_(testing "macros add locals to the env"
-    #_(is (= :pass
+  (testing "macros add locals to the env"
+    (is (= :pass
            (runner (let [x 42]
                      (pause (locals-test)))))))
-  #_(testing "fn as first arg in sexpr"
+  (testing "fn as first arg in sexpr"
     (is (= 42
            (runner ((fn [] 42))))))
-  #_(testing "do blocks"
+  (testing "do blocks"
     (is (= 42
            (runner (do (pause 42)))))
     (is (= 42
            (runner (do (pause 44)
                        (pause 42))))))
-  #_(testing "if expressions"
+  (testing "if expressions"
     (is (= true
            (runner (if (pause true)
                      (pause true)
@@ -61,15 +63,15 @@
            (runner (when (pause false)
                      (pause true))))))
 
-  #_(testing "dot forms"
+  (testing "dot forms"
     (is (= 42 (runner (. Long (parseLong "42")))))
     (is (= 42 (runner (. Long parseLong "42")))))
 
-  #_(testing "quote"
+  (testing "quote"
     (is (= '(1 2 3)
            (runner (pause '(1 2 3))))))
 
-  #_(testing "loop expressions"
+  (testing "loop expressions"
     (is (= 100
            (runner (loop [x 0]
                      (if (< x 100)
@@ -156,24 +158,24 @@
                 :foo (pause 42)
                 :bar (pause 43)
                 :baz (pause 44))))))
-    #_(is (= :default
+    (is (= :default
            (runner
             (case :baz
               :foo 44
               :default))))
-    #_(is (= nil
+    (is (= nil
            (runner
             (case true
               false false
               nil))))
-    #_(is (= 42
+    (is (= 42
            (runner
             (loop [x 0]
               (case (int x)
                 0 (recur (inc x))
                 1 42))))))
 
-  #_(testing "try"
+  (testing "try"
     (is (= 42
            (runner
             (try 42
@@ -184,7 +186,7 @@
               (assert false)
               (catch Throwable ex 42)))))
 
-    (let [a (atom false)
+   (let [a (atom false)
           v (runner
              (try
                true
@@ -192,7 +194,7 @@
                (finally (pause (reset! a true)))))]
       (is (and @a v)))
 
-    (let [a (atom false)
+   (let [a (atom false)
           v (runner
              (try
                (assert false)
@@ -200,7 +202,7 @@
                (finally (reset! a true))))]
       (is (and @a v)))
 
-    (let [a (atom false)
+   (let [a (atom false)
           v (try (runner
                   (try
                     (assert false)
@@ -209,7 +211,7 @@
       (is (and @a v)))
 
 
-    (let [a (atom 0)
+   #_ (let [a (atom 0)
           v (runner
              (try
                (try
@@ -218,7 +220,7 @@
                (finally (swap! a inc))))]
       (is (= @a 2)))
 
-    (let [a (atom 0)
+   #_ (let [a (atom 0)
           v (try (runner
                   (try
                     (try
@@ -228,7 +230,7 @@
                  (catch AssertionError ex ex))]
       (is (= @a 2)))
 
-    (let [a (atom 0)
+   #_ (let [a (atom 0)
           v (try (runner
                   (try
                     (try
@@ -240,7 +242,7 @@
                  (catch AssertionError ex ex))]
       (is (= @a 2)))
 
-    (let [a (atom 0)
+   #_ (let [a (atom 0)
           v (try (runner
                   (try
                     (try

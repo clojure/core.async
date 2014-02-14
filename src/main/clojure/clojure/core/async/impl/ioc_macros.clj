@@ -244,11 +244,16 @@
   (block-references [this] [])
   IEmittableInstruction
   (emit-instruction [this state-sym]
+    (println "----- ?>>>> "(::collected-locals ast) locals)
     (if (not-empty (reads-from this))
       `[~(:id this) (let [~@(mapcat
                              (fn [local]
                                `[~(:form local) ~(get locals (:name local))])
-                             (::collected-locals ast))]
+                             (filter
+                              (fn [local]
+                                (when locals
+                                  (get locals (:name local))))
+                              (::collected-locals ast)))]
                       ~(:form ast))]
       `[~(:id this) ~(:form ast)])))
 
@@ -665,15 +670,10 @@
       ret-id (add-instruction (->Dot cls-id method args-ids))]
      ret-id)))
 
-(defmethod sexpr-to-ssa 'try
-  [[_ & body]]
-  (let [finally-fn (every-pred seq? (comp (partial = 'finally) first))
-        catch-fn (every-pred seq? (comp (partial = 'catch) first))
-        finally (next (first (filter finally-fn body)))
-        body (remove finally-fn body)
-        catch (next (first (filter catch-fn body)))
-        [ex ex-bind & catch-body] catch
-        body (remove catch-fn body)]
+(defmethod -item-to-ssa :try
+  [{:keys [catches body finally] :as ast}]
+  (let [catch (first catches)
+        {ex-bind :local ex :class catch-body :body} catch]
     (gen-plan
      [end-blk (add-block)
       finally-blk (if finally
@@ -682,7 +682,7 @@
                       blk (add-block)
                       _ (set-block blk)
                       value-id (add-instruction (->Const ::value))
-                      _ (all (map item-to-ssa finally))
+                      _ (item-to-ssa finally)
                       _ (add-instruction (->EndCatchFinally))
                       _ (set-block cur-blk)]
                      blk)
@@ -694,8 +694,8 @@
                     _ (set-block blk)
                     ex-id (add-instruction (->Const ::value))
                     _ (push-alter-binding :locals assoc ex-bind ex-id)
-                    ids (all (map item-to-ssa catch-body))
-                    _ (add-instruction (->ProcessExceptionWithValue (last ids)))
+                    id (item-to-ssa catch-body)
+                    _ (add-instruction (->ProcessExceptionWithValue id))
                     _ (pop-binding :locals)
                     _ (set-block cur-blk)
                     _ (push-alter-binding :catch (fnil conj []) [ex blk])]
@@ -705,11 +705,11 @@
       _ (add-instruction (->Jmp nil body-blk))
       _ (set-block body-blk)
       _ (add-instruction (->Try catch-blk ex finally-blk end-blk))
-      ids (all (map item-to-ssa body))
+      body-id (item-to-ssa body)
       _ (if catch
           (pop-binding :catch)
           (no-op))
-      _ (add-instruction (->ProcessExceptionWithValue (last ids)))
+      _ (add-instruction (->ProcessExceptionWithValue body-id))
       _ (set-block end-blk)
       ret (add-instruction (->Const ::value))]
      ret)))
@@ -810,7 +810,7 @@
         (symbol (name (.getName ns)) (name sym))
         sym))))
 
-(defmethod -item-to-ssa :list
+#_(defmethod -item-to-ssa :list
   [lst]
   (gen-plan
    [locals (get-binding :locals)
@@ -1118,7 +1118,7 @@
         this-local (case (:op ast)
                      :local ast
                      nil)
-        #_collected-locals #_ (case (:op ast)
+        collected-locals (case (:op ast)
                            :let (difference collected-locals
                                             (set (map :name (:bindings ast))))
                            :loop (difference collected-locals
@@ -1135,20 +1135,23 @@
   (assoc (an-jvm/empty-env)
     :locals (into {} (for [local input-env]
                        [local {:op :local
+                               :form local
                                :name local}]))))
 
 (defn pdebug [x]
   (clojure.pprint/pprint x)
+  (println "----")
   x)
 
 (defn state-machine [body num-user-params env user-transitions]
+  (pdebug env)
   (-> (an-jvm/analyze body (make-env env))
       (ast/postwalk (comp collect-locals
                           propagate-recur
                           propagate-transitions
                           (partial mark-transitions user-transitions)))
-      #_pdebug
       (parse-to-state-machine user-transitions)
       second
+      pdebug
       (emit-state-machine num-user-params user-transitions)
-      #_pdebug))
+      pdebug))
