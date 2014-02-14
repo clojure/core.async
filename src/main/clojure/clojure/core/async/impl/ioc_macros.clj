@@ -743,23 +743,12 @@
     val-id (add-instruction (->Const ::value))]
    val-id))
 
-(defmethod sexpr-to-ssa 'fn*
-  [& fn-expr]
-  ;; For fn expressions we just want to record the expression as well
-  ;; as a list of all known renamed locals
-  (gen-plan
-   [locals (get-binding :locals)
-    fn-id (add-instruction (->Fn fn-expr (keys locals) (vals locals)))]
-   fn-id))
-
-
 (defmethod -item-to-ssa :transition
   [{:keys [name args form]}]
   (gen-plan
    [blk (add-block)
-    terminators (get-binding :terminators)
     vals (all (map item-to-ssa args))
-    val (add-instruction (->CustomTerminator (get terminators name) blk vals (meta form)))
+    val (add-instruction (->CustomTerminator name blk vals (meta form)))
     _ (set-block blk)
     res (add-instruction (->Const ::value))]
    res))
@@ -996,16 +985,6 @@
     (an/analyze form env)))
 
 
-#_(-> (an-jvm/analyze '(if true (let [x 42] (foo x)) 43) (an-jvm/empty-env))
-    (ast/postwalk (partial mark-ssa-transform-limits
-                           (fn [x]
-                             (-> x :fn :var meta :terminator))))
-    (debug)
-    emit-ssa
-    (ast->clj {:state-sym ::statesym})
-    (clojure.pprint/pprint))
-
-
 (defn mark-transitions
   [transitions {:keys [op fn] :as ast}]
   (if (and (= op :invoke)
@@ -1013,7 +992,7 @@
            (contains? transitions (var-name (:var fn))))
     (merge ast
            {:op :transition
-            :name (var-name (:var fn))})
+            :name (get transitions (var-name (:var fn)))})
     ast))
 
 (defn propagate-transitions [ast]
@@ -1085,6 +1064,4 @@
                           (partial mark-transitions user-transitions)))
       (parse-to-state-machine user-transitions)
       second
-      #_pdebug
-      (emit-state-machine num-user-params user-transitions)
-      #_pdebug))
+      (emit-state-machine num-user-params user-transitions)))

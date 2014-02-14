@@ -6,6 +6,9 @@
             [clojure.test :refer :all])
   (:import [java.io FileInputStream ByteArrayOutputStream File]))
 
+(defn pause [x]
+  x)
+
 (defn pause-run [state blk val]
   (ioc/aset-all! state ioc/STATE-IDX blk ioc/VALUE-IDX val)
   :recur)
@@ -32,6 +35,10 @@
         (get &env 'x))
     :pass
     :fail))
+
+
+(runner (let [x 42]
+                     (pause (locals-test))))
 
 (deftest runner-tests
   (testing "macros add locals to the env"
@@ -252,7 +259,8 @@
                     (catch Throwable ex (pause (throw ex)))
                     (finally (pause (swap! a inc)))))
                  (catch AssertionError ex ex))]
-      (is (= @a 2))))
+     (is (= @a 2)))))
+
 
   (defn identity-chan
     "Defines a channel that instantly writes the given value"
@@ -369,7 +377,7 @@
     (testing "go blocks"
       (is (nil? (<!! (go (assert false "This exception is expected")))))
       (is (nil? (<!! (go (alts! [(identity-chan 42)])
-                         (assert false "This exception is expected"))))))))
+                         (assert false "This exception is expected")))))))
 
 (deftest resolution-tests
     (let [<! (constantly 42)]
