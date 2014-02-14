@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [map into reduce merge take partition
                             partition-by])
   (:require [clojure.core.async.impl.ioc-macros :as ioc]
-            #_[clojure.core.async :refer :all :as async]
+            [clojure.core.async :refer :all :as async]
             [clojure.test :refer :all])
   (:import [java.io FileInputStream ByteArrayOutputStream File]))
 
@@ -254,7 +254,7 @@
                  (catch AssertionError ex ex))]
       (is (= @a 2))))
 
-  #_(defn identity-chan
+  (defn identity-chan
     "Defines a channel that instantly writes the given value"
     [x]
     (let [c (chan 1)]
@@ -262,7 +262,7 @@
       (close! c)
       c))
 
-  #_(deftest async-test
+  (deftest async-test
     (testing "values are returned correctly"
       (is (= 10
              (<!! (go (<! (identity-chan 10)))))))
@@ -295,7 +295,7 @@
                           (assert false)
                           (catch Throwable ex (<! c))))))))))
 
-  #_(deftest enqueued-chan-ops
+  (deftest enqueued-chan-ops
     (testing "enqueued channel puts re-enter async properly"
       (is (= [:foo 42]
              (let [c (chan)
@@ -322,10 +322,10 @@
                      (<!! c)
                      (<!! async-chan)]))))))
 
-  #_(defn rand-timeout [x]
+  (defn rand-timeout [x]
     (timeout (rand-int x)))
 
-  #_(deftest alt-tests
+  (deftest alt-tests
     (testing "alts works at all"
       (let [c (identity-chan 42)]
         (is (= [42 c]
@@ -347,7 +347,7 @@
                        (chan) ([v] :failed)
                        :default 42))))))
 
-    (testing "alt obeys its random-array initialization"
+    #_(testing "alt obeys its random-array initialization"
       (is (= #{:two}
              (with-redefs [clojure.core.async/random-array
                            (constantly (int-array [1 2 0]))]
@@ -361,7 +361,7 @@
                               (recur (conj acc label) (inc cnt))))
                           acc))))))))
 
-  #_(deftest close-on-exception-tests
+  (deftest close-on-exception-tests
     (testing "threads"
       (is (nil? (<!! (thread (assert false "This exception is expected")))))
       (is (nil? (<!! (thread (alts!! [(identity-chan 42)])
@@ -371,7 +371,7 @@
       (is (nil? (<!! (go (alts! [(identity-chan 42)])
                          (assert false "This exception is expected"))))))))
 
-#_(deftest resolution-tests
+(deftest resolution-tests
     (let [<! (constantly 42)]
       (is (= 42 (<!! (go (<! (identity-chan 0)))))
           "symbol translations do not apply to locals outside go"))
