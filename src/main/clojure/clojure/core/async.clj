@@ -368,7 +368,7 @@
          captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
      (dispatch/run
       (fn []
-        (let [f# ~(ioc/state-machine body 1 &env ioc/async-custom-terminators)
+        (let [f# ~(ioc/state-machine `(do ~@body) 1 (keys &env) ioc/async-custom-terminators)
               state# (-> (f#)
                          (ioc/aset-all! ioc/USER-START-IDX c#
                                         ioc/BINDINGS-IDX captured-bindings#))]

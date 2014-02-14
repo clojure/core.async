@@ -256,14 +256,15 @@
                       ~(:form ast))]
       `[~(:id this) ~(:form ast)])))
 
-(defrecord CustomTerminator [f blk values]
+(defrecord CustomTerminator [f blk values meta]
   IInstruction
   (reads-from [this] values)
   (writes-to [this] [])
   (block-references [this] [])
   ITerminator
   (terminate-block [this state-sym _]
-    `(~f ~state-sym ~blk ~@values)))
+    (with-meta `(~f ~state-sym ~blk ~@values)
+      meta)))
 
 (defn- emit-clashing-binds
   [recur-nodes ids clashes]
@@ -806,11 +807,12 @@
           form)))))
 
 (defmethod -item-to-ssa :transition
-  [{:keys [name args]}]
+  [{:keys [name args form]}]
   (gen-plan
    [blk (add-block)
+    terminators (get-binding :terminators)
     vals (all (map item-to-ssa args))
-    val (add-instruction (->CustomTerminator name blk vals))
+    val (add-instruction (->CustomTerminator (get terminators name) blk vals (meta form)))
     _ (set-block blk)
     res (add-instruction (->Const ::value))]
    res))
@@ -888,10 +890,12 @@
    a series of SSA style blocks."
   [body terminators]
   (-> (gen-plan
-       [blk (add-block)
+       [_ (push-binding :terminators terminators)
+        blk (add-block)
         _ (set-block blk)
         id (item-to-ssa body)
-        term-id (add-instruction (->Return id))]
+        term-id (add-instruction (->Return id))
+        _ (pop-binding :terminators)]
        term-id)
       get-plan))
 
@@ -1058,11 +1062,8 @@
 
 
 (def async-custom-terminators
-  {'<! `take!
-   'clojure.core.async/<! `take!
-   '>! `put!
+  {'clojure.core.async/<! `take!
    'clojure.core.async/>! `put!
-   'alts! 'clojure.core.async/ioc-alts!
    'clojure.core.async/alts! 'clojure.core.async/ioc-alts!
    :Return `return-chan})
 

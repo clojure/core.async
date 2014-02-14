@@ -6,7 +6,7 @@
             [clojure.test :refer :all])
   (:import [java.io FileInputStream ByteArrayOutputStream File]))
 
-(defn pause [state blk val]
+(defn pause-run [state blk val]
   (ioc/aset-all! state ioc/STATE-IDX blk ioc/VALUE-IDX val)
   :recur)
 
@@ -15,7 +15,7 @@
   into a state machine. At run time the body will be run as normal. This transform is
   only really useful for testing."
   [& body]
-  (let [terminators #{`pause}]
+  (let [terminators {`pause `pause-run}]
     `(let [captured-bindings# (clojure.lang.Var/getThreadBindingFrame)
            state# (~(ioc/state-machine `(do ~@body) 0 (keys &env) terminators))]
        (ioc/aset-all! state#
@@ -25,13 +25,13 @@
        (ioc/aget-object state# ioc/VALUE-IDX))))
 
 
+
 (defmacro locals-test []
   (if (if (contains? &env :locals)
         (get (:locals &env) 'x)
         (get &env 'x))
     :pass
     :fail))
-
 
 (deftest runner-tests
   (testing "macros add locals to the env"
