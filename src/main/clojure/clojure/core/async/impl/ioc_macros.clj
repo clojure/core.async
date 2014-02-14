@@ -244,7 +244,6 @@
   (block-references [this] [])
   IEmittableInstruction
   (emit-instruction [this state-sym]
-    (println "----- ?>>>> "(::collected-locals ast) locals)
     (if (not-empty (reads-from this))
       `[~(:id this) (let [~@(mapcat
                              (fn [local]
@@ -693,7 +692,7 @@
                     blk (add-block)
                     _ (set-block blk)
                     ex-id (add-instruction (->Const ::value))
-                    _ (push-alter-binding :locals assoc ex-bind ex-id)
+                    _ (push-alter-binding :locals assoc (:name ex-bind) ex-id)
                     id (item-to-ssa catch-body)
                     _ (add-instruction (->ProcessExceptionWithValue id))
                     _ (pop-binding :locals)
@@ -713,6 +712,20 @@
       _ (set-block end-blk)
       ret (add-instruction (->Const ::value))]
      ret)))
+
+(defmethod -item-to-ssa :throw
+  [{:keys [exception] :as ast}]
+  (gen-plan
+   [exception-id (item-to-ssa exception)
+    ret-id (add-instruction (->Call ['throw exception-id]))]
+   ret-id))
+
+(defmethod -item-to-ssa :new
+  [{:keys [args class] :as ast}]
+  (gen-plan
+   [arg-ids (all (map item-to-ssa args))
+    ret-id (add-instruction (->Call (concat ['new class] arg-ids)))]
+   ret-id))
 
 (defmethod -item-to-ssa :recur
   [{:keys [exprs] :as ast}]
@@ -1144,7 +1157,6 @@
   x)
 
 (defn state-machine [body num-user-params env user-transitions]
-  (pdebug env)
   (-> (an-jvm/analyze body (make-env env))
       (ast/postwalk (comp collect-locals
                           propagate-recur
@@ -1152,6 +1164,6 @@
                           (partial mark-transitions user-transitions)))
       (parse-to-state-machine user-transitions)
       second
-      pdebug
+      #_pdebug
       (emit-state-machine num-user-params user-transitions)
-      pdebug))
+      #_pdebug))

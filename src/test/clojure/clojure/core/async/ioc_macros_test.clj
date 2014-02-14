@@ -211,7 +211,7 @@
       (is (and @a v)))
 
 
-   #_ (let [a (atom 0)
+   (let [a (atom 0)
           v (runner
              (try
                (try
@@ -220,7 +220,7 @@
                (finally (swap! a inc))))]
       (is (= @a 2)))
 
-   #_ (let [a (atom 0)
+   (let [a (atom 0)
           v (try (runner
                   (try
                     (try
@@ -230,7 +230,7 @@
                  (catch AssertionError ex ex))]
       (is (= @a 2)))
 
-   #_ (let [a (atom 0)
+   (let [a (atom 0)
           v (try (runner
                   (try
                     (try
@@ -242,7 +242,7 @@
                  (catch AssertionError ex ex))]
       (is (= @a 2)))
 
-   #_ (let [a (atom 0)
+   (let [a (atom 0)
           v (try (runner
                   (try
                     (try
