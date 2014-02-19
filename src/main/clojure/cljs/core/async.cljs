@@ -643,8 +643,9 @@
                (close! (muxch* m)))
              (let [topic (topic-fn val)
                    m (get @mults topic)]
-               (when-not (>! (muxch* m) val)
-                 (swap! mults dissoc topic))
+               (when m
+                 (when-not (>! (muxch* m) val)
+                   (swap! mults dissoc topic)))
                (recur)))))
        p)))
 
