@@ -65,8 +65,20 @@
     (if (not ^boolean (impl/active? handler))
       nil
       (if (and (not (nil? buf)) (pos? (count buf)))
-        (let [_ (impl/commit handler)]
-          (box (impl/remove! buf)))
+        (let [_ (impl/commit handler)
+              retval (box (impl/remove! buf))]
+          (loop []
+            (let [putter (.pop puts)]
+              (if-not (nil? putter)
+                (let [^not-native put-handler (.-handler putter)
+                      val (.-val putter)]
+                  (if ^boolean (impl/active? put-handler)
+                      (let [put-cb (impl/commit put-handler)
+                            _ (impl/commit handler)]
+                        (dispatch/run #(put-cb true))
+                        (impl/add! buf val))
+                      (recur))))))
+          retval)
         (loop []
           (let [putter (.pop puts)]
             (if-not (nil? putter)
