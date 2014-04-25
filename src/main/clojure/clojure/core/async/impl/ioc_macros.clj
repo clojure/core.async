@@ -996,8 +996,8 @@
             :name (get transitions (var-name (:var fn)))})
     ast))
 
-(defn propagate-transitions [ast]
-  (if (or (= (:op ast) :transition)
+(defn propagate-transitions [{:keys [op] :as ast}]
+  (if (or (= op :transition)
           (some #(or (= (:op %) :transition)
                      (::transform? %))
                 (ast/children ast)))
@@ -1012,7 +1012,8 @@
    (and (= (:op ast) :loop)
         (::transform? ast)
         (some ::has-recur? (ast/children ast)))
-   (ast/postwalk ast #(if (::has-recur? %)
+   (ast/postwalk ast #(if (and (::has-recur? %)
+                               (not (= (:op %) :fn)))
                         (assoc % ::transform? true)
                         %))
 

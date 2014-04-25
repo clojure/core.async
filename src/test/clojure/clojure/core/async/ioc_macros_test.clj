@@ -150,6 +150,15 @@
                   f (fn [] x)]
               (f))))))
 
+  (testing "lazy-seqs in bodies"
+    (is (= (runner
+            (loop []
+              (when-let [x (pause 10)]
+                (pause (vec (for [i (range x)]
+                              i)))
+                (if-not x
+                  (recur))))))))
+
   (testing "specials cannot be shadowed"
     (is (= 3
            (let [let* :foo] (runner (let* [x 3] x))))))
