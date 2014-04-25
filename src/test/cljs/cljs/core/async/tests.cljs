@@ -253,3 +253,18 @@
     (go
      (is= [["a" "b"] [1 :2 3] ["c"]]
           (<! (async/into [] (async/partition-by string? (async/to-chan ["a" "b" 1 :2 3 "c"]))))))))
+
+
+(deftest dispatch-bugs
+  (testing "puts are moved to buffers"
+    (let [c (chan 1)
+          a (atom 0)]
+      (put! c 42 (fn [_] (swap! a inc))) ;; Goes into buffer
+      (put! c 42 (fn [_] (swap! a inc))) ;; Goes into puts
+      (take! c (fn [_]
+                 ;; Should release the iten in the puts and
+                 ;; put its value into the buffer, dispatching the callback
+                 (go
+                   (<! (timeout 500))
+                   ;; Thus this should be 2
+                   (is= @a 2)))))))
