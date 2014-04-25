@@ -13,6 +13,7 @@
   (ioc/aset-all! state ioc/STATE-IDX blk ioc/VALUE-IDX val)
   :recur)
 
+
 (defmacro runner
   "Creates a runner block. The code inside the body of this macro will be translated
   into a state machine. At run time the body will be run as normal. This transform is
@@ -26,7 +27,6 @@
                   captured-bindings#)
        (ioc/run-state-machine state#)
        (ioc/aget-object state# ioc/VALUE-IDX))))
-
 
 
 (defmacro locals-test []

@@ -245,15 +245,16 @@
   IEmittableInstruction
   (emit-instruction [this state-sym]
     (if (not-empty (reads-from this))
-      `[~(:id this) (let [~@(mapcat
-                             (fn [local]
-                               `[~(:form local) ~(get locals (:name local))])
-                             (filter
-                              (fn [local]
-                                (when locals
-                                  (get locals (:name local))))
-                              (::collected-locals ast)))]
-                      ~(:form ast))]
+      `[~@(->> (::collected-locals ast)
+               (map #(select-keys % [:op :name :form]))
+               (filter (fn [local]
+                         (when locals
+                           (get locals (:name local)))))
+               set
+               (mapcat
+                (fn [local]
+                  `[~(:form local) ~(get locals (:name local))]))) 
+        ~(:id this) ~(:form ast)]
       `[~(:id this) ~(:form ast)])))
 
 (defrecord CustomTerminator [f blk values meta]
@@ -754,14 +755,14 @@
    res))
 
 (defmethod -item-to-ssa :local
-  [{:keys [name]}]
+  [{:keys [name form]}]
   (gen-plan
    [locals (get-binding :locals)
     inst-id (if (contains? locals name)
               (fn [p]
                 [(locals name) p])
               (fn [p]
-                [name p]))]
+                [form p]))]
    inst-id))
 
 (defmethod -item-to-ssa :map
@@ -876,8 +877,8 @@
                      vec)
         results (interleave (map (partial id-for-inst local-map) results) results)]
     (if-not (empty? results)
-      `(aset-all! ~state-sym ~@results)
-      state-sym)))
+      [state-sym `(aset-all! ~state-sym ~@results)]
+      [])))
 
 (defn- emit-state-machine [machine num-user-params custom-terminators]
   (let [index (index-state-machine machine)
@@ -901,7 +902,7 @@
                                                   (fn [[id blk]]
                                                     [id `(let [~@(concat (build-block-preamble local-map index state-sym blk)
                                                                          (build-block-body state-sym blk))
-                                                               ~state-sym ~(build-new-state local-map index state-sym blk)]
+                                                               ~@(build-new-state local-map index state-sym blk)]
                                                            ~(terminate-block (last blk) state-sym custom-terminators))])
                                                   (:blocks machine)))]
                                  (if (identical? result# :recur)
