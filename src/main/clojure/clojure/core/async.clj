@@ -71,8 +71,7 @@
 
 (defn timeout
   "Returns a channel that will close after msecs"
-  [msecs]
-  {:pre [(integer? msecs)]}
+  [^long msecs]
   (timers/timeout msecs))
 
 (defn <!!
