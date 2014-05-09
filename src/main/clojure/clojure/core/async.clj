@@ -150,7 +150,11 @@
   will be ignored). Data in the channel remains available for taking, until
   exhausted, after which takes will return nil. If there are any
   pending takes, they will be dispatched with nil. Closing a closed
-  channel is a no-op. Returns nil."
+  channel is a no-op. Returns nil.
+
+  Logically closing happens after all puts have been delivered. Therefore, any
+  blocked or parked puts will remain blocked/parked until a taker releases them."
+
   [chan]
   (impl/close! chan))
 
