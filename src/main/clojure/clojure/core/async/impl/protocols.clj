@@ -30,7 +30,11 @@
 (defprotocol Buffer
   (full? [b])
   (remove! [b])
-  (add! [b itm]))
+  (add!* [b itm]))
+
+(defn add!
+  ([b] b)
+  ([b itm] (add!* b itm)))
 
 (defprotocol Executor
   (exec [e runnable] "execute runnable asynchronously"))

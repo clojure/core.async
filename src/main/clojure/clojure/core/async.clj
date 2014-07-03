@@ -64,10 +64,15 @@
   (extends? impl/UnblockingBuffer (class buff)))
 
 (defn chan
-  "Creates a channel with an optional buffer. If buf-or-n is a number,
-  will create and use a fixed buffer of that size."
+  "Creates a channel with an optional buffer and an optional transformation function
+  (like mapping, filtering etc).  If buf-or-n is a number, will create
+  and use a fixed buffer of that size. If a transformation function is
+  supplied a buffer must be specified"
   ([] (chan nil))
-  ([buf-or-n] (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n))))
+  ([buf-or-n] (chan buf-or-n nil))
+  ([buf-or-n xform]
+     (when xform (assert buf-or-n "buffer must be supplied when xform is"))
+     (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n) xform)))
 
 (defn timeout
   "Returns a channel that will close after msecs"
@@ -407,153 +412,183 @@
   [& body]
   `(thread-call (fn [] ~@body)))
 
+;;;;;;;;;;;;;;;;;;;; transformers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn mapping
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that first calls f on the input"
+  [f]
+  (fn [f1]
+    (fn
+      ([result] (f1 result))
+      ([result input]
+         (f1 result (f input))))))
+
+(defn filtering
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it only if pred returns true for the input"
+  [pred]
+  (fn [f1]
+    (fn
+      ([result] (f1 result))
+      ([result input]
+         (if (pred input)
+           (f1 result input)
+           result)))))
+
+(defn keeping
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it only to the non-nil results of applying f to the input"
+  [f]
+  (fn [f1]
+    (fn
+      ([result] (f1 result))
+      ([result input]
+         (let [v (f input)]
+           (if (nil? v)
+             result
+             (f1 result v)))))))
+
+(defn keeping-indexed
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it only to the non-nil results of applying f to the index and the input"
+  [f]
+  (fn [f1]
+    (let [ia (atom -1)]
+      (fn
+        ([result] (f1 result))
+        ([result input]
+           (let [i (swap! ia inc)
+                 v (f i input)]
+             (if (nil? v)
+               result
+               (f1 result v))))))))
+
+(defn removing
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it only if pred returns false for the input"
+  [pred]
+  (fn [f1]
+    (fn
+      ([result] (f1 result))
+      ([result input]
+         (if (pred input)
+           result
+           (f1 result input))))))
+
+(defn replacing
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it to the value in smap where key == input, else input"
+  [smap]
+  (mapping #(if-let [e (find smap %)] (val e) %)))
+
+(defn mapcatting
+  "Returns a fn that takes a fn of [result input] and reduces with it
+  over the result of calling f on the input"
+  [f]
+  (fn [f1]
+    (fn
+      ([result] (f1 result))
+      ([result input]
+         (clojure.core/reduce f1 result (f input))))))
+
+(defn deduping
+  "Returns a fn that takes a fn of [result input] and applies it
+  only when the input is not a duplicate of the immediately prior input"
+  []
+  (fn [f1]
+    (let [pa (atom nil)]
+      (fn
+        ([result] (f1 result))
+        ([result input]
+           (let [prior @pa]
+             (reset! pa input)
+             (if (= prior input)
+               result
+               (f1 result input))))))))
+
+(defn partitioning
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it only every nth time, to a vector of accumulated inputs, in order"
+  [^long n]
+  (fn [f1]
+    (let [a (ArrayList. n)]
+      (fn
+        ([result]
+           (let [result (if (.isEmpty a)
+                          result
+                          (f1 result (vec (.toArray a))))]
+             (.clear a)
+             (f1 result)))
+        ([result input]
+           (.add a input)
+           (if (= n (.size a))
+             (let [v (vec (.toArray a))]
+               (.clear a)
+               (f1 result v))
+             result))))))
+
+(defn partitioning-by
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it only when (f input) returns a value different from
+  the previous input, to a vector of accumulated inputs, in order"
+  [f]
+  (fn [f1]
+    (let [a (ArrayList.)
+          pa (atom ::none)]
+      (fn
+        ([result]
+           (let [result (if (.isEmpty a)
+                          result
+                          (f1 result (vec (.toArray a))))]
+             (.clear a)
+             (f1 result)))
+        ([result input]
+           (let [pval @pa
+                 val (f input)]
+             (reset! pa val)
+             (if (or (identical? pval ::none)
+                     (= val pval))
+               (do
+                 (.add a input)
+                 result)
+               (let [v (vec (.toArray a))]
+                 (.clear a)
+                 (.add a input)
+                 (f1 result v)))))))))
+
+(defn random-sampling
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it with random probability of prob (0.0 - 1.0)"
+  [prob]
+  (fn [f1]
+    (fn
+      ([result] (f1 result))
+      ([result input]
+         (if (<= (rand) prob)
+           (f1 result input)
+           result)))))
+
+(defn taking-nth
+  "Returns a fn that takes a fn of [result input] and returns a fn
+  that applies it to every nth input"
+  [n]
+  (fn [f1]
+    (let [ia (atom -1)]
+      (fn
+        ([result] (f1 result))
+        ([result input]
+           (let [i (swap! ia inc)]
+             (if (zero? (rem i n))
+               (f1 result input)
+               result)))))))
+
 ;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn map<
-  "Takes a function and a source channel, and returns a channel which
-  contains the values produced by applying f to each value taken from
-  the source channel"
-  [f ch]
-  (reify
-   impl/Channel
-   (close! [_] (impl/close! ch))
-   (closed? [_] (impl/closed? ch))
-
-   impl/ReadPort
-   (take! [_ fn1]
-     (let [ret
-       (impl/take! ch
-         (reify
-          Lock
-          (lock [_] (.lock ^Lock fn1))
-          (unlock [_] (.unlock ^Lock fn1))
-
-          impl/Handler
-          (active? [_] (impl/active? fn1))
-          (lock-id [_] (impl/lock-id fn1))
-          (commit [_]
-           (let [f1 (impl/commit fn1)]
-             #(f1 (if (nil? %) nil (f %)))))))]
-       (if (and ret (not (nil? @ret)))
-         (channels/box (f @ret))
-         ret)))
-
-   impl/WritePort
-   (put! [_ val fn1] (impl/put! ch val fn1))))
-
-(defn map>
-  "Takes a function and a target channel, and returns a channel which
-  applies f to each value before supplying it to the target channel."
-  [f ch]
-  (reify
-   impl/Channel
-   (close! [_] (impl/close! ch))
-   (closed? [_] (impl/closed? ch))
-
-   impl/ReadPort
-   (take! [_ fn1] (impl/take! ch fn1))
-
-   impl/WritePort
-   (put! [_ val fn1]
-    (impl/put! ch (f val) fn1))))
 
 (defmacro go-loop
   "Like (go (loop ...))"
   [bindings & body]
   `(go (loop ~bindings ~@body)))
-
-(defn filter>
-  "Takes a predicate and a target channel, and returns a channel which
-  supplies only the values for which the predicate returns true to the
-  target channel."
-  [p ch]
-  (reify
-   impl/Channel
-   (close! [_] (impl/close! ch))
-   (closed? [_] (impl/closed? ch))
-
-   impl/ReadPort
-   (take! [_ fn1] (impl/take! ch fn1))
-
-   impl/WritePort
-   (put! [_ val fn1]
-    (if (p val)
-      (impl/put! ch val fn1)
-      (channels/box (not (impl/closed? ch)))))))
-
-(defn remove>
-  "Takes a predicate and a target channel, and returns a channel which
-  supplies only the values for which the predicate returns false to the
-  target channel."
-  [p ch]
-  (filter> (complement p) ch))
-
-(defn filter<
-  "Takes a predicate and a source channel, and returns a channel which
-  contains only the values taken from the source channel for which the
-  predicate returns true. The returned channel will be unbuffered by
-  default, or a buf-or-n can be supplied. The channel will close
-  when the source channel closes."
-  ([p ch] (filter< p ch nil))
-  ([p ch buf-or-n]
-     (let [out (chan buf-or-n)]
-       (go-loop []
-         (let [val (<! ch)]
-           (if (nil? val)
-             (close! out)
-             (do (when (p val)
-                   (>! out val))
-                 (recur)))))
-       out)))
-
-(defn remove<
-  "Takes a predicate and a source channel, and returns a channel which
-  contains only the values taken from the source channel for which the
-  predicate returns false. The returned channel will be unbuffered by
-  default, or a buf-or-n can be supplied. The channel will close
-  when the source channel closes."
-  ([p ch] (remove< p ch nil))
-  ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
-
-(defn- mapcat* [f in out]
-  (go-loop []
-    (let [val (<! in)]
-      (if (nil? val)
-        (close! out)
-        (do (doseq [v (f val)]
-              (>! out v))
-            (when-not (impl/closed? out)
-              (recur)))))))
-
-(defn mapcat<
-  "Takes a function and a source channel, and returns a channel which
-  contains the values in each collection produced by applying f to
-  each value taken from the source channel. f must return a
-  collection.
-
-  The returned channel will be unbuffered by default, or a buf-or-n
-  can be supplied. The channel will close when the source channel
-  closes."
-  ([f in] (mapcat< f in nil))
-  ([f in buf-or-n]
-    (let [out (chan buf-or-n)]
-      (mapcat* f in out)
-      out)))
-
-(defn mapcat>
-  "Takes a function and a target channel, and returns a channel which
-  applies f to each value put, then supplies each element of the result
-  to the target channel. f must return a collection.
-
-  The returned channel will be unbuffered by default, or a buf-or-n
-  can be supplied. The target channel will be closed when the source
-  channel closes."
-
-  ([f out] (mapcat> f out nil))
-  ([f out buf-or-n]
-     (let [in (chan buf-or-n)]
-       (mapcat* f in out)
-       in)))
 
 (defn pipe
   "Takes elements from the from channel and supplies them to the to
@@ -959,7 +994,7 @@
 
 (defn take
   "Returns a channel that will return, at most, n items from ch. After n items
-   have been returned, or ch has been closed, the return chanel will close.
+   have been returned, or ch has been closed, the return channel will close.
 
   The output channel is unbuffered by default, unless buf-or-n is given."
   ([n ch]
@@ -975,12 +1010,122 @@
            (close! out))
        out)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; deprecated - do not use ;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn map<
+  "Deprecated - this function will be removed. Use mapping instead"
+  [f ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+   (closed? [_] (impl/closed? ch))
+
+   impl/ReadPort
+   (take! [_ fn1]
+     (let [ret
+       (impl/take! ch
+         (reify
+          Lock
+          (lock [_] (.lock ^Lock fn1))
+          (unlock [_] (.unlock ^Lock fn1))
+
+          impl/Handler
+          (active? [_] (impl/active? fn1))
+          (lock-id [_] (impl/lock-id fn1))
+          (commit [_]
+           (let [f1 (impl/commit fn1)]
+             #(f1 (if (nil? %) nil (f %)))))))]
+       (if (and ret (not (nil? @ret)))
+         (channels/box (f @ret))
+         ret)))
+
+   impl/WritePort
+   (put! [_ val fn1] (impl/put! ch val fn1))))
+
+(defn map>
+  "Deprecated - this function will be removed. Use mapping instead"
+  [f ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+   (closed? [_] (impl/closed? ch))
+
+   impl/ReadPort
+   (take! [_ fn1] (impl/take! ch fn1))
+
+   impl/WritePort
+   (put! [_ val fn1]
+    (impl/put! ch (f val) fn1))))
+
+(defn filter>
+  "Deprecated - this function will be removed. Use filtering instead"
+  [p ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+   (closed? [_] (impl/closed? ch))
+
+   impl/ReadPort
+   (take! [_ fn1] (impl/take! ch fn1))
+
+   impl/WritePort
+   (put! [_ val fn1]
+    (if (p val)
+      (impl/put! ch val fn1)
+      (channels/box (not (impl/closed? ch)))))))
+
+(defn remove>
+  "Deprecated - this function will be removed. Use removing instead"
+  [p ch]
+  (filter> (complement p) ch))
+
+(defn filter<
+  "Deprecated - this function will be removed. Use filtering instead"
+  ([p ch] (filter< p ch nil))
+  ([p ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go-loop []
+         (let [val (<! ch)]
+           (if (nil? val)
+             (close! out)
+             (do (when (p val)
+                   (>! out val))
+                 (recur)))))
+       out)))
+
+(defn remove<
+  "Deprecated - this function will be removed. Use removing instead"
+  ([p ch] (remove< p ch nil))
+  ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
+
+(defn- mapcat* [f in out]
+  (go-loop []
+    (let [val (<! in)]
+      (if (nil? val)
+        (close! out)
+        (do (doseq [v (f val)]
+              (>! out v))
+            (when-not (impl/closed? out)
+              (recur)))))))
+
+(defn mapcat<
+  "Deprecated - this function will be removed. Use mapcatting instead"
+  ([f in] (mapcat< f in nil))
+  ([f in buf-or-n]
+    (let [out (chan buf-or-n)]
+      (mapcat* f in out)
+      out)))
+
+(defn mapcat>
+  "Deprecated - this function will be removed. Use mapcatting instead"
+
+  ([f out] (mapcat> f out nil))
+  ([f out buf-or-n]
+     (let [in (chan buf-or-n)]
+       (mapcat* f in out)
+       in)))
 
 (defn unique
-  "Returns a channel that will contain values from ch. Consecutive duplicate
-   values will be dropped.
-
-  The output channel is unbuffered by default, unless buf-or-n is given."
+ "Deprecated - this function will be removed. Use deduping instead"
   ([ch]
      (unique ch nil))
   ([ch buf-or-n]
@@ -997,11 +1142,7 @@
 
 
 (defn partition
-  "Returns a channel that will contain vectors of n items taken from ch. The
-   final vector in the return channel may be smaller than n if ch closed before
-   the vector could be completely filled.
-
-   The output channel is unbuffered by default, unless buf-or-n is given"
+  "Deprecated - this function will be removed. Use partitioning instead"
   ([n ch]
      (partition n ch nil))
   ([n ch buf-or-n]
@@ -1025,11 +1166,7 @@
 
 
 (defn partition-by
-  "Returns a channel that will contain vectors of items taken from ch. New
-   vectors will be created whenever (f itm) returns a value that differs from
-   the previous item's (f itm).
-
-  The output channel is unbuffered, unless buf-or-n is given"
+  "Deprecated - this function will be removed. Use partitioning-by instead"
   ([f ch]
      (partition-by f ch nil))
   ([f ch buf-or-n]

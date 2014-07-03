@@ -27,9 +27,6 @@
     (add! fb :2)
     (is (= 2 (count fb)))
 
-    (is (full? fb))
-    (is (throws? (add! fb :3)))
-
     (is (= :1 (remove! fb)))
     (is (not (full? fb)))
 
