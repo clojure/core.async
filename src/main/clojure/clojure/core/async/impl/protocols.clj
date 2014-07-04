@@ -34,7 +34,9 @@
 
 (defn add!
   ([b] b)
-  ([b itm] (add!* b itm)))
+  ([b itm]
+     (assert (not (nil? itm)))
+     (add!* b itm)))
 
 (defprotocol Executor
   (exec [e runnable] "execute runnable asynchronously"))

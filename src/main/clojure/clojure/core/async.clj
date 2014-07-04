@@ -64,15 +64,20 @@
   (extends? impl/UnblockingBuffer (class buff)))
 
 (defn chan
-  "Creates a channel with an optional buffer and an optional transformation function
-  (like mapping, filtering etc).  If buf-or-n is a number, will create
+  "Creates a channel with an optional buffer, an optional transformation function
+  (like mapping, filtering etc or a composition thereof), and an
+  optional exception-handler.  If buf-or-n is a number, will create
   and use a fixed buffer of that size. If a transformation function is
-  supplied a buffer must be specified"
+  supplied a buffer must be specified. ex-handler must be a fn of one
+  argument - if an exception occurs during transformation it will be
+  called with the Throwable as an argument, and any non-nil return value
+  will be placed in the channel."
   ([] (chan nil))
   ([buf-or-n] (chan buf-or-n nil))
-  ([buf-or-n xform]
+  ([buf-or-n xform] (chan buf-or-n xform nil))
+  ([buf-or-n xform ex-handler]
      (when xform (assert buf-or-n "buffer must be supplied when xform is"))
-     (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n) xform)))
+     (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n) xform ex-handler)))
 
 (defn timeout
   "Returns a channel that will close after msecs"
@@ -517,8 +522,11 @@
         ([result]
            (let [result (if (.isEmpty a)
                           result
-                          (f1 result (vec (.toArray a))))]
-             (.clear a)
+                          (let [v (vec (.toArray a))]
+                            ;;flushing ops must clear before invoking possibly
+                            ;;failing nested op, else infinite loop
+                            (.clear a)
+                            (f1 result v)))]
              (f1 result)))
         ([result input]
            (.add a input)
@@ -540,8 +548,11 @@
         ([result]
            (let [result (if (.isEmpty a)
                           result
-                          (f1 result (vec (.toArray a))))]
-             (.clear a)
+                          (let [v (vec (.toArray a))]
+                            ;;flushing ops must clear before invoking possibly
+                            ;;failing nested op, else infinite loop
+                            (.clear a)
+                            (f1 result v)))]
              (f1 result)))
         ([result input]
            (let [pval @pa
