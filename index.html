@@ -90,6 +90,9 @@ namespace.
       <a class="toc-entry-anchor" href="#clojure.core.async/close!">close!</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/deduping">deduping</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/do-alts">do-alts</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
@@ -102,6 +105,9 @@ namespace.
       <a class="toc-entry-anchor" href="#clojure.core.async/filter&gt;">filter&gt;</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/filtering">filtering</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/go">go</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
@@ -109,6 +115,12 @@ namespace.
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/into">into</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/keeping">keeping</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/keeping-indexed">keeping-indexed</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/map">map</a>
@@ -124,6 +136,12 @@ namespace.
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/mapcat&gt;">mapcat&gt;</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/mapcatting">mapcatting</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/mapping">mapping</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/merge">merge</a>
@@ -144,6 +162,12 @@ namespace.
       <a class="toc-entry-anchor" href="#clojure.core.async/partition-by">partition-by</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/partitioning">partitioning</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/partitioning-by">partitioning-by</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/pipe">pipe</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
@@ -153,6 +177,9 @@ namespace.
       <a class="toc-entry-anchor" href="#clojure.core.async/put!">put!</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/random-sampling">random-sampling</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/reduce">reduce</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
@@ -160,6 +187,12 @@ namespace.
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/remove&gt;">remove&gt;</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/removing">removing</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/replacing">replacing</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/sliding-buffer">sliding-buffer</a>
@@ -178,6 +211,9 @@ namespace.
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/take!">take!</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.core.async/taking-nth">taking-nth</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.core.async/tap">tap</a>
@@ -278,7 +314,7 @@ namespace.
 return nil if closed. Will park if nothing is available.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L87" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L97" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -290,7 +326,7 @@ return nil if closed. Will park if nothing is available.</pre>
 if nothing is available.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L77" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L87" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -303,7 +339,7 @@ inside a (go ...) block. Will park if no buffer space is available.
 Returns true unless port is already closed.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L118" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L128" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -315,7 +351,7 @@ Returns true unless port is already closed.</pre>
 buffer space is available. Returns true unless port is already closed.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L108" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L118" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -326,7 +362,7 @@ buffer space is available. Returns true unless port is already closed.</pre>
     <pre id="var-docstr">Adds ch as an input to the mix</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L786" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L832" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -362,7 +398,7 @@ Each option may appear at most once. The choice and parking
 characteristics are those of alts!.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L316" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L326" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -374,7 +410,7 @@ characteristics are those of alts!.</pre>
 not intended for use in (go ...) blocks.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L309" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L319" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -405,7 +441,7 @@ used, nor in what order should they be, so they should not be
 depended upon for side effects.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L245" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L255" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -418,7 +454,7 @@ be made as if by &gt;!!, will block until completed, and not intended
 for use in (go ...) blocks.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L234" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L244" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -429,7 +465,7 @@ for use in (go ...) blocks.</pre>
     <pre id="var-docstr">Returns a fixed buffer of size n. When full, puts will block/park.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L42" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L42" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -437,12 +473,20 @@ for use in (go ...) blocks.</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (chan)
        (chan buf-or-n)
+       (chan buf-or-n xform)
+       (chan buf-or-n xform ex-handler)
 </pre>
-    <pre id="var-docstr">Creates a channel with an optional buffer. If buf-or-n is a number,
-will create and use a fixed buffer of that size.</pre>
+    <pre id="var-docstr">Creates a channel with an optional buffer, an optional transformation function
+(like mapping, filtering etc or a composition thereof), and an
+optional exception-handler.  If buf-or-n is a number, will create
+and use a fixed buffer of that size. If a transformation function is
+supplied a buffer must be specified. ex-handler must be a fn of one
+argument - if an exception occurs during transformation it will be
+called with the Throwable as an argument, and any non-nil return value
+will be placed in the channel.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L66" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L66" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -460,7 +504,19 @@ Logically closing happens after all puts have been delivered. Therefore, any
 blocked or parked puts will remain blocked/parked until a taker releases them.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L148" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L158" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/deduping">deduping</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (deduping)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and applies it
+only when the input is not a duplicate of the immediately prior input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L500" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -471,7 +527,7 @@ blocked or parked puts will remain blocked/parked until a taker releases them.</
     <pre id="var-docstr">returns derefable [val port] if immediate, nil if enqueued</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L205" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L215" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -483,7 +539,7 @@ blocked or parked puts will remain blocked/parked until a taker releases them.</
 val will be dropped (no transfer).</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L47" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L47" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -492,14 +548,10 @@ val will be dropped (no transfer).</pre>
     <pre id="var-usage">Usage: (filter&lt; p ch)
        (filter&lt; p ch buf-or-n)
 </pre>
-    <pre id="var-docstr">Takes a predicate and a source channel, and returns a channel which
-contains only the values taken from the source channel for which the
-predicate returns true. The returned channel will be unbuffered by
-default, or a buf-or-n can be supplied. The channel will close
-when the source channel closes.</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use filtering instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L491" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1092" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -507,12 +559,22 @@ when the source channel closes.</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (filter&gt; p ch)
 </pre>
-    <pre id="var-docstr">Takes a predicate and a target channel, and returns a channel which
-supplies only the values for which the predicate returns true to the
-target channel.</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use filtering instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L465" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1070" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/filtering">filtering</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (filtering pred)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it only if pred returns true for the input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L432" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -531,7 +593,7 @@ Returns a channel which will receive the result of the body when
 completed</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L359" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L369" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -542,7 +604,7 @@ completed</pre>
     <pre id="var-docstr">Like (go (loop ...))</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L460" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L599" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -555,7 +617,31 @@ items taken from the channel conjoined to the supplied
 collection. ch must close before into produces a result.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L952" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L998" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/keeping">keeping</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (keeping f)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it only to the non-nil results of applying f to the input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L444" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/keeping-indexed">keeping-indexed</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (keeping-indexed f)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it only to the non-nil results of applying f to the index and the input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L457" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -573,7 +659,7 @@ closed. The returned channel will be unbuffered by default, or a
 buf-or-n can be supplied</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L898" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L944" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -581,12 +667,10 @@ buf-or-n can be supplied</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (map&lt; f ch)
 </pre>
-    <pre id="var-docstr">Takes a function and a source channel, and returns a channel which
-contains the values produced by applying f to each value taken from
-the source channel</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use mapping instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L412" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1025" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -594,11 +678,10 @@ the source channel</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (map&gt; f ch)
 </pre>
-    <pre id="var-docstr">Takes a function and a target channel, and returns a channel which
-applies f to each value before supplying it to the target channel.</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use mapping instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L444" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1055" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -607,17 +690,10 @@ applies f to each value before supplying it to the target channel.</pre>
     <pre id="var-usage">Usage: (mapcat&lt; f in)
        (mapcat&lt; f in buf-or-n)
 </pre>
-    <pre id="var-docstr">Takes a function and a source channel, and returns a channel which
-contains the values in each collection produced by applying f to
-each value taken from the source channel. f must return a
-collection.
-
-The returned channel will be unbuffered by default, or a buf-or-n
-can be supplied. The channel will close when the source channel
-closes.</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use mapcatting instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L528" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1121" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -626,16 +702,34 @@ closes.</pre>
     <pre id="var-usage">Usage: (mapcat&gt; f out)
        (mapcat&gt; f out buf-or-n)
 </pre>
-    <pre id="var-docstr">Takes a function and a target channel, and returns a channel which
-applies f to each value put, then supplies each element of the result
-to the target channel. f must return a collection.
-
-The returned channel will be unbuffered by default, or a buf-or-n
-can be supplied. The target channel will be closed when the source
-channel closes.</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use mapcatting instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L543" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1129" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/mapcatting">mapcatting</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (mapcatting f)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and reduces with it
+over the result of calling f on the input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L490" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/mapping">mapping</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (mapping f)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that first calls f on the input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L422" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -650,7 +744,7 @@ unbuffered by default, or a buf-or-n can be supplied. The channel
 will close after all the source channels have closed.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L934" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L980" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -677,7 +771,7 @@ Each channel can have zero or more boolean modes set via 'toggle':
 :pause - paused channels will not have their contents consumed (and thus also not included in the mix)</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L716" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L762" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -698,7 +792,7 @@ Items received when there are no taps get dropped.
 If a tap puts to a closed channel, it will be removed from the mult.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L649" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L695" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -715,7 +809,7 @@ but can be determined by the close? parameter.
 Returns a channel which will close after the items are copied.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L618" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L664" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -724,14 +818,10 @@ Returns a channel which will close after the items are copied.</pre>
     <pre id="var-usage">Usage: (partition n ch)
        (partition n ch buf-or-n)
 </pre>
-    <pre id="var-docstr">Returns a channel that will contain vectors of n items taken from ch. The
-final vector in the return channel may be smaller than n if ch closed before
-the vector could be completely filled.
-
-The output channel is unbuffered by default, unless buf-or-n is given</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use partitioning instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L999" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1155" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -740,14 +830,35 @@ The output channel is unbuffered by default, unless buf-or-n is given</pre>
     <pre id="var-usage">Usage: (partition-by f ch)
        (partition-by f ch buf-or-n)
 </pre>
-    <pre id="var-docstr">Returns a channel that will contain vectors of items taken from ch. New
- vectors will be created whenever (f itm) returns a value that differs from
- the previous item's (f itm).
-
-The output channel is unbuffered, unless buf-or-n is given</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use partitioning-by instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L1027" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1179" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/partitioning">partitioning</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (partitioning n)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it only every nth time, to a vector of accumulated inputs, in order</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L515" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/partitioning-by">partitioning-by</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (partitioning-by f)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it only when (f input) returns a value different from
+the previous input, to a vector of accumulated inputs, in order</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L539" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -762,7 +873,7 @@ channel closes, but can be determined by the close?  parameter. Will
 stop consuming the from channel if the to channel closes</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L558" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L604" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -793,7 +904,7 @@ topic it should not expect them to be interleaved identically with
 the source.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L823" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L869" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -810,7 +921,19 @@ immediately accepted, will call fn1 on calling thread.  Returns
 true unless port is already closed.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L128" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L138" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/random-sampling">random-sampling</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (random-sampling prob)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it with random probability of prob (0.0 - 1.0)</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L571" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -825,7 +948,7 @@ the channel closes without yielding items, returns init and f is not
 called. ch must close before reduce produces a result.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L594" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L640" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -834,14 +957,10 @@ called. ch must close before reduce produces a result.</pre>
     <pre id="var-usage">Usage: (remove&lt; p ch)
        (remove&lt; p ch buf-or-n)
 </pre>
-    <pre id="var-docstr">Takes a predicate and a source channel, and returns a channel which
-contains only the values taken from the source channel for which the
-predicate returns false. The returned channel will be unbuffered by
-default, or a buf-or-n can be supplied. The channel will close
-when the source channel closes.</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use removing instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L509" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1106" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -849,12 +968,34 @@ when the source channel closes.</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (remove&gt; p ch)
 </pre>
-    <pre id="var-docstr">Takes a predicate and a target channel, and returns a channel which
-supplies only the values for which the predicate returns false to the
-target channel.</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use removing instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L484" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1087" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/removing">removing</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (removing pred)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it only if pred returns false for the input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L472" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/replacing">replacing</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (replacing smap)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it to the value in smap where key == input, else input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L484" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -867,7 +1008,7 @@ buffered, but oldest elements in buffer will be dropped (not
 transferred).</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L53" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L53" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -878,7 +1019,7 @@ transferred).</pre>
     <pre id="var-docstr">Sets the solo mode of the mix. mode must be one of :mute or :pause</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L813" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L859" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -897,7 +1038,7 @@ be supplied. The channels will close after the source channel has
 closed.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L573" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L619" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -912,7 +1053,7 @@ By default the channel will be closed when the source closes,
 but can be determined by the close? parameter.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L878" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L924" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -922,12 +1063,12 @@ but can be determined by the close? parameter.</pre>
        (take n ch buf-or-n)
 </pre>
     <pre id="var-docstr">Returns a channel that will return, at most, n items from ch. After n items
- have been returned, or ch has been closed, the return chanel will close.
+ have been returned, or ch has been closed, the return channel will close.
 
 The output channel is unbuffered by default, unless buf-or-n is given.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L960" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1006" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -942,7 +1083,19 @@ immediately available, will call fn1 on calling thread.
 Returns nil.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L93" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L103" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async/taking-nth">taking-nth</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (taking-nth n)
+</pre>
+    <pre id="var-docstr">Returns a fn that takes a fn of [result input] and returns a fn
+that applies it to every nth input</pre>
+    
+    
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L583" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -957,7 +1110,7 @@ By default the channel will be closed when the source closes,
 but can be determined by the close? parameter.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L692" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L738" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -970,7 +1123,7 @@ calling thread. Returns a channel which will receive the result of
 the body when completed.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L403" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L413" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -983,7 +1136,7 @@ thread. Returns a channel which will receive the result of calling
 f when completed.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L384" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L394" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -994,7 +1147,7 @@ f when completed.</pre>
     <pre id="var-docstr">Returns a channel that will close after msecs</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L72" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L82" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1006,7 +1159,7 @@ f when completed.</pre>
 closing when exhausted.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L633" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L679" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1024,7 +1177,7 @@ Note that channels can be added to a mix via toggle, which can be
 used to add channels in a particular (e.g. paused) state.</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L801" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L847" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1036,7 +1189,7 @@ used to add channels in a particular (e.g. paused) state.</pre>
 puts into this buffer will never cause the buffer to be full. </pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L60" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L60" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1045,13 +1198,10 @@ puts into this buffer will never cause the buffer to be full. </pre>
     <pre id="var-usage">Usage: (unique ch)
        (unique ch buf-or-n)
 </pre>
-    <pre id="var-docstr">Returns a channel that will contain values from ch. Consecutive duplicate
- values will be dropped.
-
-The output channel is unbuffered by default, unless buf-or-n is given.</pre>
+    <pre id="var-docstr">Deprecated - this function will be removed. Use deduping instead</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L979" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L1138" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1062,7 +1212,7 @@ The output channel is unbuffered by default, unless buf-or-n is given.</pre>
     <pre id="var-docstr">Removes ch as an input to the mix</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L791" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L837" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1073,7 +1223,7 @@ The output channel is unbuffered by default, unless buf-or-n is given.</pre>
     <pre id="var-docstr">removes all inputs from the mix</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L796" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L842" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1084,7 +1234,7 @@ The output channel is unbuffered by default, unless buf-or-n is given.</pre>
     <pre id="var-docstr">Unsubscribes a channel from a topic of a pub</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L886" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L932" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1096,7 +1246,7 @@ The output channel is unbuffered by default, unless buf-or-n is given.</pre>
     <pre id="var-docstr">Unsubscribes all channels from a pub, or a topic of a pub</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L891" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L937" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1107,7 +1257,7 @@ The output channel is unbuffered by default, unless buf-or-n is given.</pre>
     <pre id="var-docstr">Disconnects a target channel from a mult</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L700" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L746" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1118,7 +1268,7 @@ The output channel is unbuffered by default, unless buf-or-n is given.</pre>
     <pre id="var-docstr">Disconnects all target channels from a mult</pre>
     
     
-    <a href="https://github.com/clojure/core.async/blob/65b2d6c81350ba8b4bb3a8b82ad45ba984c0037c/src/main/clojure/clojure/core/async.clj#L705" id="var-source">Source</a>
+    <a href="https://github.com/clojure/core.async/blob/05f7cd3eae366f830abeea72394b23e534a2b07e/src/main/clojure/clojure/core/async.clj#L751" id="var-source">Source</a>
   </div>
 </div>
 <br />
