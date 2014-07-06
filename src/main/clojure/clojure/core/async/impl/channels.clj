@@ -78,9 +78,9 @@
                                              ret)
                                            (when (.hasNext iter)
                                              (recur (.next iter)))))))]
-                       (.unlock mutex)
                        (when take-cb
                          (let [val (impl/remove! buf)]
+                           (.unlock mutex)
                            (dispatch/run (fn [] (take-cb val))))))
                      (.unlock mutex))
                    (box true))
