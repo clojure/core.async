@@ -144,21 +144,19 @@
        (do
          (if-let [take-cb (commit-handler)]
            (let [val (impl/remove! buf)
-                 iter (.iterator puts)
-                 cb (when (.hasNext iter)
-                      (loop [[^Lock putter val] (.next iter)]
-                        (.lock putter)
-                        (let [cb (and (impl/active? putter) (impl/commit putter))]
-                          (.unlock putter)
-                          (.remove iter)
-                          (if cb
-                            (do (add! buf val)
-                                cb)
-                            (when (.hasNext iter)
-                              (recur (.next iter)))))))]
+                 iter (.iterator puts)]
+             (when (.hasNext iter)
+               (loop [[^Lock putter val] (.next iter)]
+                 (.lock putter)
+                 (let [cb (and (impl/active? putter) (impl/commit putter))]
+                   (.unlock putter)
+                   (.remove iter)
+                   (when cb
+                     (add! buf val)
+                     (dispatch/run #(cb true)))
+                   (when (and (.hasNext iter) (not (impl/full? buf)))
+                     (recur (.next iter))))))
              (.unlock mutex)
-             (when cb
-               (dispatch/run #(cb true)))
              (box val))
            (do (.unlock mutex)
                nil)))
