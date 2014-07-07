@@ -78,10 +78,11 @@
                                              ret)
                                            (when (.hasNext iter)
                                              (recur (.next iter)))))))]
-                       (.unlock mutex)
-                       (when take-cb
+                       (if take-cb
                          (let [val (impl/remove! buf)]
-                           (dispatch/run (fn [] (take-cb val))))))
+                           (.unlock mutex)
+                           (dispatch/run (fn [] (take-cb val))))
+                         (.unlock mutex)))
                      (.unlock mutex))
                    (box true))
                (do (.unlock mutex)
@@ -253,16 +254,16 @@
   ([buf xform exh]
      (ManyToManyChannel.
       (LinkedList.) (LinkedList.) buf (atom false) (mutex/mutex)
-                         (let [add! (if xform (xform impl/add!) impl/add!)]
-                           (fn
-                             ([buf]
-                                (try
-                                  (add! buf)
-                                  (catch Throwable t
-                                    (handle buf exh t))))
-                             ([buf val]
-                                (try
-                                  (add! buf val)
-                                  (catch Throwable t
-                                    (handle buf exh t)))))))))
+      (let [add! (if xform (xform impl/add!) impl/add!)]
+        (fn
+          ([buf]
+             (try
+               (add! buf)
+               (catch Throwable t
+                 (handle buf exh t))))
+          ([buf val]
+             (try
+               (add! buf val)
+               (catch Throwable t
+                 (handle buf exh t)))))))))
 
