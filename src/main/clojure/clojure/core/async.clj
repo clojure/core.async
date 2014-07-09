@@ -417,183 +417,6 @@
   [& body]
   `(thread-call (fn [] ~@body)))
 
-;;;;;;;;;;;;;;;;;;;; transformers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn mapping
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that first calls f on the input"
-  [f]
-  (fn [f1]
-    (fn
-      ([result] (f1 result))
-      ([result input]
-         (f1 result (f input))))))
-
-(defn filtering
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it only if pred returns true for the input"
-  [pred]
-  (fn [f1]
-    (fn
-      ([result] (f1 result))
-      ([result input]
-         (if (pred input)
-           (f1 result input)
-           result)))))
-
-(defn keeping
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it only to the non-nil results of applying f to the input"
-  [f]
-  (fn [f1]
-    (fn
-      ([result] (f1 result))
-      ([result input]
-         (let [v (f input)]
-           (if (nil? v)
-             result
-             (f1 result v)))))))
-
-(defn keeping-indexed
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it only to the non-nil results of applying f to the index and the input"
-  [f]
-  (fn [f1]
-    (let [ia (atom -1)]
-      (fn
-        ([result] (f1 result))
-        ([result input]
-           (let [i (swap! ia inc)
-                 v (f i input)]
-             (if (nil? v)
-               result
-               (f1 result v))))))))
-
-(defn removing
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it only if pred returns false for the input"
-  [pred]
-  (fn [f1]
-    (fn
-      ([result] (f1 result))
-      ([result input]
-         (if (pred input)
-           result
-           (f1 result input))))))
-
-(defn replacing
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it to the value in smap where key == input, else input"
-  [smap]
-  (mapping #(if-let [e (find smap %)] (val e) %)))
-
-(defn mapcatting
-  "Returns a fn that takes a fn of [result input] and reduces with it
-  over the result of calling f on the input"
-  [f]
-  (fn [f1]
-    (fn
-      ([result] (f1 result))
-      ([result input]
-         (clojure.core/reduce f1 result (f input))))))
-
-(defn deduping
-  "Returns a fn that takes a fn of [result input] and applies it
-  only when the input is not a duplicate of the immediately prior input"
-  []
-  (fn [f1]
-    (let [pa (atom nil)]
-      (fn
-        ([result] (f1 result))
-        ([result input]
-           (let [prior @pa]
-             (reset! pa input)
-             (if (= prior input)
-               result
-               (f1 result input))))))))
-
-(defn partitioning
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it only every nth time, to a vector of accumulated inputs, in order"
-  [^long n]
-  (fn [f1]
-    (let [a (ArrayList. n)]
-      (fn
-        ([result]
-           (let [result (if (.isEmpty a)
-                          result
-                          (let [v (vec (.toArray a))]
-                            ;;flushing ops must clear before invoking possibly
-                            ;;failing nested op, else infinite loop
-                            (.clear a)
-                            (f1 result v)))]
-             (f1 result)))
-        ([result input]
-           (.add a input)
-           (if (= n (.size a))
-             (let [v (vec (.toArray a))]
-               (.clear a)
-               (f1 result v))
-             result))))))
-
-(defn partitioning-by
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it only when (f input) returns a value different from
-  the previous input, to a vector of accumulated inputs, in order"
-  [f]
-  (fn [f1]
-    (let [a (ArrayList.)
-          pa (atom ::none)]
-      (fn
-        ([result]
-           (let [result (if (.isEmpty a)
-                          result
-                          (let [v (vec (.toArray a))]
-                            ;;flushing ops must clear before invoking possibly
-                            ;;failing nested op, else infinite loop
-                            (.clear a)
-                            (f1 result v)))]
-             (f1 result)))
-        ([result input]
-           (let [pval @pa
-                 val (f input)]
-             (reset! pa val)
-             (if (or (identical? pval ::none)
-                     (= val pval))
-               (do
-                 (.add a input)
-                 result)
-               (let [v (vec (.toArray a))]
-                 (.clear a)
-                 (.add a input)
-                 (f1 result v)))))))))
-
-(defn random-sampling
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it with random probability of prob (0.0 - 1.0)"
-  [prob]
-  (fn [f1]
-    (fn
-      ([result] (f1 result))
-      ([result input]
-         (if (<= (rand) prob)
-           (f1 result input)
-           result)))))
-
-(defn taking-nth
-  "Returns a fn that takes a fn of [result input] and returns a fn
-  that applies it to every nth input"
-  [n]
-  (fn [f1]
-    (let [ia (atom -1)]
-      (fn
-        ([result] (f1 result))
-        ([result input]
-           (let [i (swap! ia inc)]
-             (if (zero? (rem i n))
-               (f1 result input)
-               result)))))))
-
 ;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro go-loop
@@ -1023,7 +846,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; deprecated - do not use ;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn map<
-  "Deprecated - this function will be removed. Use mapping instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   [f ch]
   (reify
    impl/Channel
@@ -1053,7 +876,7 @@
    (put! [_ val fn1] (impl/put! ch val fn1))))
 
 (defn map>
-  "Deprecated - this function will be removed. Use mapping instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   [f ch]
   (reify
    impl/Channel
@@ -1068,7 +891,7 @@
     (impl/put! ch (f val) fn1))))
 
 (defn filter>
-  "Deprecated - this function will be removed. Use filtering instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   [p ch]
   (reify
    impl/Channel
@@ -1085,12 +908,12 @@
       (channels/box (not (impl/closed? ch)))))))
 
 (defn remove>
-  "Deprecated - this function will be removed. Use removing instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   [p ch]
   (filter> (complement p) ch))
 
 (defn filter<
-  "Deprecated - this function will be removed. Use filtering instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   ([p ch] (filter< p ch nil))
   ([p ch buf-or-n]
      (let [out (chan buf-or-n)]
@@ -1104,7 +927,7 @@
        out)))
 
 (defn remove<
-  "Deprecated - this function will be removed. Use removing instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   ([p ch] (remove< p ch nil))
   ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
 
@@ -1119,7 +942,7 @@
               (recur)))))))
 
 (defn mapcat<
-  "Deprecated - this function will be removed. Use mapcatting instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   ([f in] (mapcat< f in nil))
   ([f in buf-or-n]
     (let [out (chan buf-or-n)]
@@ -1127,7 +950,7 @@
       out)))
 
 (defn mapcat>
-  "Deprecated - this function will be removed. Use mapcatting instead"
+  "Deprecated - this function will be removed. Use transformer instead"
 
   ([f out] (mapcat> f out nil))
   ([f out buf-or-n]
@@ -1136,7 +959,7 @@
        in)))
 
 (defn unique
- "Deprecated - this function will be removed. Use deduping instead"
+ "Deprecated - this function will be removed. Use transformer instead"
   ([ch]
      (unique ch nil))
   ([ch buf-or-n]
@@ -1153,7 +976,7 @@
 
 
 (defn partition
-  "Deprecated - this function will be removed. Use partitioning instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   ([n ch]
      (partition n ch nil))
   ([n ch buf-or-n]
@@ -1177,7 +1000,7 @@
 
 
 (defn partition-by
-  "Deprecated - this function will be removed. Use partitioning-by instead"
+  "Deprecated - this function will be removed. Use transformer instead"
   ([f ch]
      (partition-by f ch nil))
   ([f ch buf-or-n]
