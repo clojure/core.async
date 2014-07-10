@@ -10,16 +10,16 @@
   clojure.core.async.impl.mutex
   (:require [clojure.core.async.impl.protocols :as impl])
   (:import [clojure.core.async Mutex]
-           [java.util.concurrent.locks Lock]))
+           [java.util.concurrent.locks Lock ReentrantLock]))
 
-#_(defn mutex []
-  (let [m (Mutex.)]
+(defn mutex []
+  (let [m (ReentrantLock.)]
     (reify
      Lock
      (lock [_] (.lock m))
      (unlock [_] (.unlock m)))))
 
-(defn mutex []
+#_(defn mutex []
   (let [cas (java.util.concurrent.atomic.AtomicInteger.)]
     (reify
      Lock

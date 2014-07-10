@@ -26,7 +26,8 @@
          (deref [_] val)))
 
 (defprotocol MMC
-  (cleanup [_]))
+  (cleanup [_])
+  (abort [_]))
 
 (deftype ManyToManyChannel [^LinkedList takes ^LinkedList puts ^Queue buf closed ^Lock mutex add!]
   MMC
@@ -47,6 +48,21 @@
          (when (.hasNext iter)
            (recur (.next iter)))))))
 
+  (abort
+   [this]
+   (let [iter (.iterator puts)]
+     (when (.hasNext iter)
+       (loop [^Lock putter (.next iter)]
+         (.lock putter)
+         (let [put-cb (and (impl/active? putter) (impl/commit putter))]
+           (.unlock putter)
+           (when put-cb
+             (dispatch/run (fn [] (put-cb true))))
+           (when (.hasNext iter)
+             (recur (.next iter)))))))
+   (.clear puts)
+   (impl/close! this))
+
   impl/WritePort
   (put!
    [this val handler]
@@ -64,27 +80,35 @@
            (let [put-cb (and (impl/active? handler) (impl/commit handler))]
              (.unlock handler)
              (if put-cb
-               (do (add! buf val)
-                   (if (pos? (count buf))
-                     (let [iter (.iterator takes)
-                           take-cb (when (.hasNext iter)
-                                     (loop [^Lock taker (.next iter)]
-                                       (.lock taker)
-                                       (let [ret (and (impl/active? taker) (impl/commit taker))]
-                                         (.unlock taker)
-                                         (if ret
-                                           (do
-                                             (.remove iter)
-                                             ret)
-                                           (when (.hasNext iter)
-                                             (recur (.next iter)))))))]
-                       (if take-cb
-                         (let [val (impl/remove! buf)]
-                           (.unlock mutex)
-                           (dispatch/run (fn [] (take-cb val))))
-                         (.unlock mutex)))
-                     (.unlock mutex))
-                   (box true))
+               (let [done? (reduced? (add! buf val))]
+                 (if (pos? (count buf))
+                   (let [iter (.iterator takes)
+                         take-cb (when (.hasNext iter)
+                                   (loop [^Lock taker (.next iter)]
+                                     (.lock taker)
+                                     (let [ret (and (impl/active? taker) (impl/commit taker))]
+                                       (.unlock taker)
+                                       (if ret
+                                         (do
+                                           (.remove iter)
+                                           ret)
+                                         (when (.hasNext iter)
+                                           (recur (.next iter)))))))]
+                     (if take-cb
+                       (let [val (impl/remove! buf)]
+                         (when done?
+                           (abort this))
+                         (.unlock mutex)
+                         (dispatch/run (fn [] (take-cb val))))
+                       (do
+                         (when done?
+                           (abort this))
+                         (.unlock mutex))))
+                   (do
+                     (when done?
+                       (abort this))
+                     (.unlock mutex)))
+                 (box true))
                (do (.unlock mutex)
                    nil))))
          (let [iter (.iterator takes)
@@ -114,9 +138,11 @@
                  (let [put-cb (and (impl/active? handler) (impl/commit handler))]
                    (.unlock handler)
                    (if put-cb
-                     (do (add! buf val)
-                         (.unlock mutex)
-                         (box true))
+                     (let [done? (reduced? (add! buf val))]
+                       (when done?
+                         (abort this))
+                       (.unlock mutex)
+                       (box true))
                      (do (.unlock mutex)
                          nil))))
                (do
@@ -146,19 +172,21 @@
          (if-let [take-cb (commit-handler)]
            (let [val (impl/remove! buf)
                  iter (.iterator puts)
-                 cbs (when (.hasNext iter)
-                       (loop [cbs []
-                              [^Lock putter val] (.next iter)]
-                        (.lock putter)
-                        (let [cb (and (impl/active? putter) (impl/commit putter))]
-                          (.unlock putter)
-                          (.remove iter)
-                          (let [cbs (if cb (conj cbs cb) cbs)]
-                            (when cb
-                              (add! buf val))
-                            (if (and (not (impl/full? buf)) (.hasNext iter))
-                              (recur cbs (.next iter))
-                              cbs)))))]
+                 [done? cbs]
+                 (when (.hasNext iter)
+                   (loop [cbs []
+                          [^Lock putter val] (.next iter)]
+                     (.lock putter)
+                     (let [cb (and (impl/active? putter) (impl/commit putter))]
+                       (.unlock putter)
+                       (.remove iter)
+                       (let [cbs (if cb (conj cbs cb) cbs)
+                             done? (when cb (reduced? (add! buf val)))]
+                         (if (and (not done?) (not (impl/full? buf)) (.hasNext iter))
+                           (recur cbs (.next iter))
+                           [done? cbs])))))]
+             (when done?
+               (abort this))
              (.unlock mutex)
              (doseq [cb cbs]
                (dispatch/run #(cb true)))
