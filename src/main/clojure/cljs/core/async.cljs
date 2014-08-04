@@ -60,7 +60,7 @@
   return nil if closed. Will park if nothing is available.
   Returns true unless port is already closed"
   [port]
-  (assert nil "<! used not in (go ...) block"))
+  (throw (js/Error. "<! used not in (go ...) block")))
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
@@ -85,7 +85,7 @@
   inside a (go ...) block. Will park if no buffer space is available.
   Returns true unless port is already closed."
   [port val]
-  (assert nil ">! used not in (go ...) block"))
+  (throw (js/Error. ">! used not in (go ...) block")))
 
 (defn put!
   "Asynchronously puts a val into port, calling fn0 (if supplied) when
@@ -192,7 +192,7 @@
   depended upon for side effects."
 
   [ports & {:as opts}]
-  (assert nil "alts! used not in (go ...) block"))
+  (throw (js/Error. "alts! used not in (go ...) block")))
 
 ;;;;;;; channel ops
 

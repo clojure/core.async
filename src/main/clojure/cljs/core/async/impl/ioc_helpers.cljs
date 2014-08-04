@@ -152,4 +152,4 @@
                    EXCEPTION-FRAMES
                    (:prev exception-frame)))
 
-     :else (assert false "No matching clause"))))
+     :else (throw (js/Error. "No matching clause")))))
