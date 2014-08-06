@@ -64,19 +64,19 @@
   (extends? impl/UnblockingBuffer (class buff)))
 
 (defn chan
-  "Creates a channel with an optional buffer, an optional transformation function
-  (like mapping, filtering etc or a composition thereof), and an
+  "Creates a channel with an optional buffer, an optional transducer
+  (like (map f), (filter p) etc or a composition thereof), and an
   optional exception-handler.  If buf-or-n is a number, will create
-  and use a fixed buffer of that size. If a transformation function is
-  supplied a buffer must be specified. ex-handler must be a fn of one
-  argument - if an exception occurs during transformation it will be
-  called with the Throwable as an argument, and any non-nil return value
-  will be placed in the channel."
+  and use a fixed buffer of that size. If a transducer is supplied a
+  buffer must be specified. ex-handler must be a fn of one argument -
+  if an exception occurs during transformation it will be called with
+  the Throwable as an argument, and any non-nil return value will be
+  placed in the channel."
   ([] (chan nil))
   ([buf-or-n] (chan buf-or-n nil))
   ([buf-or-n xform] (chan buf-or-n xform nil))
   ([buf-or-n xform ex-handler]
-     (when xform (assert buf-or-n "buffer must be supplied when xform is"))
+     (when xform (assert buf-or-n "buffer must be supplied when transducer is"))
      (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n) xform ex-handler)))
 
 (defn timeout
@@ -438,6 +438,104 @@
           (when (>! to v)
             (recur)))))
      to))
+
+(defn- pipeline*
+  ([n to xf from close? ex-handler type]
+     (assert (pos? n))
+     (let [ex-handler (or ex-handler (fn [ex]
+                                       (-> (Thread/currentThread)
+                                           .getUncaughtExceptionHandler
+                                           (.uncaughtException (Thread/currentThread) ex))
+                                       nil))
+           jobs (chan n)
+           results (chan n)
+           process (fn [[v p :as job]]
+                     (if (nil? job)
+                       (do (close! results) nil)
+                       (let [res (chan 1 xf ex-handler)]
+                         (>!! res v)
+                         (close! res)
+                         (put! p res)
+                         true)))
+           async (fn [[v p :as job]]
+                   (if (nil? job)
+                     (do (close! results) nil)
+                     (let [res (chan 1)]
+                       (xf v res)
+                       (put! p res)
+                       true)))]
+       (dotimes [_ n]
+         (case type
+               :blocking (thread
+                          (let [job (<!! jobs)]
+                            (when (process job)
+                              (recur))))
+               :compute (go-loop []
+                                   (let [job (<! jobs)]
+                                     (when (process job)
+                                       (recur))))
+               :async (go-loop []
+                                 (let [job (<! jobs)]
+                                   (when (async job)
+                                     (recur))))))
+       (go-loop []
+                  (let [v (<! from)]
+                    (if (nil? v)
+                      (close! jobs)
+                      (let [p (chan 1)]
+                        (>! jobs [v p])
+                        (>! results p)
+                        (recur)))))
+       (go-loop []
+                  (let [p (<! results)]
+                    (if (nil? p)
+                      (when close? (close! to))
+                      (let [res (<! p)]
+                        (loop []
+                          (let [v (<! res)]
+                            (when (and (not (nil? v)) (>! to v))
+                              (recur))))
+                        (recur))))))))
+
+;;todo - switch pipe arg order to match these (to/from)
+(defn pipeline
+  "Takes elements from the from channel and supplies them to the to
+  channel, subject to the transducer xf, with parallelism n. Because
+  it is parallel, the transducer will be applied independently to each
+  element, not across elements, and may produce zero or more outputs
+  per input.  Outputs will be returned in order relative to the
+  inputs. By default, the to channel will be closed when the from
+  channel closes, but can be determined by the close?  parameter. Will
+  stop consuming the from channel if the to channel closes. Note this
+  should be used for computational parallelism. If you have multiple
+  blocking operations to put in flight, use pipeline-blocking instead,
+  If you have multiple asynchronous operations to put in flight, use
+  pipeline-async instead."
+  ([n to xf from] (pipeline n to xf from true))
+  ([n to xf from close?] (pipeline n to xf from close? nil))
+  ([n to xf from close? ex-handler] (pipeline* n to xf from close? ex-handler :compute)))
+
+(defn pipeline-blocking
+  "Like pipeline, for blocking operations."
+  ([n to xf from] (pipeline-blocking n to xf from true))
+  ([n to xf from close?] (pipeline-blocking n to xf from close? nil))
+  ([n to xf from close? ex-handler] (pipeline* n to xf from close? ex-handler :blocking)))
+
+(defn pipeline-async
+  "Takes elements from the from channel and supplies them to the to
+  channel, subject to the async function af, with parallelism n. af
+  must be a function of two arguments, the first an input value and
+  the second a channel on which to place the result(s). af must close!
+  the channel before returning.  The presumption is that af will
+  return immediately, having launched some asynchronous operation
+  (i.e. in another thread) whose completion/callback will manipulate
+  the result channel. Outputs will be returned in order relative to
+  the inputs. By default, the to channel will be closed when the from
+  channel closes, but can be determined by the close?  parameter. Will
+  stop consuming the from channel if the to channel closes. See also
+  pipeline, pipeline-blocking."
+  ([n to af from] (pipeline-async n to af from true))
+  ([n to af from close?] (pipeline* n to af from close? nil :async)))
 
 (defn split
   "Takes a predicate and a source channel and returns a vector of two
