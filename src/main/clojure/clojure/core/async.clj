@@ -401,13 +401,12 @@
       (.execute thread-macro-executor
                 (fn []
                   (clojure.lang.Var/resetThreadBindingFrame binds)
-                  (let [ret (try (f)
-                                 (catch Throwable t
-                                   (println t)
-                                   nil))]
-                    (when-not (nil? ret)
-                      (>!! c ret))
-                    (close! c)))))
+                  (try
+                    (let [ret (f)]
+                      (when-not (nil? ret)
+                        (>!! c ret)))
+                    (finally
+                      (close! c))))))
     c))
 
 (defmacro thread
