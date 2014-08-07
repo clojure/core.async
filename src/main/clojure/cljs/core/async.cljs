@@ -196,145 +196,6 @@
 
 ;;;;;;; channel ops
 
-
-(defn map<
-  "Takes a function and a source channel, and returns a channel which
-  contains the values produced by applying f to each value taken from
-  the source channel"
-  [f ch]
-  (reify
-   impl/Channel
-   (close! [_] (impl/close! ch))
-   (closed? [_] (impl/closed? ch))
-
-   impl/ReadPort
-   (take! [_ fn1]
-     (let [ret
-       (impl/take! ch
-         (reify
-          impl/Handler
-          (active? [_] (impl/active? fn1))
-          (lock-id [_] (impl/lock-id fn1))
-          (commit [_]
-           (let [f1 (impl/commit fn1)]
-             #(f1 (if (nil? %) nil (f %)))))))]
-       (if (and ret (not (nil? @ret)))
-         (channels/box (f @ret))
-         ret)))
-
-   impl/WritePort
-   (put! [_ val fn1] (impl/put! ch val fn1))))
-
-(defn map>
-  "Takes a function and a target channel, and returns a channel which
-  applies f to each value before supplying it to the target channel."
-  [f ch]
-  (reify
-   impl/Channel
-   (close! [_] (impl/close! ch))
-
-   impl/ReadPort
-   (take! [_ fn1] (impl/take! ch fn1))
-
-   impl/WritePort
-   (put! [_ val fn1]
-     (impl/put! ch (f val) fn1))))
-
-
-
-(defn filter>
-  "Takes a predicate and a target channel, and returns a channel which
-  supplies only the values for which the predicate returns true to the
-  target channel."
-  [p ch]
-  (reify
-   impl/Channel
-   (close! [_] (impl/close! ch))
-   (closed? [_] (impl/closed? ch))
-
-   impl/ReadPort
-   (take! [_ fn1] (impl/take! ch fn1))
-
-   impl/WritePort
-   (put! [_ val fn1]
-    (if (p val)
-      (impl/put! ch val fn1)
-      (channels/box (not (impl/closed? ch)))))))
-
-(defn remove>
-  "Takes a predicate and a target channel, and returns a channel which
-  supplies only the values for which the predicate returns false to the
-  target channel."
-  [p ch]
-  (filter> (complement p) ch))
-
-(defn filter<
-  "Takes a predicate and a source channel, and returns a channel which
-  contains only the values taken from the source channel for which the
-  predicate returns true. The returned channel will be unbuffered by
-  default, or a buf-or-n can be supplied. The channel will close
-  when the source channel closes."
-  ([p ch] (filter< p ch nil))
-  ([p ch buf-or-n]
-     (let [out (chan buf-or-n)]
-       (go-loop []
-         (let [val (<! ch)]
-           (if (nil? val)
-             (close! out)
-             (do (when (p val)
-                   (>! out val))
-                 (recur)))))
-       out)))
-
-(defn remove<
-  "Takes a predicate and a source channel, and returns a channel which
-  contains only the values taken from the source channel for which the
-  predicate returns false. The returned channel will be unbuffered by
-  default, or a buf-or-n can be supplied. The channel will close
-  when the source channel closes."
-  ([p ch] (remove< p ch nil))
-  ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
-
-(defn- mapcat* [f in out]
-  (go-loop []
-    (let [val (<! in)]
-      (if (nil? val)
-        (close! out)
-        (do (doseq [v (f val)]
-              (>! out v))
-            (when-not (impl/closed? out)
-              (recur)))))))
-
-(defn mapcat<
-  "Takes a function and a source channel, and returns a channel which
-  contains the values in each collection produced by applying f to
-  each value taken from the source channel. f must return a
-  collection.
-
-  The returned channel will be unbuffered by default, or a buf-or-n
-  can be supplied. The channel will close when the source channel
-  closes."
-  ([f in] (mapcat< f in nil))
-  ([f in buf-or-n]
-    (let [out (chan buf-or-n)]
-      (mapcat* f in out)
-      out)))
-
-(defn mapcat>
-  "Takes a function and a target channel, and returns a channel which
-  applies f to each value put, then supplies each element of the result
-  to the target channel. f must return a collection.
-
-  The returned channel will be unbuffered by default, or a buf-or-n
-  can be supplied. The target channel will be closed when the source
-  channel closes."
-
-  ([f out] (mapcat> f out nil))
-  ([f out buf-or-n]
-     (let [in (chan buf-or-n)]
-       (mapcat* f in out)
-       in)))
-
 (defn pipe
   "Takes elements from the from channel and supplies them to the to
    channel. By default, the to channel will be closed when the from
@@ -731,7 +592,6 @@
   [coll ch]
   (reduce conj coll ch))
 
-
 (defn take
   "Returns a channel that will return, at most, n items from ch. After n items
    have been returned, or ch has been closed, the return chanel will close.
@@ -750,12 +610,117 @@
            (close! out))
        out)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; deprecated - do not use ;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn map<
+  "Deprecated - this function will be removed. Use transformer instead"
+  [f ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+   (closed? [_] (impl/closed? ch))
+
+   impl/ReadPort
+   (take! [_ fn1]
+     (let [ret
+       (impl/take! ch
+         (reify
+          impl/Handler
+          (active? [_] (impl/active? fn1))
+          (lock-id [_] (impl/lock-id fn1))
+          (commit [_]
+           (let [f1 (impl/commit fn1)]
+             #(f1 (if (nil? %) nil (f %)))))))]
+       (if (and ret (not (nil? @ret)))
+         (channels/box (f @ret))
+         ret)))
+
+   impl/WritePort
+   (put! [_ val fn1] (impl/put! ch val fn1))))
+
+(defn map>
+  "Deprecated - this function will be removed. Use transformer instead"
+  [f ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+
+   impl/ReadPort
+   (take! [_ fn1] (impl/take! ch fn1))
+
+   impl/WritePort
+   (put! [_ val fn1]
+     (impl/put! ch (f val) fn1))))
+
+(defn filter>
+  "Deprecated - this function will be removed. Use transformer instead"
+  [p ch]
+  (reify
+   impl/Channel
+   (close! [_] (impl/close! ch))
+   (closed? [_] (impl/closed? ch))
+
+   impl/ReadPort
+   (take! [_ fn1] (impl/take! ch fn1))
+
+   impl/WritePort
+   (put! [_ val fn1]
+    (if (p val)
+      (impl/put! ch val fn1)
+      (channels/box (not (impl/closed? ch)))))))
+
+(defn remove>
+  "Deprecated - this function will be removed. Use transformer instead"
+  [p ch]
+  (filter> (complement p) ch))
+
+(defn filter<
+  "Deprecated - this function will be removed. Use transformer instead"
+  ([p ch] (filter< p ch nil))
+  ([p ch buf-or-n]
+     (let [out (chan buf-or-n)]
+       (go-loop []
+         (let [val (<! ch)]
+           (if (nil? val)
+             (close! out)
+             (do (when (p val)
+                   (>! out val))
+                 (recur)))))
+       out)))
+
+(defn remove<
+  "Deprecated - this function will be removed. Use transformer instead"
+  ([p ch] (remove< p ch nil))
+  ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
+
+(defn- mapcat* [f in out]
+  (go-loop []
+    (let [val (<! in)]
+      (if (nil? val)
+        (close! out)
+        (do (doseq [v (f val)]
+              (>! out v))
+            (when-not (impl/closed? out)
+              (recur)))))))
+
+(defn mapcat<
+  "Deprecated - this function will be removed. Use transformer instead"
+  ([f in] (mapcat< f in nil))
+  ([f in buf-or-n]
+    (let [out (chan buf-or-n)]
+      (mapcat* f in out)
+      out)))
+
+(defn mapcat>
+  "Deprecated - this function will be removed. Use transformer instead"
+  ([f out] (mapcat> f out nil))
+  ([f out buf-or-n]
+     (let [in (chan buf-or-n)]
+       (mapcat* f in out)
+       in)))
 
 (defn unique
-  "Returns a channel that will contain values from ch. Consecutive duplicate
-   values will be dropped.
-
-  The output channel is unbuffered by default, unless buf-or-n is given."
+  "Deprecated - this function will be removed. Use transformer instead"
   ([ch]
      (unique ch nil))
   ([ch buf-or-n]
@@ -770,13 +735,8 @@
            (close! out))
        out)))
 
-
 (defn partition
-  "Returns a channel that will contain vectors of n items taken from ch. The
-   final vector in the return channel may be smaller than n if ch closed before
-   the vector could be completely filled.
-
-   The output channel is unbuffered by default, unless buf-or-n is given"
+  "Deprecated - this function will be removed. Use transformer instead"
   ([n ch]
      (partition n ch nil))
   ([n ch buf-or-n]
@@ -798,11 +758,7 @@
 
 
 (defn partition-by
-  "Returns a channel that will contain vectors of items taken from ch. New
-   vectors will be created whenever (f itm) returns a value that differs from
-   the previous item's (f itm).
-
-  The output channel is unbuffered, unless buf-or-n is given"
+  "Deprecated - this function will be removed. Use transformer instead"
   ([f ch]
      (partition-by f ch nil))
   ([f ch buf-or-n]
