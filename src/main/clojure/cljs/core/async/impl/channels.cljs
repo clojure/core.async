@@ -24,42 +24,39 @@
 
 (def ^:const MAX_DIRTY 64)
 
-(deftype ManyToManyChannel [takes ^:mutable dirty-takes puts ^:mutable dirty-puts ^not-native buf ^:mutable closed]
+(deftype ManyToManyChannel [takes ^:mutable dirty-takes puts ^:mutable dirty-puts ^not-native buf ^:mutable closed add!]
   impl/WritePort
   (put! [this val ^not-native handler]
     (assert (not (nil? val)) "Can't put nil in on a channel")
     ;; bug in CLJS compiler boolean inference - David
     (let [^boolean closed closed]
-      (if (or closed
-              (not ^boolean (impl/active? handler)))
+      (if (or closed (not ^boolean (impl/active? handler)))
         (box (not closed))
-        (loop []
-          (let [^not-native taker (.pop takes)]
-            (if-not (nil? taker)
-              (if ^boolean (impl/active? taker)
-                  (let [take-cb (impl/commit taker)
-                        _ (impl/commit handler)]
-                    (dispatch/run (fn [] (take-cb val)))
-                    (box true))
-                  (recur))
-
-              (if (not (or (nil? buf)
-                           ^boolean (impl/full? buf)))
-                (let [_ (impl/commit handler)]
-                  (do (impl/add! buf val)
-                      (box true)))
-                (do
-                  (if (> dirty-puts MAX_DIRTY)
-                    (do (set! dirty-puts 0)
-                        (.cleanup puts put-active?))
-                    (set! dirty-puts (inc dirty-puts)))
-                  (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
-                          (str "No more than " impl/MAX-QUEUE-SIZE
-                               " pending puts are allowed on a single channel."
-                               " Consider using a windowed buffer."))
-                  (.unbounded-unshift puts (PutBox. handler val))
-                  nil))))))))
-
+        (if (and buf (not (impl/full? buf)))
+          (do
+            (impl/commit handler)
+            (add! buf val)
+            (loop []
+              (let [^not-native taker (.pop takes)]
+                (if-not (nil? taker)
+                  (if ^boolean (impl/active? taker)
+                    (let [take-cb (impl/commit taker)
+                          val (impl/remove! buf)]
+                      (dispatch/run (fn [] (take-cb val)))
+                      (box true))
+                    (recur))
+                  (box true)))))
+          (do
+            (if (> dirty-puts MAX_DIRTY)
+              (do (set! dirty-puts 0)
+                  (.cleanup puts put-active?))
+              (set! dirty-puts (inc dirty-puts)))
+            (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
+                    (str "No more than " impl/MAX-QUEUE-SIZE
+                         " pending puts are allowed on a single channel."
+                         " Consider using a windowed buffer."))
+            (.unbounded-unshift puts (PutBox. handler val))
+            nil)))))
   impl/ReadPort
   (take! [this ^not-native handler]
     (if (not ^boolean (impl/active? handler))
@@ -76,7 +73,7 @@
                       (let [put-cb (impl/commit put-handler)
                             _ (impl/commit handler)]
                         (dispatch/run #(put-cb true))
-                        (impl/add! buf val))
+                        (add! buf val))
                       (recur))))))
           retval)
         (loop []
@@ -120,5 +117,31 @@
                   (recur))))
             nil))))
 
-(defn chan [buf]
-  (ManyToManyChannel. (buffers/ring-buffer 32) 0 (buffers/ring-buffer 32) 0 buf false))
+(defn- ex-handler [ex]
+  (.log js/console ex)
+  nil)
+
+(defn- handle [buf exh t]
+  (let [else ((or exh ex-handler) t)]
+    (if (nil? else)
+      buf
+      (impl/add! buf else))))
+
+(defn chan
+  ([buf] (chan buf nil))
+  ([buf xform] (chan buf xform nil))
+  ([buf xform exh]
+     (ManyToManyChannel. (buffers/ring-buffer 32) 0 (buffers/ring-buffer 32)
+                         0 buf false
+                         (let [add! (if xform (xform impl/add!) impl/add!)]
+                           (fn
+                             ([buf]
+                              (try
+                                (add! buf)
+                                (catch :default t
+                                  (handle buf exh t))))
+                             ([buf val]
+                              (try
+                                (add! buf val)
+                                (catch :default t
+                                  (handle buf exh t)))))))))

@@ -42,13 +42,18 @@
   "Creates a channel with an optional buffer. If buf-or-n is a number,
   will create and use a fixed buffer of that size."
   ([] (chan nil))
-  ([buf-or-n]
-     (let [buf-or-n (if (= buf-or-n 0)
-                      nil
-                      buf-or-n)]
-       (channels/chan (if (number? buf-or-n)
-                        (buffer buf-or-n)
-                        buf-or-n)))))
+  ([buf-or-n] (chan buf-or-n nil nil))
+  ([buf-or-n xform] (chan buf-or-n xform nil))
+  ([buf-or-n xform ex-handler]
+   (let [buf-or-n (if (= buf-or-n 0)
+                    nil
+                    buf-or-n)]
+     (when xform (assert buf-or-n "buffer must be supplied when transducer is"))
+     (channels/chan (if (number? buf-or-n)
+                      (buffer buf-or-n)
+                      buf-or-n)
+                    xform
+                    ex-handler))))
 
 (defn timeout
   "Returns a channel that will close after msecs"

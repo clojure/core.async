@@ -29,7 +29,13 @@
 (defprotocol Buffer
   (full? [b])
   (remove! [b])
-  (add! [b itm]))
+  (add!* [b itm]))
+
+(defn add!
+  ([b] b)
+  ([b itm]
+     (assert (not (nil? itm)))
+     (add!* b itm)))
 
 ;; Defines a buffer that will never block (return true to full?)
 (defprotocol UnblockingBuffer)
