@@ -24,7 +24,23 @@
 
 (def ^:const MAX_DIRTY 64)
 
+(defprotocol MMC
+  (abort [this]))
+
 (deftype ManyToManyChannel [takes ^:mutable dirty-takes puts ^:mutable dirty-puts ^not-native buf ^:mutable closed add!]
+  MMC
+  (abort [this]
+    (loop []
+      (let [putter (.pop puts)]
+        (when-not (nil? putter)
+          (let [^not-native put-handler (.-handler putter)
+                val (.-val putter)]
+            (if ^boolean (impl/active? put-handler)
+              (let [put-cb (impl/commit put-handler)]
+                (dispatch/run #(put-cb true)))
+              (recur))))))
+    (.cleanup puts (constantly false))
+    (impl/close! this))
   impl/WritePort
   (put! [this val ^not-native handler]
     (assert (not (nil? val)) "Can't put nil in on a channel")
@@ -35,17 +51,17 @@
         (if (and buf (not (impl/full? buf)))
           (do
             (impl/commit handler)
-            (add! buf val)
-            (loop []
-              (let [^not-native taker (.pop takes)]
-                (if-not (nil? taker)
-                  (if ^boolean (impl/active? taker)
-                    (let [take-cb (impl/commit taker)
-                          val (impl/remove! buf)]
-                      (dispatch/run (fn [] (take-cb val)))
-                      (box true))
-                    (recur))
-                  (box true)))))
+            (let [done? (reduced? (add! buf val))]
+              (loop []
+                (let [^not-native taker (.pop takes)]
+                  (if-not (nil? taker)
+                    (if ^boolean (impl/active? taker)
+                      (let [take-cb (impl/commit taker)
+                            val (impl/remove! buf)]
+                        (dispatch/run (fn [] (take-cb val))))
+                      (recur)))))
+              (when done? (abort this))
+              (box true)))
           (do
             (if (> dirty-puts MAX_DIRTY)
               (do (set! dirty-puts 0)
@@ -73,7 +89,8 @@
                       (let [put-cb (impl/commit put-handler)
                             _ (impl/commit handler)]
                         (dispatch/run #(put-cb true))
-                        (add! buf val))
+                      (when (reduced (add! buf val))
+                        (abort this)))
                       (recur))))))
           retval)
         (loop []
