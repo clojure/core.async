@@ -222,6 +222,57 @@
               (recur)))))
      to))
 
+(defn- pipeline*
+  ([n to xf from close?]
+     (assert (pos? n))
+     (let [jobs (chan n)
+           results (chan n)
+           async (fn [[v p :as job]]
+                   (if (nil? job)
+                     (do (close! results) nil)
+                     (let [res (chan 1)]
+                       (xf v res)
+                       (put! p res)
+                       true)))]
+       (dotimes [_ n]
+         (go-loop []
+                  (let [job (<! jobs)]
+                    (when (async job)
+                      (recur)))))
+       (go-loop []
+                  (let [v (<! from)]
+                    (if (nil? v)
+                      (close! jobs)
+                      (let [p (chan 1)]
+                        (>! jobs [v p])
+                        (>! results p)
+                        (recur)))))
+       (go-loop []
+                  (let [p (<! results)]
+                    (if (nil? p)
+                      (when close? (close! to))
+                      (let [res (<! p)]
+                        (loop []
+                          (let [v (<! res)]
+                            (when (and (not (nil? v)) (>! to v))
+                              (recur))))
+                        (recur))))))))
+
+(defn pipeline-async
+  "Takes elements from the from channel and supplies them to the to
+  channel, subject to the async function af, with parallelism n. af
+  must be a function of two arguments, the first an input value and
+  the second a channel on which to place the result(s). af must close!
+  the channel before returning.  The presumption is that af will
+  return immediately, having launched some asynchronous operation
+  whose completion/callback will manipulate the result channel. Outputs
+  will be returned in order relative to  the inputs. By default, the to
+  channel will be closed when the from channel closes, but can be
+  determined by the close?  parameter. Will stop consuming the from
+  channel if the to channel closes."
+  ([n to af from] (pipeline-async n to af from true))
+  ([n to af from close?] (pipeline* n to af from close?)))
+
 (defn split
   "Takes a predicate and a source channel and returns a vector of two
   channels, the first of which will contain the values for which the
