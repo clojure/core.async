@@ -302,3 +302,10 @@
                       (<! (async/into [] (integer-chan 8 (partition-all 5)))))))
            (go (is (= [[0 1 2 3 4] [5 6 7 8 9]]
                       (<! (async/into [] (integer-chan 10 (partition-all 5)))))))))
+
+(deftest test-bufferless
+  (let [c (chan)]
+    (go
+      (is (= [:value c] (async/alts! [c (async/timeout 6000)] :priority true))))
+    (go
+      (is (= [true c] (async/alts! [[c :value] (async/timeout 6000)] :priority true))))))

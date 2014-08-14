@@ -62,17 +62,28 @@
                       (recur)))))
               (when done? (abort this))
               (box true)))
-          (do
-            (if (> dirty-puts MAX_DIRTY)
-              (do (set! dirty-puts 0)
-                  (.cleanup puts put-active?))
-              (set! dirty-puts (inc dirty-puts)))
-            (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
-                    (str "No more than " impl/MAX-QUEUE-SIZE
-                         " pending puts are allowed on a single channel."
-                         " Consider using a windowed buffer."))
-            (.unbounded-unshift puts (PutBox. handler val))
-            nil)))))
+          (let [taker (loop []
+                        (let [^not-native taker (.pop takes)]
+                          (when taker
+                            (if (impl/active? taker)
+                              taker
+                              (recur)))))]
+            (if taker
+              (let [take-cb (impl/commit taker)]
+                (impl/commit handler)
+                (dispatch/run (fn [] (take-cb val)))
+                (box true))
+              (do
+                (if (> dirty-puts MAX_DIRTY)
+                  (do (set! dirty-puts 0)
+                      (.cleanup puts put-active?))
+                  (set! dirty-puts (inc dirty-puts)))
+                (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
+                        (str "No more than " impl/MAX-QUEUE-SIZE
+                             " pending puts are allowed on a single channel."
+                             " Consider using a windowed buffer."))
+                (.unbounded-unshift puts (PutBox. handler val))
+                nil)))))))
   impl/ReadPort
   (take! [this ^not-native handler]
     (if (not ^boolean (impl/active? handler))
