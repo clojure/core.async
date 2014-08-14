@@ -89,7 +89,7 @@
                       (let [put-cb (impl/commit put-handler)
                             _ (impl/commit handler)]
                         (dispatch/run #(put-cb true))
-                      (when (reduced (add! buf val))
+                      (when (reduced? (add! buf val))
                         (abort this)))
                       (recur))))))
           retval)

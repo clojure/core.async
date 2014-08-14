@@ -268,3 +268,20 @@
                    (<! (timeout 500))
                    ;; Thus this should be 2
                    (is= @a 2)))))))
+(defn integer-chan
+  "Returns a channel upon which will be placed integers from 0 to n (exclusive) at 10 ms intervals, using the provided xform"
+  [n xform]
+  (let [c (chan 1 xform)]
+    (go
+      (loop [i 0]
+        (if (< i n)
+          (do
+            (<! (timeout 10))
+            (>! c i)
+            (recur (inc i)))
+          (close! c))))
+    c))
+
+(deftest test-transducers
+         (testing "base case without transducer"
+                  (go (is (= (range 10) (<! (async/into [] (integer-chan 10 nil))))))))
