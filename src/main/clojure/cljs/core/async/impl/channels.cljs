@@ -53,8 +53,8 @@
             (impl/commit handler)
             (let [done? (reduced? (add! buf val))]
               (loop []
-                (let [^not-native taker (.pop takes)]
-                  (if-not (nil? taker)
+                (when (and (pos? (.-length takes)) (pos? (count buf)))
+                  (let [^not-native taker (.pop takes)]
                     (if ^boolean (impl/active? taker)
                       (let [take-cb (impl/commit taker)
                             val (impl/remove! buf)]
