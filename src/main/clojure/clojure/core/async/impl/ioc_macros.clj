@@ -15,6 +15,9 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.tools.analyzer :as an]
             [clojure.tools.analyzer.ast :as ast]
+            [clojure.tools.analyzer.env :as env]
+            [clojure.tools.analyzer.passes :refer [schedule]]
+            [clojure.tools.analyzer.passes.jvm.annotate-loops :refer [annotate-loops]]
             [clojure.tools.analyzer.jvm :as an-jvm]
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
@@ -239,13 +242,13 @@
   IInstruction
   (reads-from [this]
     (keep (or locals #{})
-          (map :name (::collected-locals ast))))
+          (map :name (-> ast :env :locals vals))))
   (writes-to [this] [(:id this)])
   (block-references [this] [])
   IEmittableInstruction
   (emit-instruction [this state-sym]
     (if (not-empty (reads-from this))
-      `[~@(->> (::collected-locals ast)
+      `[~@(->> (-> ast :env :locals vals)
                (map #(select-keys % [:op :name :form]))
                (filter (fn [local]
                          (when locals
@@ -311,6 +314,15 @@
   IEmittableInstruction
   (emit-instruction [this state-sym]
     `[~(:id this) (. ~class ~method ~@(seq refs))]))
+
+(defrecord InstanceInterop [instance-id op refs]
+  IInstruction
+  (reads-from [this] (cons instance-id refs))
+  (writes-to [this] [(:id this)])
+  (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~(:id this) (. ~instance-id ~op ~@(seq refs))]))
 
 (defrecord Case [val-id test-vals jmp-blocks default-block]
   IInstruction
@@ -486,6 +498,13 @@
 (def -item-to-ssa nil) ;; for help in the repl
 (defmulti -item-to-ssa :op)
 
+(defmethod -item-to-ssa :default
+  [ast]
+  (gen-plan
+   [locals (get-binding :locals)
+    id (add-instruction (->RawCode ast locals))]
+   id))
+
 (defn item-to-ssa [ast]
   (if (or (::transform? ast)
           (contains? #{:local :const :quote} (:op ast)))
@@ -503,10 +522,24 @@
    inst-id))
 
 (defmethod -item-to-ssa :keyword-invoke
-  [{f :fn args :args}]
+  [{f :keyword target :target}]
   (gen-plan
-   [arg-ids (all (map item-to-ssa (cons f args)))
+   [arg-ids (all (map item-to-ssa (list f target)))
     inst-id (add-instruction (->Call arg-ids))]
+   inst-id))
+
+(defmethod -item-to-ssa :protocol-invoke
+  [{f :protocol-fn target :target args :args}]
+  (gen-plan
+   [arg-ids (all (map item-to-ssa (list* f target args)))
+    inst-id (add-instruction (->Call arg-ids))]
+   inst-id))
+
+(defmethod -item-to-ssa :instance?
+  [{:keys [class target]}]
+  (gen-plan
+   [arg-id (item-to-ssa target)
+    inst-id (add-instruction (->Call (list `instance? class arg-id)))]
    inst-id))
 
 (defmethod -item-to-ssa :prim-invoke
@@ -516,11 +549,40 @@
     inst-id (add-instruction (->Call arg-ids))]
    inst-id))
 
+(defmethod -item-to-ssa :instance-call
+  [{:keys [instance method args]}]
+  (gen-plan
+   [arg-ids (all (map item-to-ssa args))
+    instance-id (item-to-ssa instance)
+    inst-id (add-instruction (->InstanceInterop instance-id method arg-ids))]
+   inst-id))
+
+(defmethod -item-to-ssa :instance-field
+  [{:keys [instance field]}]
+  (gen-plan
+   [instance-id (item-to-ssa instance)
+    inst-id (add-instruction (->InstanceInterop instance-id (symbol (str "-" field)) ()))]
+   inst-id))
+
+(defmethod -item-to-ssa :host-interop
+  [{:keys [target m-or-f]}]
+  (gen-plan
+   [instance-id (item-to-ssa target)
+    inst-id (add-instruction (->InstanceInterop instance-id m-or-f ()))]
+   inst-id))
+
 (defmethod -item-to-ssa :static-call
   [{:keys [class method args]}]
   (gen-plan
    [arg-ids (all (map item-to-ssa args))
     inst-id (add-instruction (->StaticCall class method arg-ids))]
+   inst-id))
+
+(defmethod -item-to-ssa :set!
+  [{:keys [val target]}]
+  (gen-plan
+   [arg-ids (all (map item-to-ssa (list target val)))
+    inst-id (add-instruction (->Call (cons 'set! arg-ids)))]
    inst-id))
 
 (defn var-name [v]
@@ -669,13 +731,13 @@
                     _ (add-instruction (->ProcessExceptionWithValue id))
                     _ (pop-binding :locals)
                     _ (set-block cur-blk)
-                    _ (push-alter-binding :catch (fnil conj []) [ex blk])]
+                    _ (push-alter-binding :catch (fnil conj []) [(:val ex) blk])]
                    blk)
                   (no-op))
       body-blk (add-block)
       _ (add-instruction (->Jmp nil body-blk))
       _ (set-block body-blk)
-      _ (add-instruction (->Try catch-blk ex finally-blk end-blk))
+      _ (add-instruction (->Try catch-blk (:val ex) finally-blk end-blk))
       body-id (item-to-ssa body)
       _ (if catch
           (pop-binding :catch)
@@ -696,7 +758,7 @@
   [{:keys [args class] :as ast}]
   (gen-plan
    [arg-ids (all (map item-to-ssa args))
-    ret-id (add-instruction (->Call (concat ['new class] arg-ids)))]
+    ret-id (add-instruction (->Call (list* 'new (:val class) arg-ids)))]
    ret-id))
 
 (defmethod -item-to-ssa :recur
@@ -772,6 +834,14 @@
     vals-ids (all (map item-to-ssa vals))
     id (add-instruction (->Call (cons 'clojure.core/hash-map
                              (interleave keys-ids vals-ids))))]
+   id))
+
+(defmethod -item-to-ssa :with-meta
+  [{:keys [expr meta]}]
+  (gen-plan
+   [meta-id (item-to-ssa meta)
+    expr-id (item-to-ssa expr)
+    id (add-instruction (->Call (list 'clojure.core/with-meta expr-id meta-id)))]
    id))
 
 (defmethod -item-to-ssa :record
@@ -978,26 +1048,21 @@
    'clojure.core.async/alts! 'clojure.core.async/ioc-alts!
    :Return `return-chan})
 
-(defn analyze
-  [form env]
-  (binding [an/macroexpand-1 an-jvm/macroexpand-1
-            an/create-var    an-jvm/create-var
-            an/parse         an-jvm/parse
-            an/var?          var?]
-    (an/analyze form env)))
-
-
 (defn mark-transitions
-  [transitions {:keys [op fn] :as ast}]
-  (if (and (= op :invoke)
-           (= (:op fn) :var)
-           (contains? transitions (var-name (:var fn))))
-    (merge ast
-           {:op :transition
-            :name (get transitions (var-name (:var fn)))})
-    ast))
+  {:pass-info {:walk :post :depends #{} :after an-jvm/default-passes}}
+  [{:keys [op fn] :as ast}]
+  (let [transitions (-> (env/deref-env) :passes-opts :mark-transitions/transitions)]
+    (if (and (= op :invoke)
+             (= (:op fn) :var)
+             (contains? transitions (var-name (:var fn))))
+      (merge ast
+             {:op   :transition
+              :name (get transitions (var-name (:var fn)))})
+      ast)))
 
-(defn propagate-transitions [{:keys [op] :as ast}]
+(defn propagate-transitions
+  {:pass-info {:walk :post :depends #{#'mark-transitions}}}
+  [{:keys [op] :as ast}]
   (if (or (= op :transition)
           (some #(or (= (:op %) :transition)
                      (::transform? %))
@@ -1005,47 +1070,19 @@
     (assoc ast ::transform? true)
     ast))
 
-(defn propagate-recur [ast]
-  (cond
-   ;; If we are a loop and we need to transform, and
-   ;; one of our children is a recur, then we must transform everything
-   ;; that has a recur
-   (and (= (:op ast) :loop)
-        (::transform? ast)
-        (some ::has-recur? (ast/children ast)))
-   (ast/postwalk ast #(if (and (::has-recur? %)
-                               (not (= (:op %) :fn)))
-                        (assoc % ::transform? true)
-                        %))
-
-   (or (= (:op ast) :recur)
-          (some #(or (= (:op %) :recur)
-                     (::has-recur? %))
-                (ast/children ast)))
-   (assoc ast ::has-recur? true)
-
-   :else ast))
-
-(defn collect-locals [ast]
-  (let [collected-locals (->> ast
-                              ast/children
-                              (map ::collected-locals)
-                              (apply union #{}))
-        this-local (case (:op ast)
-                     :local ast
-                     nil)
-        collected-locals (case (:op ast)
-                           :let (difference collected-locals
-                                            (set (map :name (:bindings ast))))
-                           :loop (difference collected-locals
-                                             (set (map :name (:bindings ast))))
-                           collected-locals)]
-    (if-let [val (not-empty (if this-local
-                              (conj collected-locals this-local)
-                              collected-locals))]
-      (assoc ast ::collected-locals val)
-      ast)))
-
+(defn propagate-recur
+  {:pass-info {:walk :post :depends #{#'annotate-loops #'propagate-transitions}}}
+  [ast]
+  (if (and (= (:op ast) :loop)
+           (::transform? ast))
+    ;; If we are a loop and we need to transform, and
+    ;; one of our children is a recur, then we must transform everything
+    ;; that has a recur
+    (let [loop-id (:loop-id ast)]
+      (ast/postwalk ast #(if (contains? (:loops %) loop-id)
+                           (assoc % ::transform? true)
+                           %)))
+    ast))
 
 (defn make-env [input-env]
   (assoc (an-jvm/empty-env)
@@ -1059,12 +1096,20 @@
   (println "----")
   x)
 
+(def passes (into an-jvm/default-passes
+                  #{#'propagate-recur
+                    #'propagate-transitions
+                    #'mark-transitions}))
+
+(def run-passes
+  (schedule passes))
+
 (defn state-machine [body num-user-params env user-transitions]
-  (-> (an-jvm/analyze body (make-env env))
-      (ast/postwalk (comp collect-locals
-                          propagate-recur
-                          propagate-transitions
-                          (partial mark-transitions user-transitions)))
+  (binding [an-jvm/run-passes run-passes]
+    (-> (an-jvm/analyze body (make-env env)
+                       {:passes-opts (merge an-jvm/default-passes-opts
+                                            {:uniquify/uniquify-env true
+                                             :mark-transitions/transitions user-transitions})})
       (parse-to-state-machine user-transitions)
       second
-      (emit-state-machine num-user-params user-transitions)))
+      (emit-state-machine num-user-params user-transitions))))

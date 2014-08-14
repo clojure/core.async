@@ -31,7 +31,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.analyzer.jvm</artifactId>
-      <version>0.1.0-beta12</version>
+      <version>0.6.6</version>
     </dependency>
   </dependencies>
 
