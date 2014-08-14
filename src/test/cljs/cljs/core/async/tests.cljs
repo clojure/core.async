@@ -268,6 +268,7 @@
                    (<! (timeout 500))
                    ;; Thus this should be 2
                    (is= @a 2)))))))
+
 (defn integer-chan
   "Returns a channel upon which will be placed integers from 0 to n (exclusive) at 10 ms intervals, using the provided xform"
   [n xform]
@@ -284,4 +285,15 @@
 
 (deftest test-transducers
          (testing "base case without transducer"
-                  (go (is (= (range 10) (<! (async/into [] (integer-chan 10 nil))))))))
+                  (go (is (= (range 10)
+                             (<! (async/into [] (integer-chan 10 nil)))))))
+         (testing "mapping transducer"
+                  (go (is (= (map str (range 10))
+                             (<! (async/into [] (integer-chan 10 (map str))))))))
+         (testing "filtering transducer"
+                  (go (is (= (filter even? (range 10))
+                             (<! (async/into [] (integer-chan 10 (filter even?))))))))
+         (testing "flatpmapping transducer"
+                  (let [pair-of (fn [x] [x x])]
+                    (go (is (= (mapcat pair-of (range 10))
+                               (<! (async/into [] (integer-chan 10 (flatmap pair-of))))))))))
