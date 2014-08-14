@@ -1,5 +1,5 @@
 (ns cljs.core.async.tests
-  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close! take partition partition-by] :as async]
+  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close! take partition-by] :as async]
             [cljs.core.async.impl.dispatch :as dispatch]
             [cljs.core.async.impl.buffers :as buff]
             [cljs.core.async.impl.timers :as timers :refer [timeout]]
@@ -296,4 +296,9 @@
          (testing "flatpmapping transducer"
                   (let [pair-of (fn [x] [x x])]
                     (go (is (= (mapcat pair-of (range 10))
-                               (<! (async/into [] (integer-chan 10 (flatmap pair-of))))))))))
+                               (<! (async/into [] (integer-chan 10 (flatmap pair-of)))))))))
+         (testing "partitioning transducer"
+           (go (is (= [[0 1 2 3 4] [5 6 7]]
+                      (<! (async/into [] (integer-chan 8 (partition-all 5)))))))
+           (go (is (= [[0 1 2 3 4] [5 6 7 8 9]]
+                      (<! (async/into [] (integer-chan 10 (partition-all 5)))))))))
