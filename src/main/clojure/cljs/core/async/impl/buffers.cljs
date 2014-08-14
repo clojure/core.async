@@ -84,7 +84,8 @@
   (remove! [this]
     (.pop buf))
   (add!* [this itm]
-    (.unbounded-unshift buf itm))
+    (.unbounded-unshift buf itm)
+    this)
   cljs.core/ICounted
   (-count [this]
     (.-length buf)))
@@ -101,7 +102,8 @@
     (.pop buf))
   (add!* [this itm]
     (when-not (== (.-length buf) n)
-      (.unshift buf itm)))
+      (.unshift buf itm))
+    this)
   cljs.core/ICounted
   (-count [this]
     (.-length buf)))
@@ -119,7 +121,8 @@
   (add!* [this itm]
     (when (== (.-length buf) n)
       (impl/remove! this))
-    (.unshift buf itm))
+    (.unshift buf itm)
+    this)
   cljs.core/ICounted
   (-count [this]
     (.-length buf)))
