@@ -12,10 +12,26 @@
        (assert (cljs.core.async.impl.ioc-helpers/finished? state#) "state did not return finished")
        (aget state# ~ioc/VALUE-IDX))))
 
+(defmacro assert-go-block-completes
+  [nm & body]
+  `(let [body-chan# (do ~@body)
+         timeout# (fn [] (let [c# (cljs.core.async/chan)]
+                           (cljs.core.async.macros/go
+                             (cljs.core.async/<! (cljs.core.async/timeout 10000))
+                             (cljs.core.async/>! c# ::timeout)
+                             (cljs.core.async/close! c#))
+                           c#))]
+     (when (satisfies? cljs.core.async.impl.protocols.Channel body-chan#)
+       (cljs.core.async.macros/go
+         (let [[v# _] (cljs.core.async/alts! [body-chan# (timeout#)] :priority true)]
+           (assert (not= ::timeout v#)
+                   (str "test timed out: " ~nm ))))
+       true)))
+
 (defmacro deftest
   [nm & body]
   `(do (.log js/console (str "Testing: " ~(str nm) "..."))
-       ~@body))
+       (assert-go-block-completes ~(str nm) ~@body)))
 
 (defmacro throws?
   [& exprs]
@@ -25,7 +41,7 @@
 (defmacro testing
   [nm & body]
     `(do (.log js/console (str "    " ~nm "..."))
-       ~@body))
+         (assert-go-block-completes ~(str nm) ~@body)))
 
 (defmacro is=
   [a b]
