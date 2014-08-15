@@ -92,56 +92,63 @@
         (let [_ (impl/commit handler)
               retval (box (impl/remove! buf))]
           (loop []
-            (let [putter (.pop puts)]
-              (if-not (nil? putter)
-                (let [^not-native put-handler (.-handler putter)
-                      val (.-val putter)]
-                  (if ^boolean (impl/active? put-handler)
-                      (let [put-cb (impl/commit put-handler)
-                            _ (impl/commit handler)]
+            (when-not (impl/full? buf)
+              (let [putter (.pop puts)]
+                (when-not (nil? putter)
+                  (let [^not-native put-handler (.-handler putter)
+                        val (.-val putter)]
+                    (when ^boolean (impl/active? put-handler)
+                      (let [put-cb (impl/commit put-handler)]
+                        (impl/commit handler)
                         (dispatch/run #(put-cb true))
-                      (when (reduced? (add! buf val))
-                        (abort this)))
-                      (recur))))))
+                        (when (reduced? (add! buf val))
+                          (abort this)))))
+                  (recur)))))
           retval)
-        (loop []
-          (let [putter (.pop puts)]
-            (if-not (nil? putter)
-              (let [^not-native put-handler (.-handler putter)
-                    val (.-val putter)]
-                (if ^boolean (impl/active? put-handler)
-                    (let [put-cb (impl/commit put-handler)
-                          _ (impl/commit handler)]
-                      (dispatch/run #(put-cb true))
-                      (box val))
-                    (recur)))
-              (if ^boolean closed
-                  (let [_ (impl/commit handler)]
-                    (box nil))
-                  (do
-                    (if (> dirty-takes MAX_DIRTY)
-                      (do (set! dirty-takes 0)
-                          (.cleanup takes impl/active?))
-                      (set! dirty-takes (inc dirty-takes)))
-
-                    (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
-                            (str "No more than " impl/MAX-QUEUE-SIZE
-                                 " pending takes are allowed on a single channel."))
-                    (.unbounded-unshift takes handler)
-                    nil))))))))
-
+        (let [putter (loop []
+                       (let [putter (.pop puts)]
+                         (when putter
+                           (if ^boolean (impl/active? (.-handler putter))
+                             putter
+                             (recur)))))]
+          (if putter
+            (let [put-cb (impl/commit (.-handler putter))]
+              (impl/commit handler)
+              (dispatch/run #(put-cb true))
+              (box (.-val putter)))
+            (if closed
+              (do
+                (when buf (add! buf))
+                (if (and (impl/active? handler) (impl/commit handler))
+                  (let [has-val (and buf (pos? (count buf)))]
+                    (let [val (when has-val (impl/remove! buf))]
+                      (box val)))
+                  nil))
+              (do
+                (if (> dirty-takes MAX_DIRTY)
+                  (do (set! dirty-takes 0)
+                      (.cleanup takes impl/active?))
+                  (set! dirty-takes (inc dirty-takes)))
+                (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
+                        (str "No more than " impl/MAX-QUEUE-SIZE
+                             " pending takes are allowed on a single channel."))
+                (.unbounded-unshift takes handler)
+                nil)))))))
   impl/Channel
   (closed? [_] closed)
   (close! [this]
     (if ^boolean closed
         nil
         (do (set! closed true)
+            (when (and buf (zero? (.-length puts)))
+                    (add! buf))
             (loop []
               (let [^not-native taker (.pop takes)]
                 (when-not (nil? taker)
                   (when ^boolean (impl/active? taker)
-                        (let [take-cb (impl/commit taker)]
-                          (dispatch/run (fn [] (take-cb nil)))))
+                    (let [take-cb (impl/commit taker)
+                          val (when (and buf (pos? (count buf))) (impl/remove! buf))]
+                      (dispatch/run (fn [] (take-cb val)))))
                   (recur))))
             nil))))
 
