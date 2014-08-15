@@ -223,10 +223,19 @@
      to))
 
 (defn- pipeline*
-  ([n to xf from close?]
+  ([n to xf from close? ex-handler type]
      (assert (pos? n))
      (let [jobs (chan n)
            results (chan n)
+           process (fn [[v p :as job]]
+                     (if (nil? job)
+                       (do (close! results) nil)
+                       (let [res (chan 1 xf ex-handler)]
+                         (go
+                           (>! res v)
+                           (close! res))
+                         (put! p res)
+                         true)))
            async (fn [[v p :as job]]
                    (if (nil? job)
                      (do (close! results) nil)
@@ -235,10 +244,15 @@
                        (put! p res)
                        true)))]
        (dotimes [_ n]
-         (go-loop []
-                  (let [job (<! jobs)]
-                    (when (async job)
-                      (recur)))))
+         (case type
+           :compute  (go-loop []
+                               (let [job (<! jobs)]
+                                 (when (process job)
+                                   (recur))))
+           :async (go-loop []
+                           (let [job (<! jobs)]
+                             (when (async job)
+                               (recur))))))
        (go-loop []
                   (let [v (<! from)]
                     (if (nil? v)
@@ -271,7 +285,24 @@
   determined by the close?  parameter. Will stop consuming the from
   channel if the to channel closes."
   ([n to af from] (pipeline-async n to af from true))
-  ([n to af from close?] (pipeline* n to af from close?)))
+  ([n to af from close?] (pipeline* n to af from close? nil :async)))
+
+(defn pipeline
+  "Takes elements from the from channel and supplies them to the to
+  channel, subject to the transducer xf, with parallelism n. Because
+  it is parallel, the transducer will be applied independently to each
+  element, not across elements, and may produce zero or more outputs
+  per input.  Outputs will be returned in order relative to the
+  inputs. By default, the to channel will be closed when the from
+  channel closes, but can be determined by the close?  parameter. Will
+  stop consuming the from channel if the to channel closes.
+
+  Note this is supplied for API compatibility with the Clojure version.
+  Values of N > 1 will not result in actual concurrency in a
+  single-threaded runtime."
+  ([n to xf from] (pipeline n to xf from true))
+  ([n to xf from close?] (pipeline n to xf from close? nil))
+  ([n to xf from close? ex-handler] (pipeline* n to xf from close? ex-handler :compute)))
 
 (defn split
   "Takes a predicate and a source channel and returns a vector of two
