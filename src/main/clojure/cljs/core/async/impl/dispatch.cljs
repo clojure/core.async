@@ -1,10 +1,10 @@
 (ns cljs.core.async.impl.dispatch
-  (:require [cljs.core.async.impl.buffers :as buffers]))
+  (:require [cljs.core.async.impl.buffers :as buffers]
+            [goog.async.nextTick]))
 
-(def message-channel nil)
 (def tasks (buffers/ring-buffer 32))
-(def ^:boolean running? false)
-(def ^:boolean queued? false)
+(def running? false)
+(def queued? false)
 
 (def TASK_BATCH_SIZE 1024)
 
@@ -23,20 +23,10 @@
   (when (> (.-length tasks) 0)
     (queue-dispatcher)))
 
-(when (exists? js/MessageChannel)
-  (set! message-channel (js/MessageChannel.))
-  (set! (.. message-channel -port1 -onmessage)
-        (fn [msg]
-          (process-messages))))
-
 (defn queue-dispatcher []
-  (when-not ^boolean (and ^boolean queued?
-                          running?)
+  (when-not (and queued? running?)
     (set! queued? true)
-    (cond
-     (exists? js/MessageChannel) (.postMessage (.-port2 message-channel) 0)
-     (exists? js/setImmediate) (js/setImmediate process-messages)
-     :else (js/setTimeout process-messages 0))))
+    (goog.async.nextTick process-messages)))
 
 (defn run [f]
   (.unbounded-unshift tasks f)

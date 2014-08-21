@@ -14,7 +14,7 @@
   :java-source-paths ["src/main/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
-  :plugins [[lein-cljsbuild "1.0.3"]]
+  :plugins [[lein-cljsbuild "1.0.4-SNAPSHOT"]]
 
   :cljsbuild
   {:builds
