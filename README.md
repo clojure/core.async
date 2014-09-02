@@ -16,6 +16,12 @@ Latest release: 0.1.338.0-5c5012-alpha
  [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
 ```
 
+To use snapshot releases, you must include the following in your project.clj:
+
+```clj
+  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
+```
+
 [Maven](http://maven.apache.org/) dependency information:
 
 ```xml
