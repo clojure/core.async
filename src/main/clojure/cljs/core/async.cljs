@@ -719,7 +719,7 @@
          (reify
           impl/Handler
           (active? [_] (impl/active? fn1))
-          (lock-id [_] (impl/lock-id fn1))
+          #_(lock-id [_] (impl/lock-id fn1))
           (commit [_]
            (let [f1 (impl/commit fn1)]
              #(f1 (if (nil? %) nil (f %)))))))]
