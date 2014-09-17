@@ -872,8 +872,8 @@
    'cljs.core.async/<! 'cljs.core.async.impl.ioc-helpers/take!
    '>! 'cljs.core.async.impl.ioc-helpers/put!
    'cljs.core.async/>! 'cljs.core.async.impl.ioc-helpers/put!
-   'alts! 'cljs.core.async.impl.ioc-helpers/ioc-alts!
-   'cljs.core.async/alts! 'cljs.core.async.impl.ioc-helpers/ioc-alts!
+   'alts! 'cljs.core.async/ioc-alts!
+   'cljs.core.async/alts! 'cljs.core.async/ioc-alts!
    :Return 'cljs.core.async.impl.ioc-helpers/return-chan})
 
 

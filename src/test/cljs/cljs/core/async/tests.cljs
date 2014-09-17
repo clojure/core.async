@@ -296,7 +296,7 @@
          (testing "flatpmapping transducer"
                   (let [pair-of (fn [x] [x x])]
                     (go (is (= (mapcat pair-of (range 10))
-                               (<! (async/into [] (integer-chan 10 (flatmap pair-of)))))))))
+                               (<! (async/into [] (integer-chan 10 (mapcat pair-of)))))))))
          (testing "partitioning transducer"
            (go (is (= [[0 1 2 3 4] [5 6 7]]
                       (<! (async/into [] (integer-chan 8 (partition-all 5)))))))
