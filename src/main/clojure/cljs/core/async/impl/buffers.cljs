@@ -80,7 +80,7 @@
 (deftype FixedBuffer [buf n]
   impl/Buffer
   (full? [this]
-    (== (.-length buf) n))
+    (>= (.-length buf) n))
   (remove! [this]
     (.pop buf))
   (add!* [this itm]

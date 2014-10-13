@@ -30,12 +30,20 @@
       (is (full? fb))
       #_(assert (throws? (add! fb :3)))
 
+      ; already overflown
+      (add! fb :3)
+      (is (= 3 (count fb)))
+      (is (full? fb))
+
       (is (= :1 (remove! fb)))
+      (is (= 2 (count fb)))
+      (is (full? fb))
+
+      (is (= :2 (remove! fb)))
+      (is (= 1 (count fb)))
       (is (not (full? fb)))
 
-      (is (= 1 (count fb)))
-      (is (= :2 (remove! fb)))
-
+      (is (= :3 (remove! fb)))
       (is (= 0 (count fb)))
       #_(is (helpers/throws? (remove! fb)))))
 
