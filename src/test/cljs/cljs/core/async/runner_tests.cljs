@@ -163,6 +163,12 @@
             (assert false)
             (catch js/Error ex 42))))
 
+    (is= 42
+         (runner
+          (try
+            (assert false)
+            (catch :default ex 42))))
+
     (let [a (atom false)
           v (runner
              (try
