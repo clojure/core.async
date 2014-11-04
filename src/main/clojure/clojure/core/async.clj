@@ -568,7 +568,10 @@
     (let [v (<! ch)]
       (if (nil? v)
         ret
-        (recur (f ret v))))))
+        (let [ret' (f ret v)]
+          (if (reduced? ret')
+            @ret'
+            (recur ret')))))))
 
 (defn- bounded-count
   "Returns the smaller of n or the count of coll, without examining
