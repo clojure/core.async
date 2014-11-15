@@ -77,7 +77,7 @@
   available to be read from, parks execution until a value is
   available."
   [& ports]
-  (->MultiplexingReadPort (mutex/mutex) (HashSet. ^Collection ports)))
+  (->MultiplexingReadPort (mutex/mutex) (HashSet. ^Collection (or ports []))))
 
 (defn- broadcast-write
   [port-set val handler]
