@@ -943,7 +943,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; deprecated - do not use ;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn map<
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   [f ch]
   (reify
    impl/Channel
@@ -973,7 +973,7 @@
    (put! [_ val fn1] (impl/put! ch val fn1))))
 
 (defn map>
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   [f ch]
   (reify
    impl/Channel
@@ -988,7 +988,7 @@
     (impl/put! ch (f val) fn1))))
 
 (defn filter>
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   [p ch]
   (reify
    impl/Channel
@@ -1005,12 +1005,12 @@
       (channels/box (not (impl/closed? ch)))))))
 
 (defn remove>
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   [p ch]
   (filter> (complement p) ch))
 
 (defn filter<
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   ([p ch] (filter< p ch nil))
   ([p ch buf-or-n]
      (let [out (chan buf-or-n)]
@@ -1024,7 +1024,7 @@
        out)))
 
 (defn remove<
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   ([p ch] (remove< p ch nil))
   ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
 
@@ -1039,7 +1039,7 @@
               (recur)))))))
 
 (defn mapcat<
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   ([f in] (mapcat< f in nil))
   ([f in buf-or-n]
     (let [out (chan buf-or-n)]
@@ -1047,7 +1047,7 @@
       out)))
 
 (defn mapcat>
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
 
   ([f out] (mapcat> f out nil))
   ([f out buf-or-n]
@@ -1056,7 +1056,7 @@
        in)))
 
 (defn unique
- "Deprecated - this function will be removed. Use transformer instead"
+ "Deprecated - this function will be removed. Use transducer instead"
   ([ch]
      (unique ch nil))
   ([ch buf-or-n]
@@ -1073,7 +1073,7 @@
 
 
 (defn partition
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   ([n ch]
      (partition n ch nil))
   ([n ch buf-or-n]
@@ -1097,7 +1097,7 @@
 
 
 (defn partition-by
-  "Deprecated - this function will be removed. Use transformer instead"
+  "Deprecated - this function will be removed. Use transducer instead"
   ([f ch]
      (partition-by f ch nil))
   ([f ch buf-or-n]
