@@ -1,6 +1,7 @@
 (ns clojure.core.async-test
   (:refer-clojure :exclude [map into reduce merge take partition partition-by])
-  (:require [clojure.core.async :refer :all :as a]
+  (:require [clojure.core.async.impl.buffers :as b]
+            [clojure.core.async :refer :all :as a]
             [clojure.test :refer :all]))
 
 
@@ -10,7 +11,8 @@
 (deftest buffers-tests
   (is (not (unblocking-buffer? (buffer 1))))
   (is (unblocking-buffer? (dropping-buffer 1)))
-  (is (unblocking-buffer? (sliding-buffer 1))))
+  (is (unblocking-buffer? (sliding-buffer 1)))
+  (is (unblocking-buffer? (b/promise-buffer))))
 
 (deftest basic-channel-test
   (let [c (default-chan)
@@ -133,6 +135,30 @@
            (put! c :enqueues (fn [_] (deliver p :proceeded)))  ;; enqueue a put
            (<!! c)        ;; make room in the buffer
            (deref p 250 :timeout)))))
+
+(deftest test-promise-chan
+  (testing "put on promise-chan fulfills all pending takers"
+    (let [c (promise-chan)
+          t1 (thread (<!! c))
+          t2 (thread (<!! c))]
+      (>!! c :val)
+      (is (= :val (<!! t1) (<!! t2)))
+      (testing "then puts succeed but are dropped"
+        (>!! c :LOST)
+        (is (= :val (<!! c))))
+      (testing "then takes succeed with the original value"
+        (is (= :val (<!! c) (<!! c) (<!! c))))
+      (testing "then after close takes return nil"
+        (close! c)
+        (is (= nil (<!! c) (<!! c))))))
+  (testing "close on promise-chan fulfills all pending takers"
+    (let [c (promise-chan)
+          t1 (thread (<!! c))
+          t2 (thread (<!! c))]
+      (close! c)
+      (is (= nil (<!! t1) (<!! t2)))
+      (testing "then takes return nil"
+        (is (= nil (<!! t1) (<!! t1) (<!! t2) (<!! t2)))))))
 
 (def ^:dynamic test-dyn false)
 
