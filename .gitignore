@@ -1,7 +1,9 @@
 *.iml
 *init.clj
 .idea
-out
+out-simp
+out-simp-node
+out-adv
 out-adv-node
 /target
 /lib
