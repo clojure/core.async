@@ -1,3 +1,8 @@
+*.iml
+*init.clj
+.idea
+out
+out-adv-node
 /target
 /lib
 /classes
@@ -10,3 +15,5 @@ pom.xml
 .lein-failures
 .lein-plugins
 .lein-repl-history
+tests.js
+tests.js.map

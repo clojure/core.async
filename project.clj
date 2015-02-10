@@ -6,7 +6,7 @@
   :parent [org.clojure/pom.contrib "0.1.2"]
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.analyzer.jvm "0.1.0-beta12"]
-                 [org.clojure/clojurescript "0.0-2371" :scope "provided"]]
+                 [org.clojure/clojurescript "0.0-2816" :scope "provided"]]
   :global-vars {*warn-on-reflection* true}
   :source-paths ["src/main/clojure"]
   :test-paths ["src/test/clojure"]
@@ -24,11 +24,28 @@
                 :pretty-print true
                 :static-fns true
                 :output-to "tests.js"}}
+    {:id "simple-node"
+     :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
+     :notify-command ["node" "tests.js"]
+     :compiler {:optimizations :simple
+                :target :nodejs
+                :pretty-print true
+                :static-fns true
+                :output-to "tests.js"}}
     {:id "adv"
      :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
      :compiler {:optimizations :advanced
                 :pretty-print false
                 :static-fns true
                 :output-dir "out"
+                :output-to "tests.js"
+                :source-map "tests.js.map"}}
+    {:id "adv-node"
+     :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
+     :compiler {:optimizations :advanced
+                :target :nodejs
+                :pretty-print false
+                :static-fns true
+                :output-dir "out-adv-node"
                 :output-to "tests.js"
                 :source-map "tests.js.map"}}]})
