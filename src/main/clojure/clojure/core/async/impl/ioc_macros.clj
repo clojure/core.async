@@ -932,6 +932,7 @@
 
    impl/Handler
    (active? [_] true)
+   (blockable? [_] true)
    (lock-id [_] 0)
    (commit [_] f)))
 

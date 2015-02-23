@@ -28,16 +28,19 @@
 (set! *warn-on-reflection* true)
 
 (defn fn-handler
-  [f]
-  (reify
-   Lock
-   (lock [_])
-   (unlock [_])
+  ([f]
+   (fn-handler f true))
+  ([f blockable]
+   (reify
+     Lock
+     (lock [_])
+     (unlock [_])
 
-   impl/Handler
-   (active? [_] true)
-   (lock-id [_] 0)
-   (commit [_] f)))
+     impl/Handler
+     (active? [_] true)
+     (blockable? [_] blockable)
+     (lock-id [_] 0)
+     (commit [_] f))))
 
 (defn buffer
   "Returns a fixed buffer of size n. When full, puts will block/park."
@@ -205,6 +208,7 @@
 
      impl/Handler
      (active? [_] @flag)
+     (blockable? [_] true)
      (lock-id [_] id)
      (commit [_]
              (reset! flag nil)
@@ -218,6 +222,7 @@
 
      impl/Handler
      (active? [_] (impl/active? flag))
+     (blockable? [_] true)
      (lock-id [_] (impl/lock-id flag))
      (commit [_]
              (impl/commit flag)
@@ -376,6 +381,19 @@
     (ioc/aset-all! state ioc/VALUE-IDX @cb)
     :recur))
 
+(defn offer!
+  "Puts a val into port if it's possible to do so immediately.
+   nil values are not allowed. Never blocks. Returns true if offer succeeds."
+  [port val]
+  (let [ret (impl/put! port val (fn-handler nop false))]
+    (when ret @ret)))
+
+(defn poll!
+  "Takes a val from port if it's possible to do so immediately.
+   Never blocks. Returns value if successful, nil otherwise."
+  [port]
+  (let [ret (impl/take! port (fn-handler nop false))]
+    (when ret @ret)))
 
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
@@ -975,6 +993,7 @@
 
           impl/Handler
           (active? [_] (impl/active? fn1))
+          (blockable? [_] true)
           (lock-id [_] (impl/lock-id fn1))
           (commit [_]
            (let [f1 (impl/commit fn1)]

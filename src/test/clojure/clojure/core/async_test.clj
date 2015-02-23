@@ -160,6 +160,18 @@
       (testing "then takes return nil"
         (is (= nil (<!! t1) (<!! t1) (<!! t2) (<!! t2)))))))
 
+(deftest offer-poll
+  (let [c (chan 2)]
+    (is (true? (offer! c 1)))
+    (is (true? (offer! c 2)))
+    (is (nil? (offer! c 3)))
+    (is (= 1 (<!! c)))
+    (is (= 2 (poll! c)))
+    (is (nil? (poll! c))))
+  (let [c (chan)]
+    (is (nil? (offer! c 1)))
+    (is (nil? (poll! c)))))
+
 (def ^:dynamic test-dyn false)
 
 (deftest thread-tests

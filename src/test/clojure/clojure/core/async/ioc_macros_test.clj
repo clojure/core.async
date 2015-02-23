@@ -309,6 +309,11 @@
                           (assert false)
                           (catch Throwable ex (<! c))))))))))
 
+  (deftest offer-poll
+    (let [c (chan 2)]
+      (is (= [true true 5 6 nil]
+             (<!! (go [(offer! c 5) (offer! c 6) (poll! c) (poll! c) (poll! c)]))))))
+
   (deftest enqueued-chan-ops
     (testing "enqueued channel puts re-enter async properly"
       (is (= [:foo 42]
