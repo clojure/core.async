@@ -6,7 +6,7 @@
   :parent [org.clojure/pom.contrib "0.1.2"]
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.analyzer.jvm "0.6.6"]
-                 [org.clojure/clojurescript "0.0-2816" :scope "provided"]]
+                 [org.clojure/clojurescript "0.0-3169" :scope "provided"]]
   :global-vars {*warn-on-reflection* true}
   :source-paths ["src/main/clojure"]
   :test-paths ["src/test/clojure"]
@@ -14,7 +14,7 @@
   :java-source-paths ["src/main/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
-  :plugins [[lein-cljsbuild "1.0.4"]]
+  :plugins [[lein-cljsbuild "1.0.5"]]
 
   :clean-targets ["tests.js" "tests.js.map"
                   "out-simp" "out-simp-node"
@@ -42,7 +42,6 @@
      :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
      :compiler {:optimizations :advanced
                 :pretty-print false
-                :static-fns true
                 :output-dir "out-adv"
                 :output-to "tests.js"
                 :source-map "tests.js.map"}}
@@ -51,7 +50,6 @@
      :compiler {:optimizations :advanced
                 :target :nodejs
                 :pretty-print false
-                :static-fns true
                 :output-dir "out-adv-node"
                 :output-to "tests.js"
                 :source-map "tests.js.map"}}]})
