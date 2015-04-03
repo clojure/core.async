@@ -17,12 +17,19 @@
   :plugins [[lein-cljsbuild "1.0.5"]]
 
   :clean-targets ["tests.js" "tests.js.map"
-                  "out-simp" "out-simp-node"
+                  "out" "out-simp" "out-simp-node"
                   "out-adv" "out-adv-node"]
 
   :cljsbuild
   {:builds
-   [{:id "simple"
+   [{:id "dev"
+     :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
+     :compiler {:main cljs.core.async.test-runner
+                :asset-path "../out"
+                :optimizations :none
+                :output-to "tests.js"
+                :output-dir "out"}}
+    {:id "simple"
      :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
      :compiler {:optimizations :simple
                 :pretty-print true
