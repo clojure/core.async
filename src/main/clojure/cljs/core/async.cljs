@@ -348,8 +348,10 @@
     (let [v (<! ch)]
       (if (nil? v)
         ret
-        (recur (f ret v))))))
-
+        (let [ret' (f ret v)]
+          (if (reduced? ret')
+            @ret'
+            (recur ret')))))))
 
 (defn onto-chan
   "Puts the contents of coll into the supplied channel.

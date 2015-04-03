@@ -329,6 +329,17 @@
              (<! (async/into [] (async/partition-by string? (async/to-chan ["a" "b" 1 :2 3 "c"]))))))
       (done))))
 
+(deftest test-reduce
+  (async done
+    (let [l (latch 3 done)]
+      (go (is (= 0 (<! (async/reduce + 0 (async/to-chan [])))))
+        (inc! l))
+      (go (is (= 45 (<! (async/reduce + 0 (async/to-chan (range 10))))))
+        (inc! l))
+      (go (is (= :foo (<! (async/reduce #(if (= %2 2) (reduced :foo) %1) 0
+                            (async/to-chan (range 10))))))
+        (inc! l)))))
+
 (deftest dispatch-bugs
   (async done
     (testing "puts are moved to buffers"
