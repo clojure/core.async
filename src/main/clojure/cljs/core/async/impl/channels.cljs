@@ -78,11 +78,12 @@
                   (do (set! dirty-puts 0)
                       (.cleanup puts put-active?))
                   (set! dirty-puts (inc dirty-puts)))
-                (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
-                        (str "No more than " impl/MAX-QUEUE-SIZE
-                             " pending puts are allowed on a single channel."
-                             " Consider using a windowed buffer."))
-                (.unbounded-unshift puts (PutBox. handler val))
+                (when (impl/blockable? handler)
+                  (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
+                    (str "No more than " impl/MAX-QUEUE-SIZE
+                         " pending puts are allowed on a single channel."
+                         " Consider using a windowed buffer."))
+                  (.unbounded-unshift puts (PutBox. handler val)))
                 nil)))))))
   impl/ReadPort
   (take! [this ^not-native handler]
@@ -129,10 +130,11 @@
                   (do (set! dirty-takes 0)
                       (.cleanup takes impl/active?))
                   (set! dirty-takes (inc dirty-takes)))
-                (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
-                        (str "No more than " impl/MAX-QUEUE-SIZE
-                             " pending takes are allowed on a single channel."))
-                (.unbounded-unshift takes handler)
+                (when (impl/blockable? handler)
+                  (assert (< (.-length takes) impl/MAX-QUEUE-SIZE)
+                    (str "No more than " impl/MAX-QUEUE-SIZE
+                         " pending takes are allowed on a single channel."))
+                  (.unbounded-unshift takes handler))
                 nil)))))))
   impl/Channel
   (closed? [_] closed)

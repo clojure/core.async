@@ -4,7 +4,7 @@
   (:require
    [cljs.core.async :refer
     [buffer dropping-buffer sliding-buffer put! take! chan promise-chan
-     close! take partition-by] :as async]
+     close! take partition-by offer! poll!] :as async]
    [cljs.core.async.impl.dispatch :as dispatch]
    [cljs.core.async.impl.buffers :as buff]
    [cljs.core.async.impl.timers :as timers :refer [timeout]]
@@ -439,3 +439,18 @@
             (testing "then takes return nil"
               (is (= nil (<! t1) (<! t1) (<! t2) (<! t2)))))
           (inc! l))))))
+
+(deftest test-offer-poll-go
+  (let [c (chan 2)]
+    (is (= [true true 5 6 nil]
+           [(offer! c 5) (offer! c 6) (poll! c) (poll! c) (poll! c)])))
+  (let [c (chan 2)]
+    (is (true? (offer! c 1)))
+    (is (true? (offer! c 2)))
+    (is (nil? (offer! c 3)))
+    (is (= 1 (poll! c)))
+    (is (= 2 (poll! c)))
+    (is (nil? (poll! c))))
+  (let [c (chan)]
+    (is (nil? (offer! c 1)))
+    (is (nil? (poll! c)))))

@@ -9,11 +9,14 @@
     (:require-macros [cljs.core.async.impl.ioc-macros :as ioc]
                      [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn- fn-handler [f]
-  (reify
-    impl/Handler
-    (active? [_] true)
-    (commit [_] f)))
+(defn- fn-handler
+  ([f] (fn-handler f true))
+  ([f blockable]
+   (reify
+     impl/Handler
+     (active? [_] true)
+     (blockable? [_] blockable)
+     (commit [_] f))))
 
 (defn buffer
   "Returns a fixed buffer of size n. When full, puts will block/park."
@@ -152,6 +155,7 @@
     (reify
       impl/Handler
       (active? [_] @flag)
+      (blockable? [_] true)
       (commit [_]
         (reset! flag nil)
         true))))
@@ -160,6 +164,7 @@
   (reify
     impl/Handler
     (active? [_] (impl/active? flag))
+    (blockable? [_] true)
     (commit [_]
       (impl/commit flag)
       cb)))
@@ -215,6 +220,20 @@
 
   [ports & {:as opts}]
   (throw (js/Error. "alts! used not in (go ...) block")))
+
+(defn offer!
+  "Puts a val into port if it's possible to do so immediately.
+  nil values are not allowed. Never blocks. Returns true if offer succeeds."
+  [port val]
+  (let [ret (impl/put! port val (fn-handler nop false))]
+    (when ret @ret)))
+
+(defn poll!
+  "Takes a val from port if it's possible to do so immediately.
+  Never blocks. Returns value if successful, nil otherwise."
+  [port]
+  (let [ret (impl/take! port (fn-handler nop false))]
+    (when ret @ret)))
 
 ;;;;;;; channel ops
 
@@ -744,6 +763,7 @@
          (reify
           impl/Handler
           (active? [_] (impl/active? fn1))
+          (blockable? [_] true)
           #_(lock-id [_] (impl/lock-id fn1))
           (commit [_]
            (let [f1 (impl/commit fn1)]

@@ -27,6 +27,7 @@
   (reify
    impl/Handler
    (active? [_] true)
+   (blockable? [_] true)
    (commit [_] f)))
 
 
