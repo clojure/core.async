@@ -150,6 +150,7 @@
                           val (when (and buf (pos? (count buf))) (impl/remove! buf))]
                       (dispatch/run (fn [] (take-cb val)))))
                   (recur))))
+            (when buf (impl/close-buf! buf))
             nil))))
 
 (defn- ex-handler [ex]

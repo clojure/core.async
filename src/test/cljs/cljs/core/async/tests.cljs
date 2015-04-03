@@ -3,7 +3,8 @@
    [cljs.core.async.macros :as m :refer [go alt!]])
   (:require
    [cljs.core.async :refer
-    [buffer dropping-buffer sliding-buffer put! take! chan close! take partition-by] :as async]
+    [buffer dropping-buffer sliding-buffer put! take! chan promise-chan
+     close! take partition-by] :as async]
    [cljs.core.async.impl.dispatch :as dispatch]
    [cljs.core.async.impl.buffers :as buff]
    [cljs.core.async.impl.timers :as timers :refer [timeout]]
@@ -397,3 +398,33 @@
       (go
         (is (= [true c] (async/alts! [[c :value] (async/timeout 6000)] :priority true)))
         (inc! l)))))
+
+(deftest test-promise-chan
+  (async done
+    (let [l (latch 2 done)]
+      (testing "put on promise-chan fulfills all pending takers"
+        (go
+          (let [c  (promise-chan)
+                t1 (go (<! c))
+                t2 (go (<! c))]
+            (>! c :val)
+            (is (= :val (<! t1) (<! t2)))
+            (testing "then puts succeed but are dropped"
+              (go (>! c :LOST))
+              (is (= :val (<! c))))
+            (testing "then takes succeed with the original value"
+              (is (= :val (<! c) (<! c) (<! c))))
+            (testing "then after close takes return nil"
+              (close! c)
+              (is (= nil (<! c) (<! c)))))
+          (inc! l)))
+      (testing "close on promise-chan fulfills all pending takers"
+        (go
+          (let [c  (promise-chan)
+                t1 (go (<! c))
+                t2 (go (<! c))]
+            (close! c)
+            (is (= nil (<! t1) (<! t2)))
+            (testing "then takes return nil"
+              (is (= nil (<! t1) (<! t1) (<! t2) (<! t2)))))
+          (inc! l))))))

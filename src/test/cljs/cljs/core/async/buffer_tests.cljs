@@ -1,10 +1,13 @@
 (ns cljs.core.async.buffer-tests
   (:require-macros [cljs.core.async.macros :as m :refer [go]])
   (:require [cljs.core.async
-             :refer [unblocking-buffer? buffer dropping-buffer sliding-buffer put! take! chan close!]]
+             :refer [unblocking-buffer? buffer dropping-buffer sliding-buffer
+                     put! take! chan close!]]
             [cljs.core.async.impl.dispatch :as dispatch]
-            [cljs.core.async.impl.buffers :as buff]
-            [cljs.core.async.impl.protocols :refer [full? add! remove!]]
+            [cljs.core.async.impl.buffers :as buff :refer [promise-buffer]]
+            [cljs.core.async.impl.protocols
+             :refer [full? add! remove! close-buf!]]
+            [cljs.core.async.test-helpers :refer-macros [throws?]]
             [cljs.test :refer-macros [deftest testing is]]))
 
 (deftest unblocking-buffer-tests
@@ -83,3 +86,26 @@
 
       (is (= 0 (count fb)))
       #_(is (throws? (remove! fb))))))
+
+(deftest promise-buffer-tests
+  (let [pb (promise-buffer)]
+    (is (= 0 (count pb)))
+
+    (add! pb :1)
+    (is (= 1 (count pb)))
+
+    (add! pb :2)
+    (is (= 1 (count pb)))
+
+    (is (not (full? pb)))
+    (is (not (throws? (add! pb :3))))
+    (is (= 1 (count pb)))
+
+    (is (= :1 (remove! pb)))
+    (is (not (full? pb)))
+
+    (is (= 1 (count pb)))
+    (is (= :1 (remove! pb)))
+
+    (is (= nil (close-buf! pb)))
+    (is (= nil (remove! pb)))))
