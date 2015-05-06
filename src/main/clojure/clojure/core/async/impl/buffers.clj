@@ -22,7 +22,6 @@
   (add!* [this itm]
     (.addFirst buf itm)
     this)
-  (close-buf! [this])
   clojure.lang.Counted
   (count [this]
     (.size buf)))
@@ -42,7 +41,6 @@
     (when-not (>= (.size buf) n)
       (.addFirst buf itm))
     this)
-  (close-buf! [this])
   clojure.lang.Counted
   (count [this]
     (.size buf)))
@@ -62,30 +60,9 @@
       (impl/remove! this))
     (.addFirst buf itm)
     this)
-  (close-buf! [this])
   clojure.lang.Counted
   (count [this]
     (.size buf)))
 
 (defn sliding-buffer [n]
   (SlidingBuffer. (LinkedList.) n))
-
-(deftype PromiseBuffer [^:unsynchronized-mutable val]
-  impl/UnblockingBuffer
-  impl/Buffer
-  (full? [_]
-    false)
-  (remove! [_]
-    val)
-  (add!* [this itm]
-    (when (nil? val)
-      (set! val itm))
-    this)
-  (close-buf! [_]
-    (set! val nil))
-  clojure.lang.Counted
-  (count [_]
-    (if val 1 0)))
-
-(defn promise-buffer []
-  (PromiseBuffer. nil))
