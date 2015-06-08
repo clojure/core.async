@@ -446,7 +446,6 @@
            (reset! dctr (count chs))
            (doseq [c chs]
                (when-not (put! c val done)
-                 (done nil)
                  (untap* m c)))
            ;;wait for all
            (when (seq chs)
