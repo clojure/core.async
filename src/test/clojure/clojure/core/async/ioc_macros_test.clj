@@ -151,7 +151,8 @@
               (f))))))
 
   (testing "lazy-seqs in bodies"
-    (is (= (runner
+    (is (= nil
+		   (runner
             (loop []
               (when-let [x (pause 10)]
                 (pause (vec (for [i (range x)]
