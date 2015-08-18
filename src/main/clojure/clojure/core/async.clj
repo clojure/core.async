@@ -84,6 +84,7 @@ the Java system property `clojure.core.async.pool-size`."
   ([buf-or-n] (chan buf-or-n nil))
   ([buf-or-n xform] (chan buf-or-n xform nil))
   ([buf-or-n xform ex-handler]
+     (when (and buf-or-n (number? buf-or-n)) (assert (pos? buf-or-n) "fixed buffers must have size > 0"))
      (when xform (assert buf-or-n "buffer must be supplied when transducer is"))
      (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n) xform ex-handler)))
 
@@ -649,9 +650,14 @@ the Java system property `clojure.core.async.pool-size`."
   "Creates and returns a channel which contains the contents of coll,
   closing when exhausted."
   [coll]
-  (let [ch (chan (bounded-count 100 coll))]
-    (onto-chan ch coll)
-    ch))
+  (let [c (bounded-count 100 coll)]
+    (if (pos? c)
+      (let [ch (chan c)]
+        (onto-chan ch coll)
+        ch)
+      (let [ch (chan)]
+        (close! ch)
+        ch))))
 
 (defprotocol Mux
   (muxch* [_]))
