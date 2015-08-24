@@ -266,6 +266,7 @@
                (.remove iter)
                (when (.hasNext iter)
                  (recur (.next iter)))))))
+       (when buf (impl/close-buf! buf))
        (.unlock mutex)
        nil))))
 

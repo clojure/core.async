@@ -9,7 +9,7 @@
 (ns clojure.core.async.buffers-test
   (:require [clojure.test :refer :all]
             [clojure.core.async.impl.buffers :refer :all]
-            [clojure.core.async.impl.protocols :refer [full? add! remove!]]))
+            [clojure.core.async.impl.protocols :refer [full? add! remove! close-buf!]]))
 
 (defmacro throws? [expr]
   `(try
@@ -82,4 +82,25 @@
     (is (= 0 (count fb)))
     (is (throws? (remove! fb)))))
 
+(deftest promise-buffer-tests
+  (let [pb (promise-buffer)]
+    (is (= 0 (count pb)))
 
+    (add! pb :1)
+    (is (= 1 (count pb)))
+
+    (add! pb :2)
+    (is (= 1 (count pb)))
+
+    (is (not (full? pb)))
+    (is (not (throws? (add! pb :3))))
+    (is (= 1 (count pb)))
+
+    (is (= :1 (remove! pb)))
+    (is (not (full? pb)))
+
+    (is (= 1 (count pb)))
+    (is (= :1 (remove! pb)))
+
+    (is (= nil (close-buf! pb)))
+    (is (= :1 (remove! pb)))))

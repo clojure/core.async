@@ -82,6 +82,17 @@
      (when xform (assert buf-or-n "buffer must be supplied when transducer is"))
      (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n) xform ex-handler)))
 
+(defn promise-chan
+  "Creates a promise channel with an optional transducer, and an optional
+  exception-handler. A promise channel can take exactly one value that consumers
+  will receive. Once full, puts complete but val is dropped (no transfer).
+  Consumers will block until either a value is placed in the channel or the
+  channel is closed. See chan for the semantics of xform and ex-handler."
+  ([] (promise-chan nil))
+  ([xform] (promise-chan xform nil))
+  ([xform ex-handler]
+     (chan (buffers/promise-buffer) xform ex-handler)))
+
 (defn timeout
   "Returns a channel that will close after msecs"
   [^long msecs]
