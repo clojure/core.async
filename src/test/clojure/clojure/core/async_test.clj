@@ -293,3 +293,46 @@
     (is (= 45 (<!! (a/reduce + 0 (a/to-chan (range 10))))))
     (is (= :foo (<!! (a/reduce #(if (= %2 2) (reduced :foo) %1) 0 (a/to-chan (range 10)))))))
   )
+
+;; transducer yielding n copies of each input value
+;; (into [] (xerox 2) [1 2 3]) => [1 1 2 2 3 3]
+(defn xerox [n]
+  (fn [f1]
+    (fn
+      ([] (f1))
+      ([result] (f1 result))
+      ([result input]
+       (loop [res result
+              i n]
+         (if (pos? i)
+           (let [a (f1 result input)]
+             (if (reduced? a)
+               a
+               (recur a (dec i))))
+           res))))))
+
+(defn check-expanding-transducer [buffer-size in multiplier takers]
+  (let [input (range in)
+        xf (xerox multiplier)
+        expected (apply interleave (repeat multiplier input))
+        counter (atom 0)
+        res (atom [])
+        c (chan buffer-size xf)]
+    (dotimes [x takers]
+      (take! c #(do
+                 (when (some? %) (swap! res conj %))
+                 (swap! counter inc))))
+    (onto-chan c input)
+
+    ;; wait for all takers to report
+    (while (< @counter takers)
+      (Thread/sleep 50))
+
+    ;; check expected results
+    (is (= (sort (clojure.core/take takers expected))
+          (sort @res)))))
+
+(deftest expanding-transducer-delivers-to-multiple-pending
+  (doseq [b (range 1 10)
+          t (range 1 10)]
+    (check-expanding-transducer b 3 3 t)))

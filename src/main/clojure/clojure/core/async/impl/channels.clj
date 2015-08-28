@@ -83,23 +83,25 @@
                (let [done? (reduced? (add! buf val))]
                  (if (pos? (count buf))
                    (let [iter (.iterator takes)
-                         take-cb (when (.hasNext iter)
-                                   (loop [^Lock taker (.next iter)]
-                                     (.lock taker)
-                                     (let [ret (and (impl/active? taker) (impl/commit taker))]
-                                       (.unlock taker)
-                                       (if ret
-                                         (do
-                                           (.remove iter)
-                                           ret)
-                                         (when (.hasNext iter)
-                                           (recur (.next iter)))))))]
-                     (if take-cb
-                       (let [val (impl/remove! buf)]
+                         take-cbs (loop [takers []]
+                                    (if (and (.hasNext iter) (pos? (count buf)))
+                                      (let [^Lock taker (.next iter)]
+                                        (.lock taker)
+                                        (let [ret (and (impl/active? taker) (impl/commit taker))]
+                                          (.unlock taker)
+                                          (if ret
+                                            (let [val (impl/remove! buf)]
+                                              (.remove iter)
+                                              (recur (conj takers (fn [] (ret val)))))
+                                            (recur takers))))
+                                      takers))]
+                     (if (seq take-cbs)
+                       (do
                          (when done?
                            (abort this))
                          (.unlock mutex)
-                         (dispatch/run (fn [] (take-cb val))))
+                         (doseq [f take-cbs]
+                           (dispatch/run f)))
                        (do
                          (when done?
                            (abort this))
@@ -155,7 +157,7 @@
                    (.add puts [handler val]))
                  (.unlock mutex)
                  nil))))))))
-  
+
   impl/ReadPort
   (take!
    [this handler]
