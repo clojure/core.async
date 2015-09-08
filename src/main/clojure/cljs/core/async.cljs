@@ -513,7 +513,7 @@
         solo-modes #{:mute :pause}
         attrs (conj solo-modes :solo)
         solo-mode (atom :mute)
-        change (chan)
+        change (chan (sliding-buffer 1))
         changed #(put! change true)
         pick (fn [attr chs]
                (reduce-kv
