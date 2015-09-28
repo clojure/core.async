@@ -108,4 +108,4 @@
     (is (= :1 (remove! pb)))
 
     (is (= nil (close-buf! pb)))
-    (is (= nil (remove! pb)))))
+    (is (= :1 (remove! pb)))))

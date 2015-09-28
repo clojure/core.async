@@ -412,7 +412,7 @@
 
 (deftest test-promise-chan
   (async done
-    (let [l (latch 2 done)]
+    (let [l (latch 3 done)]
       (testing "put on promise-chan fulfills all pending takers"
         (go
           (let [c  (promise-chan)
@@ -425,9 +425,9 @@
               (is (= :val (<! c))))
             (testing "then takes succeed with the original value"
               (is (= :val (<! c) (<! c) (<! c))))
-            (testing "then after close takes return nil"
+            (testing "then after close takes continue returning val"
               (close! c)
-              (is (= nil (<! c) (<! c)))))
+              (is (= :val (<! c) (<! c)))))
           (inc! l)))
       (testing "close on promise-chan fulfills all pending takers"
         (go
@@ -438,6 +438,14 @@
             (is (= nil (<! t1) (<! t2)))
             (testing "then takes return nil"
               (is (= nil (<! t1) (<! t1) (<! t2) (<! t2)))))
+          (inc! l)))
+      (testing "close after put on promise-chan continues delivering promised value"
+        (go
+          (let [c (promise-chan)]
+            (>! c :val) ;; deliver
+            (is (= :val (<! c) (<! c)))
+            (close! c)
+            (is (= :val (<! c) (<! c))))
           (inc! l))))))
 
 (deftest test-offer-poll-go
