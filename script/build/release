@@ -11,7 +11,7 @@ version_template=`cat VERSION_TEMPLATE`
 git_revision=`script/build/git_revision`
 
 prefix=${version_template%%GENERATED_VERSION*}
-tag=v$prefix${git_revision:0:${#git_revision}-7}
+tag=v$prefix$git_revision
 
 script/build/pom
 

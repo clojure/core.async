@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 
 # Return the portion of the version number generated from git
-# <trunk-basis>.<patch-or-0>-<sha>
+# <trunk-basis>
 
 set -e
 
 trunk_basis=`script/build/trunk_revision`
-patch=`script/build/branch_revision`
 sha=`git rev-parse HEAD`
-
-trunk_basis=`expr $trunk_basis - $patch`
 
 sha=${sha:0:${#sha}-34} # drop the last 34 characters, keep 6
 
-echo $trunk_basis.$patch-$sha
+echo $trunk_basis
