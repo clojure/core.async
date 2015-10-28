@@ -25,7 +25,7 @@
 
 (alias 'core 'clojure.core)
 
-(set! *warn-on-reflection* true)
+(set! *warn-on-reflection* false)
 
 (defn fn-handler
   ([f]
