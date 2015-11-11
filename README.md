@@ -5,7 +5,7 @@ A Clojure library designed to provide facilities for async programming and commu
 
 ## Releases and Dependency Information
 
-Latest release: 0.2.371
+Latest release: 0.2.374
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
@@ -13,7 +13,7 @@ Latest release: 0.2.371
 
 ```clj
  [org.clojure/clojure "1.6.0"]
- [org.clojure/core.async "0.2.371"]
+ [org.clojure/core.async "0.2.374"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -22,7 +22,7 @@ Latest release: 0.2.371
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.2.371</version>
+  <version>0.2.374</version>
 </dependency>
 ```
 
@@ -51,6 +51,10 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Release 0.2.374 on 2015.11.11
+  * [ASYNC-149](http://dev.clojure.org/jira/browse/ASYNC-149) - fix error compiling recur inside case in a go block
+  * Updated tools.analyzer.jvm version (and other upstream deps)
+  * Updated to latest clojurescript and cljsbuild versions
 * Release 0.2.371 on 2015.10.28
   * [ASYNC-124](http://dev.clojure.org/jira/browse/ASYNC-124) - dispatch multiple pending takers from expanding transducer
   * [ASYNC-103](http://dev.clojure.org/jira/browse/ASYNC-103) - NEW promise-chan
