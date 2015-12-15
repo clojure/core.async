@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :parent [org.clojure/pom.contrib "0.1.2"]
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/tools.analyzer.jvm "0.6.10"]
+                 [org.clojure/tools.analyzer.jvm "0.7.0-alpha1"]
                  [org.clojure/clojurescript "1.7.170" :scope "provided"]]
   :global-vars {*warn-on-reflection* true}
   :source-paths ["src/main/clojure"]

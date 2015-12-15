@@ -411,16 +411,18 @@ the Java system property `clojure.core.async.pool-size`."
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  `(let [c# (chan 1)
-         captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
-     (dispatch/run
-      (fn []
-        (let [f# ~(ioc/state-machine `(do ~@body) 1 (keys &env) ioc/async-custom-terminators)
-              state# (-> (f#)
-                         (ioc/aset-all! ioc/USER-START-IDX c#
-                                        ioc/BINDINGS-IDX captured-bindings#))]
-          (ioc/run-state-machine-wrapped state#))))
-     c#))
+  (let [crossing-env (zipmap (keys &env) (repeatedly gensym))]
+    `(let [c# (chan 1)
+           captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
+       (dispatch/run
+         (^:once fn* []
+          (let [~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~l)]) crossing-env)
+                f# ~(ioc/state-machine `(do ~@body) 1 [crossing-env &env] ioc/async-custom-terminators)
+                state# (-> (f#)
+                           (ioc/aset-all! ioc/USER-START-IDX c#
+                                          ioc/BINDINGS-IDX captured-bindings#))]
+            (ioc/run-state-machine-wrapped state#))))
+       c#)))
 
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
