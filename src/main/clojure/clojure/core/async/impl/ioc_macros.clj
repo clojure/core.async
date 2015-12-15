@@ -605,10 +605,10 @@
    form))
 
 (defn let-binding-to-ssa
-  [{:keys [name init]}]
+  [{:keys [name init form]}]
   (gen-plan
    [bind-id (item-to-ssa init)
-    _ (push-alter-binding :locals assoc name bind-id)]
+    _ (push-alter-binding :locals assoc (with-meta name (meta form)) bind-id)]
    bind-id))
 
 (defmethod -item-to-ssa :let
@@ -624,13 +624,7 @@
 (defmethod -item-to-ssa :loop
   [{:keys [body bindings] :as ast}]
   (gen-plan
-   [local-val-ids (all (map ; not parallel bind
-                        (fn [{:keys [name init]}]
-                          (gen-plan
-                           [itm-id (item-to-ssa init)
-                            _ (push-alter-binding :locals assoc name itm-id)]
-                           itm-id))
-                        bindings))
+   [local-val-ids (all (map let-binding-to-ssa bindings))
     _ (all (for [_ bindings]
              (pop-binding :locals)))
     local-ids (all (map (comp add-instruction ->Const) local-val-ids))
@@ -639,8 +633,9 @@
     _ (add-instruction (->Jmp nil body-blk))
 
     _ (set-block body-blk)
-    _ (push-alter-binding :locals merge (zipmap (map :name bindings)
-                                                local-ids))
+    _ (push-alter-binding :locals merge (into {} (map (fn [id {:keys [name form]}]
+                                                        [name (vary-meta id merge (meta form))])
+                                                      local-ids bindings)))
     _ (push-binding :recur-point body-blk)
     _ (push-binding :recur-nodes local-ids)
 
