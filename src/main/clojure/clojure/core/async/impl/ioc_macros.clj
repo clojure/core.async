@@ -18,6 +18,7 @@
             [clojure.tools.analyzer.env :as env]
             [clojure.tools.analyzer.passes :refer [schedule]]
             [clojure.tools.analyzer.passes.jvm.annotate-loops :refer [annotate-loops]]
+            [clojure.tools.analyzer.passes.jvm.warn-on-reflection :refer [warn-on-reflection]]
             [clojure.tools.analyzer.jvm :as an-jvm]
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
@@ -1096,7 +1097,7 @@
   (println "----")
   x)
 
-(def passes (into an-jvm/default-passes
+(def passes (into (disj an-jvm/default-passes #'warn-on-reflection)
                   #{#'propagate-recur
                     #'propagate-transitions
                     #'mark-transitions}))
