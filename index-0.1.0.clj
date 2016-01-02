@@ -950,6 +950,7 @@
   {:name "BroadcastingWritePort",
    :var-type "type",
    :namespace "clojure.core.async.lab",
+   :arglists nil,
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/BroadcastingWritePort",
    :source-url nil,
@@ -958,6 +959,7 @@
   {:name "MultiplexingReadPort",
    :var-type "type",
    :namespace "clojure.core.async.lab",
+   :arglists nil,
    :wiki-url
    "http://clojure.github.com/core.async//clojure.core.async-api.html#clojure.core.async.lab/MultiplexingReadPort",
    :source-url nil,
