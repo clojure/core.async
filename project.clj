@@ -14,7 +14,7 @@
   :java-source-paths ["src/main/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
-  :plugins [[lein-cljsbuild "1.1.1"]]
+  :plugins [[lein-cljsbuild "1.1.2"]]
 
   :clean-targets ["tests.js" "tests.js.map"
                   "out" "out-simp" "out-simp-node"
