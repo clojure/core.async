@@ -68,8 +68,8 @@
 ;; done with `alts!!` (ordinary threads) or `alts!` in go blocks.
 
 ;; We can create a background thread with alts that combines inputs on
-;; either of two channels. `alts!!` takes either a set of operations
-;; to perform - either a channel to take from a [channel value] to put
+;; either of two channels. `alts!!` takes a set of operations
+;; to perform - either a channel to take from or a [channel value] to put,
 ;; and returns the value (nil for put) and channel that succeeded:
 
 (let [c1 (chan)
