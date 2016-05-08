@@ -1,8 +1,8 @@
 (ns cljs.core.async.pipeline-test
-  (:require-macros [cljs.core.async.macros :as m :refer [go go-loop]])
   (:require [cljs.core.async.test-helpers :refer [latch inc!]]
             [cljs.core.async :as a
-             :refer [<! >! chan close! to-chan pipeline-async pipeline put!]]
+             :refer [<! >! chan close! to-chan pipeline-async pipeline put!]
+             :refer-macros [go go-loop]]
             [cljs.test :refer-macros [deftest is testing async]]))
 
 (defn pipeline-tester [pipeline-fn n inputs xf]
