@@ -1,6 +1,6 @@
-(defproject org.clojure/core.async "0.1.0-SNAPSHOT"
-  :description "Facilities for async programming and communication in Clojure"
-  :url "https://github.com/clojure/core.async"
+(defproject andare "0.1.0"
+  :description "core.async for bootstrap ClojureScript"
+  :url "https://github.com/mfikes/andare"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :parent [org.clojure/pom.contrib "0.1.2"]
