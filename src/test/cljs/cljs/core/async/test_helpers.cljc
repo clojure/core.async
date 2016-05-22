@@ -1,5 +1,6 @@
 (ns cljs.core.async.test-helpers
-  (:require [cljs.core.async.impl.ioc-macros :as ioc]))
+  (:require [cljs.core.async.impl.ioc-macros-runtime])
+  (#?(:clj :require :cljs :require-macros) [cljs.core.async.impl.ioc-macros]))
 
 (defmacro runner
   "Creates a runner block. The code inside the body of this macro will be translated
@@ -7,10 +8,10 @@
   only really useful for testing."
   [& body]
   (let [terminators {'pause 'cljs.core.async.runner-tests/pause}]
-    `(let [state# (~(ioc/state-machine body 0 &env terminators))]
+    `(let [state# (~(cljs.core.async.impl.ioc-macros-runtime/state-machine body 0 &env terminators))]
        (cljs.core.async.impl.ioc-helpers/run-state-machine state#)
        (assert (cljs.core.async.impl.ioc-helpers/finished? state#) "state did not return finished")
-       (aget state# ~ioc/VALUE-IDX))))
+       (aget state# ~cljs.core.async.impl.ioc-macros-runtime/VALUE-IDX))))
 
 (defmacro assert-go-block-completes
   [nm & body]

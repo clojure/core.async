@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ ! -f lib/cljs.jar ]; then
+  echo "First, download cljs.jar and place in lib/cljs.jar"
+  echo "You can download cljs.jar from https://github.com/clojure/clojurescript/releases"
+  exit 1
+fi
+
+rm -rf target/out-self-host
+mkdir -p target/out-self-host/cljs/analyzer
+java -cp lib/cljs.jar clojure.main script/test-self-host.clj
+node target/out-self-host/main.js
