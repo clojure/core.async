@@ -1,6 +1,7 @@
 (ns cljs.core.async.impl.ioc-macros-runtime
   (:refer-clojure :exclude [all])
-  (:require #?(:clj [clojure.pprint :refer [pprint]])
+  (:require #?(:cljs [goog.string :as gstring])
+            #?(:clj [clojure.pprint :refer [pprint]])
             [clojure.set :refer (intersection)]
             #?(:clj  [clojure.core.async.impl.protocols :as impl]
                :cljs [cljs.core.async.impl.protocols :as impl])
@@ -251,7 +252,7 @@
   (block-references [this] [])
   IEmittableInstruction
   (emit-instruction [this state-sym]
-    (if (.startsWith (name method) "-")
+    (if (#?(:clj .startsWith :cljs gstring/startsWith) (name method) "-")
       `[~(:id this) (. ~target ~method)]
       `[~(:id this) (. ~target ~(cons method args))])))
 
