@@ -13,7 +13,7 @@
 
 (set! *warn-on-reflection* true)
 
-(def executor (delay (tp/thread-pool-executor)))
+(defonce executor (delay (tp/thread-pool-executor)))
 
 (defn run
   "Runs Runnable r in a thread pool thread"
