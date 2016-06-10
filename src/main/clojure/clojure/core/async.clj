@@ -27,12 +27,6 @@
 
 (set! *warn-on-reflection* false)
 
-(def ^:dynamic *pool-size*
-  "Maximum number of threads used for async completion of operations"
-  (or (when-let [prop (System/getProperty "clojure.core.async.pool-size")]
-        (Long/parseLong prop))
-      8))
-
 (defn fn-handler
   ([f]
    (fn-handler f true))
