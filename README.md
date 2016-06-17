@@ -5,7 +5,7 @@ A Clojure library designed to provide facilities for async programming and commu
 
 ## Releases and Dependency Information
 
-Latest release: 0.2.382
+Latest release: 0.2.385
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
@@ -13,7 +13,7 @@ Latest release: 0.2.382
 
 ```clj
  [org.clojure/clojure "1.6.0"]
- [org.clojure/core.async "0.2.382"]
+ [org.clojure/core.async "0.2.385"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -22,7 +22,7 @@ Latest release: 0.2.382
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.2.382</version>
+  <version>0.2.385</version>
 </dependency>
 ```
 
@@ -51,6 +51,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Release 0.2.385 on 2016.06.17
+  * Updated tools.analyzer.jvm version
 * Release 0.2.382 on 2016.06.13
   * Change default dispatch thread pool size to 8.
   * Add Java system property `clojure.core.async.pool-size` to set the dispatch thread pool size
