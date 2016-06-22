@@ -54,7 +54,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 * Release 0.2.385 on 2016.06.17
   * Updated tools.analyzer.jvm version
 * Release 0.2.382 on 2016.06.13
-  * Change default dispatch thread pool size to 8.
+  * Important: Change default dispatch thread pool size to 8.
   * Add Java system property `clojure.core.async.pool-size` to set the dispatch thread pool size
   * [ASYNC-152](http://dev.clojure.org/jira/browse/ASYNC-152) - disable t.a.jvm's warn-on-reflection pass 
 * Release 0.2.374 on 2015.11.11
