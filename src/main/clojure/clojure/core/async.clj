@@ -13,7 +13,7 @@ go blocks are dispatched over an internal thread pool, which
 defaults to 8 threads. The size of this pool can be modified using
 the Java system property `clojure.core.async.pool-size`."
   (:refer-clojure :exclude [reduce into merge map take partition
-                            partition-by] :as core)
+                            partition-by bounded-count] :as core)
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.channels :as channels]
             [clojure.core.async.impl.buffers :as buffers]
