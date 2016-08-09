@@ -981,6 +981,7 @@ the Java system property `clojure.core.async.pool-size`."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; deprecated - do not use ;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn map<
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   [f ch]
   (reify
    impl/Channel
@@ -1012,6 +1013,7 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn map>
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   [f ch]
   (reify
    impl/Channel
@@ -1027,6 +1029,7 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn filter>
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   [p ch]
   (reify
    impl/Channel
@@ -1044,11 +1047,13 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn remove>
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   [p ch]
   (filter> (complement p) ch))
 
 (defn filter<
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([p ch] (filter< p ch nil))
   ([p ch buf-or-n]
      (let [out (chan buf-or-n)]
@@ -1063,6 +1068,7 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn remove<
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([p ch] (remove< p ch nil))
   ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
 
@@ -1078,6 +1084,7 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn mapcat<
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([f in] (mapcat< f in nil))
   ([f in buf-or-n]
     (let [out (chan buf-or-n)]
@@ -1086,7 +1093,7 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn mapcat>
   "Deprecated - this function will be removed. Use transducer instead"
-
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([f out] (mapcat> f out nil))
   ([f out buf-or-n]
      (let [in (chan buf-or-n)]
@@ -1095,6 +1102,7 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn unique
  "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([ch]
      (unique ch nil))
   ([ch buf-or-n]
@@ -1112,6 +1120,7 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn partition
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([n ch]
      (partition n ch nil))
   ([n ch buf-or-n]
@@ -1136,6 +1145,7 @@ the Java system property `clojure.core.async.pool-size`."
 
 (defn partition-by
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([f ch]
      (partition-by f ch nil))
   ([f ch buf-or-n]
