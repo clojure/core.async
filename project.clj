@@ -12,7 +12,11 @@
   :test-paths ["src/test/clojure"]
   :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :java-source-paths ["src/main/java"]
-  :profiles {:dev {:source-paths ["examples"]}}
+  :profiles {:dev {:source-paths ["examples"]}
+             :self-host {:dependencies [[org.clojure/clojure "1.8.0"]
+                                        [org.clojure/clojurescript "1.9.229"]
+                                        [org.clojure/tools.reader "1.0.0-beta3"]]
+                         :global-vars {*warn-on-reflection* false}}}
 
   :plugins [[lein-cljsbuild "1.0.5"]]
 
