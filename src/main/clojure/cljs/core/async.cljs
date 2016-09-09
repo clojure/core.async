@@ -1,5 +1,5 @@
 (ns cljs.core.async
-    (:refer-clojure :exclude [reduce into merge map take partition partition-by bounded-count])
+    (:refer-clojure :exclude [reduce into merge map take partition partition-by])
     (:require [cljs.core.async.impl.protocols :as impl]
               [cljs.core.async.impl.channels :as channels]
               [cljs.core.async.impl.buffers :as buffers]
