@@ -13,17 +13,19 @@
 
 (set! *warn-on-reflection* true)
 
-(defonce the-executor
-  (Executors/newFixedThreadPool
-   (-> (Runtime/getRuntime)
-       (.availableProcessors)
-       (* 2)
-       (+ 42))
-   (conc/counted-thread-factory "async-dispatch-%d" true)))
+(def ^:private pool-size
+  "Value is set via clojure.core.async.pool-size system property; defaults to 8; uses a
+   delay so property can be set from code after core.async namespace is loaded but before
+   any use of the async thread pool."
+  (delay (or (when-let [prop (System/getProperty "clojure.core.async.pool-size")]
+               (Long/parseLong prop))
+             8)))
 
 (defn thread-pool-executor
-  ([] (thread-pool-executor the-executor))
-  ([^Executor executor-svc]
-     (reify impl/Executor
-       (impl/exec [this r]
-         (.execute executor-svc ^Runnable r)))))
+  []
+  (let [executor-svc (Executors/newFixedThreadPool
+                      @pool-size
+                      (conc/counted-thread-factory "async-dispatch-%d" true))]
+    (reify impl/Executor
+      (impl/exec [this r]
+        (.execute executor-svc ^Runnable r)))))

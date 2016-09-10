@@ -7,8 +7,13 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.core.async
+  "Facilities for async programming and communication.
+
+go blocks are dispatched over an internal thread pool, which
+defaults to 8 threads. The size of this pool can be modified using
+the Java system property `clojure.core.async.pool-size`."
   (:refer-clojure :exclude [reduce into merge map take partition
-                            partition-by] :as core)
+                            partition-by bounded-count] :as core)
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.channels :as channels]
             [clojure.core.async.impl.buffers :as buffers]
@@ -976,6 +981,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; deprecated - do not use ;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn map<
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   [f ch]
   (reify
    impl/Channel
@@ -1007,6 +1013,7 @@
 
 (defn map>
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   [f ch]
   (reify
    impl/Channel
@@ -1022,6 +1029,7 @@
 
 (defn filter>
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   [p ch]
   (reify
    impl/Channel
@@ -1039,11 +1047,13 @@
 
 (defn remove>
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   [p ch]
   (filter> (complement p) ch))
 
 (defn filter<
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([p ch] (filter< p ch nil))
   ([p ch buf-or-n]
      (let [out (chan buf-or-n)]
@@ -1058,6 +1068,7 @@
 
 (defn remove<
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([p ch] (remove< p ch nil))
   ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
 
@@ -1073,6 +1084,7 @@
 
 (defn mapcat<
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([f in] (mapcat< f in nil))
   ([f in buf-or-n]
     (let [out (chan buf-or-n)]
@@ -1081,7 +1093,7 @@
 
 (defn mapcat>
   "Deprecated - this function will be removed. Use transducer instead"
-
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([f out] (mapcat> f out nil))
   ([f out buf-or-n]
      (let [in (chan buf-or-n)]
@@ -1090,6 +1102,7 @@
 
 (defn unique
  "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([ch]
      (unique ch nil))
   ([ch buf-or-n]
@@ -1107,6 +1120,7 @@
 
 (defn partition
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([n ch]
      (partition n ch nil))
   ([n ch buf-or-n]
@@ -1131,6 +1145,7 @@
 
 (defn partition-by
   "Deprecated - this function will be removed. Use transducer instead"
+  {:deprecated "0.1.319.0-6b1aca-alpha"}
   ([f ch]
      (partition-by f ch nil))
   ([f ch buf-or-n]

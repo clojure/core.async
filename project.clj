@@ -4,9 +4,9 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :parent [org.clojure/pom.contrib "0.1.2"]
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/tools.analyzer.jvm "0.6.7"]
-                 [org.clojure/clojurescript "0.0-3169" :scope "provided"]]
+  :dependencies [[org.clojure/clojure "1.7.0"]
+                 [org.clojure/tools.analyzer.jvm "0.6.10"]
+                 [org.clojure/clojurescript "1.7.170" :scope "provided"]]
   :global-vars {*warn-on-reflection* true}
   :source-paths ["src/main/clojure"]
   :test-paths ["src/test/clojure"]
@@ -18,7 +18,7 @@
                                         [org.clojure/tools.reader "1.0.0-beta3"]]
                          :global-vars {*warn-on-reflection* false}}}
 
-  :plugins [[lein-cljsbuild "1.0.5"]]
+  :plugins [[lein-cljsbuild "1.1.2"]]
 
   :clean-targets ["tests.js" "tests.js.map"
                   "out" "out-simp" "out-simp-node"
