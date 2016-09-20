@@ -949,6 +949,7 @@
                                  (throw ex#))
                                :recur)
                              (finally
+                               (aset-object ~state-sym ~BINDINGS-IDX (clojure.lang.Var/getThreadBindingFrame))
                                (clojure.lang.Var/resetThreadBindingFrame old-frame#)))]
             (if (identical? ret-value# :recur)
               (recur ~state-sym)

@@ -538,3 +538,52 @@
                   (if foo
                     (<! foo)
                     42)))))))
+
+;; The park/park-run/park-runner api is similar to the pause
+;; counterpart above, but it actually parks the state machine so you
+;; can test parking and unparking machines in different environments.
+(defn park [x]
+  x)
+
+(defn park-run [state blk val]
+  (ioc/aset-all! state ioc/STATE-IDX blk ioc/VALUE-IDX val)
+  nil)
+
+(defmacro park-runner
+  [& body]
+  (let [terminators {`park `park-run}
+        crossing-env (zipmap (keys &env) (repeatedly gensym))]
+    `(let [captured-bindings# (clojure.lang.Var/getThreadBindingFrame)
+           ~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~(vary-meta l dissoc :tag))]) crossing-env)
+           state# (~(ioc/state-machine
+                     `(do ~@body)
+                     0
+                     [crossing-env &env]
+                     terminators))]
+       (ioc/aset-all! state#
+                      ~ioc/BINDINGS-IDX
+                      captured-bindings#)
+       (ioc/run-state-machine state#)
+       [state# (ioc/aget-object state# ioc/VALUE-IDX)])))
+
+(deftest test-binding
+  (let [results (atom {})
+        exception (atom nil)]
+    ;; run the machine on another thread without any existing binding frames.
+    (doto (Thread.
+           (fn []
+             (try
+               (let [[state result] (park-runner (binding [*1 2] (park 10) 100))]
+                 (ioc/run-state-machine state)
+                 ;; the test is macro relies on binding to convey
+                 ;; results, but we want a pristine binding
+                 ;; environment on this thread, so use an atom to
+                 ;; report results back to the main thread.
+                 (reset! results {:park-value result :final-value (ioc/aget-object state ioc/VALUE-IDX)}))
+               (catch Throwable t
+                 (reset! exception t)))))
+      (.start)
+      (.join))
+    (is (= 10 (:park-value @results)))
+    (is (= 100 (:final-value @results)))
+    (is (if @exception (throw @exception) true))))
