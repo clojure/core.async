@@ -28,6 +28,65 @@
        (ioc/run-state-machine state#)
        (ioc/aget-object state# ioc/VALUE-IDX))))
 
+(deftest test-try-catch-finally
+  (testing "Don't endlessly loop when exceptions are thrown"
+    (is (thrown? Exception
+                 (runner
+                  (loop []
+                    (try
+                      (pause (throw (Exception. "Ex")))
+                      (catch clojure.lang.ExceptionInfo ei
+                        :retry))))))
+    (is (thrown? Throwable
+                 (runner
+                  (loop []
+                    (try
+                      (pause (throw (Throwable. "Ex")))
+                      (catch clojure.lang.ExceptionInfo ei
+                        :retry))))))
+    ;; (is (try ((fn [] (println "Hello") (pause 5))) (catch Exception e)))
+    (is (= :Throwable
+           (runner
+            (try
+              (pause 5)
+              (throw (new Throwable))
+              (catch Exception re
+                :Exception)
+              (catch Throwable t
+                :Throwable))))))
+  (testing "finally shouldn't change the return value"
+    (is (= 1 (runner (try 1 (finally (pause 2)))))))
+  (testing "exception handlers stack"
+    (is  (= "eee"
+            (runner
+             (try
+               (try
+                 (try
+                   (throw (pause (Exception. "e")))
+                   (catch Exception e
+                     (pause (throw (Exception. (str (.getMessage e) "e"))))))
+                 (catch Exception e
+                   (throw (throw (Exception. (str (.getMessage e) "e"))))))
+               (catch Exception e
+                 (.getMessage e)))))))
+  (testing "exception handlers and the class hierarchy"
+    (is
+     (runner
+      (try
+        (pause 10)
+        (throw (RuntimeException.))
+        (catch RuntimeException r
+          (pause true))
+        (catch Exception e
+          (pause false)))))
+    (is
+     (runner
+      (try
+        (pause 10)
+        (throw (RuntimeException.))
+        (catch Exception e
+          (pause true)))))))
+
 
 (defmacro locals-test []
   (if (if (contains? &env :locals)
