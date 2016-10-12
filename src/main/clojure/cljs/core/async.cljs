@@ -1,5 +1,5 @@
 (ns cljs.core.async
-    (:refer-clojure :exclude [reduce into merge map take partition partition-by])
+    (:refer-clojure :exclude [reduce transduce into merge map take partition partition-by])
     (:require [cljs.core.async.impl.protocols :as impl]
               [cljs.core.async.impl.channels :as channels]
               [cljs.core.async.impl.buffers :as buffers]
@@ -371,6 +371,16 @@
           (if (reduced? ret')
             @ret'
             (recur ret')))))))
+
+(defn transduce
+  "async/reduces a channel with a transformation (xform f).
+  Returns a channel containing the result.  ch must close before
+  transduce produces a result."
+  [xform f init ch]
+  (let [f (xform f)]
+    (go
+      (let [ret (<! (reduce f init ch))]
+        (f ret)))))
 
 (defn onto-chan
   "Puts the contents of coll into the supplied channel.
