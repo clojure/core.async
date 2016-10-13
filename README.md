@@ -5,7 +5,7 @@ A Clojure library designed to provide facilities for async programming and commu
 
 ## Releases and Dependency Information
 
-Latest release: 0.2.391
+Latest release: 0.2.395
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
@@ -13,7 +13,7 @@ Latest release: 0.2.391
 
 ```clj
  [org.clojure/clojure "1.6.0"]
- [org.clojure/core.async "0.2.391"]
+ [org.clojure/core.async "0.2.395"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -22,7 +22,7 @@ Latest release: 0.2.391
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.2.391</version>
+  <version>0.2.395</version>
 </dependency>
 ```
 
@@ -51,6 +51,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Release 0.2.395 on 2016.10.12
+  * Add async version of transduce
 * Release 0.2.391 on 2016.09.09
   * Fix redefinition warning for bounded-count (added in Clojure 1.9)
   * Add :deprecated meta to the deprecated functions
