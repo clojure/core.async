@@ -12,7 +12,7 @@
 go blocks are dispatched over an internal thread pool, which
 defaults to 8 threads. The size of this pool can be modified using
 the Java system property `clojure.core.async.pool-size`."
-  (:refer-clojure :exclude [reduce into merge map take partition
+  (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count] :as core)
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.channels :as channels]
@@ -606,6 +606,16 @@ the Java system property `clojure.core.async.pool-size`."
           (if (reduced? ret')
             @ret'
             (recur ret')))))))
+
+(defn transduce
+  "async/reduces a channel with a transformation (xform f).
+  Returns a channel containing the result.  ch must close before
+  transduce produces a result."
+  [xform f init ch]
+  (let [f (xform f)]
+    (go
+     (let [ret (<! (reduce f init ch))]
+       (f ret)))))
 
 (defn- bounded-count
   "Returns the smaller of n or the count of coll, without examining

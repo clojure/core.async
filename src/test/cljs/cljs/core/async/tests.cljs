@@ -464,3 +464,8 @@
   (let [c (chan)]
     (is (nil? (offer! c 1)))
     (is (nil? (poll! c)))))
+
+(deftest test-transduce
+  (go
+    (= [1 2 3 4 5]
+      (<! (async/transduce (map inc) conj [] (async/to-chan (range 5)))))))

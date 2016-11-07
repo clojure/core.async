@@ -1,5 +1,5 @@
 (ns clojure.core.async-test
-  (:refer-clojure :exclude [map into reduce merge take partition partition-by])
+  (:refer-clojure :exclude [map into reduce transduce merge take partition partition-by])
   (:require [clojure.core.async.impl.buffers :as b]
             [clojure.core.async :refer :all :as a]
             [clojure.test :refer :all]))
@@ -368,3 +368,18 @@
   (doseq [b (range 1 10)
           t (range 1 10)]
     (check-expanding-transducer b 3 3 t)))
+
+;; in 1.7+, use (map f)
+(defn mapping [f]
+  (fn [f1]
+    (fn
+      ([] (f1))
+      ([result] (f1 result))
+      ([result input]
+       (f1 result (f input)))
+      ([result input & inputs]
+       (f1 result (apply f input inputs))))))
+
+(deftest test-transduce
+  (is (= [1 2 3 4 5]
+         (<!! (a/transduce (mapping inc) conj [] (a/to-chan (range 5)))))))
