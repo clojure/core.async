@@ -1,6 +1,8 @@
 # Andare
 
-A fork of [core.async](https://github.com/clojure/core.async) ported for use with bootstrapped ClojureScript.
+A fork of [core.async](https://github.com/clojure/core.async) ported for use with bootstrapped ClojureScript. 
+
+Up to date with core.async 0.2.395.
 
 [![Clojars Project](https://img.shields.io/clojars/v/andare.svg)](https://clojars.org/andare)
 
