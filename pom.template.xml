@@ -55,4 +55,27 @@
     <version>0.2.0</version>
   </parent>
 
+  <build>
+    <plugins>
+      <plugin>
+      <!-- By default, compile everything as a sanity check, but do
+           not include any AOT-compiled .class files in the
+           JAR. Projects may override as needed. -->
+        <groupId>com.theoryinpractise</groupId>
+        <artifactId>clojure-maven-plugin</artifactId>
+        <version>1.7.1</version>
+	<extensions>true</extensions>
+	<executions>
+          <execution>
+            <id>clojure-compile</id>
+            <phase/>
+          </execution>
+          <execution>
+            <id>clojure-test</id>
+            <phase/>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
