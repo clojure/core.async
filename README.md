@@ -20,6 +20,6 @@ Andare preserves the namespaces present in `core.async`. Thus, bootstrap-compati
 ## License
 
 Revisions in this fork:
-Copyright © 2016 Mike Fikes and Contributors
+Copyright © 2016–2017 Mike Fikes and Contributors
 
 Distributed under the Eclipse Public License, the same as Clojure.
