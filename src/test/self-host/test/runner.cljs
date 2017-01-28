@@ -154,6 +154,7 @@
      #{'cljs.core
        'cljs.pprint
        'cljs.env.macros
+       'cljs.reader
        'cljs.analyzer.macros
        'cljs.compiler.macros}
      #{'goog.object
