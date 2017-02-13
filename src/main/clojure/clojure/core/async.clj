@@ -428,7 +428,7 @@ the Java system property `clojure.core.async.pool-size`."
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
-  f when completed."
+  f when completed, then close."
   [f]
   (let [c (chan 1)]
     (let [binds (clojure.lang.Var/getThreadBindingFrame)]
@@ -446,7 +446,7 @@ the Java system property `clojure.core.async.pool-size`."
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
   calling thread. Returns a channel which will receive the result of
-  the body when completed."
+  the body when completed, then close."
   [& body]
   `(thread-call (fn [] ~@body)))
 
