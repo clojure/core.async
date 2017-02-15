@@ -1040,12 +1040,23 @@
                            %)))
     ast))
 
-(defn make-env [input-env]
+(defn nested-go? [env]
+  (-> env vals first map?))
+
+(defn make-env [input-env crossing-env]
   (assoc (an-jvm/empty-env)
-    :locals (into {} (for [local input-env]
-                       [local {:op :local
-                               :form local
-                               :name local}]))))
+         :locals (into {}
+                       (if (nested-go? input-env)
+                         (for [[l expr] input-env
+                               :let [local (get crossing-env l)]]
+                           [local (-> expr
+                                      (assoc :form local)
+                                      (assoc :name local))])
+                         (for [l (keys input-env)
+                               :let [local (get crossing-env l)]]
+                           [local {:op :local
+                                   :form local
+                                   :name local}])))))
 
 (defn pdebug [x]
   (clojure.pprint/pprint x)
@@ -1060,12 +1071,38 @@
 (def run-passes
   (schedule passes))
 
-(defn state-machine [body num-user-params env user-transitions]
+(defn emit-hinted [local tag env]
+  (let [tag (or tag (-> local meta :tag))
+        init (list (get env local))]
+    (if-let [prim-fn (case (cond-> tag (string? tag) symbol)
+                       int `int
+                       long `long
+                       char `char
+                       float `float
+                       double `double
+                       byte `byte
+                       short `short
+                       boolean `boolean
+                       nil)]
+      [(vary-meta local dissoc :tag) (list prim-fn init)]
+      [(vary-meta local assoc :tag tag) init])))
+
+(defn state-machine [body num-user-params [crossing-env env] user-transitions]
   (binding [an-jvm/run-passes run-passes]
-    (-> (an-jvm/analyze body (make-env env)
-                       {:passes-opts (merge an-jvm/default-passes-opts
-                                            {:uniquify/uniquify-env true
-                                             :mark-transitions/transitions user-transitions})})
-      (parse-to-state-machine user-transitions)
-      second
-      (emit-state-machine num-user-params user-transitions))))
+    (-> (an-jvm/analyze `(let [~@(if (nested-go? env)
+                                   (mapcat (fn [[l {:keys [tag]}]]
+                                             (emit-hinted l tag crossing-env))
+                                           env)
+                                   (mapcat (fn [[l ^clojure.lang.Compiler$LocalBinding lb]]
+                                             (emit-hinted l (when (.hasJavaClass lb)
+                                                              (.getName (.getJavaClass lb)))
+                                                          crossing-env))
+                                           env))]
+                           ~body)
+                        (make-env env crossing-env)
+                        {:passes-opts (merge an-jvm/default-passes-opts
+                                             {:uniquify/uniquify-env true
+                                              :mark-transitions/transitions user-transitions})})
+        (parse-to-state-machine user-transitions)
+        second
+        (emit-state-machine num-user-params user-transitions))))
