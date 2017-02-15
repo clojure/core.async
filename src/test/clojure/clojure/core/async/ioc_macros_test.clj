@@ -19,11 +19,9 @@
   into a state machine. At run time the body will be run as normal. This transform is
   only really useful for testing."
   [& body]
-  (let [terminators {`pause `pause-run}
-        crossing-env (zipmap (keys &env) (repeatedly gensym))]
+  (let [terminators {`pause `pause-run}]
     `(let [captured-bindings# (clojure.lang.Var/getThreadBindingFrame)
-           ~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~l)]) crossing-env)
-           state# (~(ioc/state-machine `(do ~@body) 0 [crossing-env &env] terminators))]
+           state# (~(ioc/state-machine `(do ~@body) 0 (keys &env) terminators))]
        (ioc/aset-all! state#
                   ~ioc/BINDINGS-IDX
                   captured-bindings#)
@@ -474,6 +472,3 @@
     (let [c (identity-chan 42)]
       (is (= [42 c] (<!! (go (async/alts! [c]))))
           "symbol translations apply to resolved symbols")))
-
-(deftest go-nests
-  (is (= [23 42] (<!! (<!! (go (let [let* 1 a 23] (go (let* [b 42] [a b])))))))))
