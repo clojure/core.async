@@ -199,6 +199,21 @@
 ;; and then translate the instructions for this
 ;; virtual-virtual-machine back into Clojure data.
 
+(defrecord ExceptionFrame [catch-block
+                           ^Class catch-exception
+                           finally-block
+                           continue-block
+                           prev])
+
+(defn add-exception-frame [state catch-block catch-exception finally-block continue-block]
+  (aset-all! state
+             EXCEPTION-FRAMES
+             (->ExceptionFrame catch-block
+                               catch-exception
+                               finally-block
+                               continue-block
+                               (aget-object state EXCEPTION-FRAMES))))
+
 ;; Here we define the instructions:
 
 (defprotocol IInstruction
@@ -386,52 +401,99 @@
                       ~STATE-IDX ~else-block))
          :recur)))
 
-(defrecord PushTry [catch-block]
+(defrecord Try [catch-block catch-exception finally-block continue-block]
   IInstruction
   (reads-from [this] [])
   (writes-to [this] [])
-  (block-references [this] [catch-block])
+  (block-references [this] [catch-block finally-block continue-block])
   IEmittableInstruction
   (emit-instruction [this state-sym]
-    `[~'_ (aset-all! ~state-sym ~EXCEPTION-FRAMES (cons ~catch-block (aget-object ~state-sym ~EXCEPTION-FRAMES)))]))
+    `[~'_ (add-exception-frame ~state-sym ~catch-block ~catch-exception ~finally-block ~continue-block)]))
 
-(defrecord PopTry []
+(defrecord ProcessExceptionWithValue [value]
   IInstruction
-  (reads-from [this] [])
+  (reads-from [this] [value])
   (writes-to [this] [])
   (block-references [this] [])
-  IEmittableInstruction
-  (emit-instruction [this state-sym]
-    `[~'_ (aset-all! ~state-sym ~EXCEPTION-FRAMES (rest (aget-object ~state-sym ~EXCEPTION-FRAMES)))]))
-
-(defrecord CatchHandler [catches]
-  IInstruction
-  (reads-from [this] [])
-  (writes-to [this] [])
-  (block-references [this] (map first catches))
   ITerminator
   (terminate-block [this state-sym _]
-    (let [ex (gensym 'ex)]
-      `(let [~ex (aget-object ~state-sym ~VALUE-IDX)]
-         (aset-all! ~state-sym ~CURRENT-EXCEPTION ~ex)
-         (cond
-          ~@(for [[handler-idx type] catches
-                  i [`(instance? ~type ~ex) ` (aset-all! ~state-sym
-                                                         ~STATE-IDX ~handler-idx
-                                                         ~CURRENT-EXCEPTION nil)]]
-              i)
-          :else (throw ~ex))
-         :recur))))
+    `(do (aset-all! ~state-sym
+                    VALUE-IDX
+                    ~value)
+         (process-exception ~state-sym)
+         :recur)))
 
-(defrecord EndFinally []
+(defrecord EndCatchFinally []
   IInstruction
   (reads-from [this] [])
   (writes-to [this] [])
   (block-references [this] [])
-  IEmittableInstruction
-  (emit-instruction [this state-sym]
-    `[~'_ (when-let [e# (aget-object ~state-sym ~CURRENT-EXCEPTION)]
-            (throw e#))]))
+  ITerminator
+  (terminate-block [this state-sym _]
+    `(do (process-exception ~state-sym)
+         :recur)))
+
+(defn process-exception [state]
+  (let [exception-frame (aget-object state EXCEPTION-FRAMES)
+        catch-block (:catch-block exception-frame)
+        catch-exception (:catch-exception exception-frame)
+        exception (aget-object state CURRENT-EXCEPTION)]
+    (cond
+     (and exception
+          (not exception-frame))
+     (throw exception)
+
+     (and exception
+          catch-block
+          (instance? catch-exception exception))
+     (aset-all! state
+                STATE-IDX
+                catch-block
+                VALUE-IDX
+                exception
+                CURRENT-EXCEPTION
+                nil
+                EXCEPTION-FRAMES
+                (assoc exception-frame
+                  :catch-block nil
+                  :catch-exception nil))
+
+
+     (and exception
+          (not catch-block)
+          (not (:finally-block exception-frame)))
+
+     (do (aset-all! state
+                    EXCEPTION-FRAMES
+                    (:prev exception-frame))
+         (recur state))
+
+     (and exception
+          (not catch-block)
+          (:finally-block exception-frame))
+     (aset-all! state
+                STATE-IDX
+                (:finally-block exception-frame)
+                EXCEPTION-FRAMES
+                (assoc exception-frame
+                  :finally-block nil))
+
+     (and (not exception)
+          (:finally-block exception-frame))
+     (do (aset-all! state
+                    STATE-IDX
+                    (:finally-block exception-frame)
+                    EXCEPTION-FRAMES
+                    (assoc exception-frame
+                      :finally-block nil)))
+
+     (and (not exception)
+          (not (:finally-block exception-frame)))
+     (do (aset-all! state
+                   STATE-IDX
+                   (:continue-block exception-frame)
+                   EXCEPTION-FRAMES
+                   (:prev exception-frame))))))
 
 ;; Dispatch clojure forms based on :op
 (def -item-to-ssa nil) ;; for help in the repl
@@ -639,66 +701,47 @@
 
 (defmethod -item-to-ssa :try
   [{:keys [catches body finally] :as ast}]
-  (gen-plan
-   [body-block (add-block)
-    exit-block (add-block)
-    ;; Two routes to the finally block, via normal execution and
-    ;; exception execution
-    finally-blk (if finally
+  (let [catch (first catches)
+        {ex-bind :local ex :class catch-body :body} catch]
+    (gen-plan
+     [end-blk (add-block)
+      finally-blk (if finally
                     (gen-plan
                      [cur-blk (get-block)
-                      finally-blk (add-block)
-                      _ (set-block finally-blk)
-                      result-id (add-instruction (->Const ::value))
+                      blk (add-block)
+                      _ (set-block blk)
+                      value-id (add-instruction (->Const ::value))
                       _ (item-to-ssa finally)
-                      ;; rethrow exception on exception path
-                      _ (add-instruction (->EndFinally))
-                      _ (add-instruction (->Jmp result-id exit-block))
+                      _ (add-instruction (->EndCatchFinally))
                       _ (set-block cur-blk)]
-                     finally-blk)
-                    (gen-plan [] exit-block))
-    catch-blocks (all
-                  (for [{ex-bind :local {ex :val} :class catch-body :body} catches]
-                    (gen-plan
-                     [cur-blk (get-block)
-                      catch-blk (add-block)
-                      _ (set-block catch-blk)
-                      ex-id (add-instruction (->Const ::value))
-                      _ (push-alter-binding :locals assoc (:name ex-bind)
-                                            (with-meta ex-id {:tag 'java.lang.Throwable}))
-                      result-id (item-to-ssa catch-body)
-                      ;; if there is a finally, jump to it after
-                      ;; handling the exception, if not jump to exit
-                      _ (add-instruction (->Jmp result-id finally-blk))
-                      _ (pop-binding :locals)
-                      _ (set-block cur-blk)]
-                     [catch-blk ex])))
-    ;; catch block handler routes exceptions to the correct handler,
-    ;; rethrows if there is no match
-    catch-handler-block (add-block)
-    cur-blk (get-block)
-    _ (set-block catch-handler-block)
-    _ (add-instruction (->CatchHandler catch-blocks))
-    _ (set-block cur-blk)
-    _ (add-instruction (->Jmp nil body-block))
-    _ (set-block body-block)
-    ;; the finally gets pushed on to the exception handler stack, so
-    ;; it will be executed if there is an exception
-    _ (if finally
-        (add-instruction (->PushTry finally-blk))
-        (no-op))
-    _ (add-instruction (->PushTry catch-handler-block))
-    body (item-to-ssa body)
-    _ (add-instruction (->PopTry))
-    _ (if finally
-        (add-instruction (->PopTry))
-        (no-op))
-    ;; if the body finishes executing normally, jump to the finally
-    ;; block, if it exists
-    _ (add-instruction (->Jmp body finally-blk))
-    _ (set-block exit-block)
-    ret (add-instruction (->Const ::value))]
-   ret))
+                     blk)
+                    (no-op))
+      catch-blk (if catch
+                  (gen-plan
+                   [cur-blk (get-block)
+                    blk (add-block)
+                    _ (set-block blk)
+                    ex-id (add-instruction (->Const ::value))
+                    _ (push-alter-binding :locals assoc (:name ex-bind) ex-id)
+                    id (item-to-ssa catch-body)
+                    _ (add-instruction (->ProcessExceptionWithValue id))
+                    _ (pop-binding :locals)
+                    _ (set-block cur-blk)
+                    _ (push-alter-binding :catch (fnil conj []) [(:val ex) blk])]
+                   blk)
+                  (no-op))
+      body-blk (add-block)
+      _ (add-instruction (->Jmp nil body-blk))
+      _ (set-block body-blk)
+      _ (add-instruction (->Try catch-blk (:val ex) finally-blk end-blk))
+      body-id (item-to-ssa body)
+      _ (if catch
+          (pop-binding :catch)
+          (no-op))
+      _ (add-instruction (->ProcessExceptionWithValue body-id))
+      _ (set-block end-blk)
+      ret (add-instruction (->Const ::value))]
+     ret)))
 
 (defmethod -item-to-ssa :throw
   [{:keys [exception] :as ast}]
@@ -932,11 +975,8 @@
                                    (recur)
                                    result#)))
                              (catch Throwable ex#
-                               (aset-all! ~state-sym ~VALUE-IDX ex#)
-                               (if (seq (aget-object ~state-sym ~EXCEPTION-FRAMES))
-                                 (aset-all! ~state-sym ~STATE-IDX (first (aget-object ~state-sym ~EXCEPTION-FRAMES))
-                                            ~EXCEPTION-FRAMES (rest (aget-object ~state-sym ~EXCEPTION-FRAMES)))
-                                 (throw ex#))
+                               (aset-all! ~state-sym CURRENT-EXCEPTION ex#)
+                               (process-exception ~state-sym)
                                :recur)
                              (finally
                                (clojure.lang.Var/resetThreadBindingFrame old-frame#)))]
