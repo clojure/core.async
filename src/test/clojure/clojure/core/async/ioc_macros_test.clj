@@ -87,7 +87,15 @@
         (pause 10)
         (throw (RuntimeException.))
         (catch Exception e
-          (pause true)))))))
+          (pause true))))))
+  (testing "don't explode trying to compile this"
+    (is
+     (runner
+      (try
+        true
+        (catch Exception e
+          (pause 1)
+          e))))))
 
 
 (defmacro locals-test []
