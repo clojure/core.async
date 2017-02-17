@@ -451,7 +451,7 @@ the Java system property `clojure.core.async.pool-size`."
   calling thread. Returns a channel which will receive the result of
   the body when completed, then close."
   [& body]
-  `(thread-call (fn [] ~@body)))
+  `(thread-call (^:once fn* [] ~@body)))
 
 ;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
