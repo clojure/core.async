@@ -665,7 +665,7 @@
                       _ (set-block catch-blk)
                       ex-id (add-instruction (->Const ::value))
                       _ (push-alter-binding :locals assoc (:name ex-bind)
-                                            (vary-meta ex-id assoc :tag (:tag ex-bind)))
+                                            (with-meta ex-id {:tag 'java.lang.Throwable}))
                       result-id (item-to-ssa catch-body)
                       ;; if there is a finally, jump to it after
                       ;; handling the exception, if not jump to exit
