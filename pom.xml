@@ -3,7 +3,7 @@
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
   <!-- Version number will be replaced during build -->
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.3.424-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>core.async</name>
   <description>Facilities for async programming and communication in Clojure</description>
