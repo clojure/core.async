@@ -15,7 +15,7 @@ tag=v$prefix$git_revision
 
 script/build/pom
 
-if [ "$HUDSON" = "true" ]; then
+if [ "$JENKINS" = "true" ]; then
     mvn -DskipStaging=true -Dclojure.version=1.6.0 clean deploy release:prepare release:perform
 
     echo "Creating tag $tag"
