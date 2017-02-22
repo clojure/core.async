@@ -3,7 +3,7 @@
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
   <!-- Version number will be replaced by script/build/pom -->
-  <version>RELEASE_VERSION</version>
+  <version>RELEASE_VERSION-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>core.async</name>
 
