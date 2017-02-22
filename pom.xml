@@ -30,6 +30,10 @@
     <tag>HEAD</tag>
   </scm>
 
+  <properties>
+    <clojure.version>1.7.0</clojure.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.clojure</groupId>
@@ -50,22 +54,6 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
         <version>2.3</version>
-      </plugin>
-      <plugin>
-        <groupId>com.theoryinpractise</groupId>
-        <artifactId>clojure-maven-plugin</artifactId>
-        <version>1.7.1</version>
-	<extensions>true</extensions>
-	<executions>
-          <execution>
-            <id>clojure-compile</id>
-            <phase />
-          </execution>
-          <execution>
-            <id>clojure-test</id>
-            <phase />
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
