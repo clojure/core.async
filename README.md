@@ -5,7 +5,7 @@ A Clojure library designed to provide facilities for async programming and commu
 
 ## Releases and Dependency Information
 
-Latest release: 0.2.395
+Latest release: 0.3.426
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
@@ -13,7 +13,7 @@ Latest release: 0.2.395
 
 ```clj
  [org.clojure/clojure "1.6.0"]
- [org.clojure/core.async "0.2.395"]
+ [org.clojure/core.async "0.3.426"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -22,7 +22,7 @@ Latest release: 0.2.395
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.2.395</version>
+  <version>0.3.426</version>
 </dependency>
 ```
 
@@ -51,7 +51,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* Next release
+* Release 0.3.426 on 2017.02.22
   * [ASYNC-169](http://dev.clojure.org/jira/browse/ASYNC-169) - handling of catch and finally inside go blocks was broken, causing a number of issues. Related: [ASYNC-100](http://dev.clojure.org/jira/browse/ASYNC-100), [ASYNC-173](http://dev.clojure.org/jira/browse/ASYNC-173), [ASYNC-180](http://dev.clojure.org/jira/browse/ASYNC-180), [ASYNC-179](http://dev.clojure.org/jira/browse/ASYNC-179), [ASYNC-122](http://dev.clojure.org/jira/browse/ASYNC-122), [ASYNC-78](http://dev.clojure.org/jira/browse/ASYNC-78), [ASYNC-168](http://dev.clojure.org/jira/browse/ASYNC-168)
   * [ASYNC-138](http://dev.clojure.org/jira/browse/ASYNC-138) - go blocks do not allow closed over locals to be cleared which can lead to a memory leak. Related: [ASYNC-32](http://dev.clojure.org/jira/browse/ASYNC-32)
   * [ASYNC-155](http://dev.clojure.org/jira/browse/ASYNC-155) - preserve loop binding metadata when inside a go block
