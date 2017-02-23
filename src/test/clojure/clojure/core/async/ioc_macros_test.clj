@@ -19,14 +19,83 @@
   into a state machine. At run time the body will be run as normal. This transform is
   only really useful for testing."
   [& body]
-  (let [terminators {`pause `pause-run}]
+  (let [terminators {`pause `pause-run}
+        crossing-env (zipmap (keys &env) (repeatedly gensym))]
     `(let [captured-bindings# (clojure.lang.Var/getThreadBindingFrame)
-           state# (~(ioc/state-machine `(do ~@body) 0 (keys &env) terminators))]
+           ~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~l)]) crossing-env)
+           state# (~(ioc/state-machine `(do ~@body) 0 [crossing-env &env] terminators))]
        (ioc/aset-all! state#
                   ~ioc/BINDINGS-IDX
                   captured-bindings#)
        (ioc/run-state-machine state#)
        (ioc/aget-object state# ioc/VALUE-IDX))))
+
+(deftest test-try-catch-finally
+  (testing "Don't endlessly loop when exceptions are thrown"
+    (is (thrown? Exception
+                 (runner
+                  (loop []
+                    (try
+                      (pause (throw (Exception. "Ex")))
+                      (catch clojure.lang.ExceptionInfo ei
+                        :retry))))))
+    (is (thrown? Throwable
+                 (runner
+                  (loop []
+                    (try
+                      (pause (throw (Throwable. "Ex")))
+                      (catch clojure.lang.ExceptionInfo ei
+                        :retry))))))
+    ;; (is (try ((fn [] (println "Hello") (pause 5))) (catch Exception e)))
+    (is (= :Throwable
+           (runner
+            (try
+              (pause 5)
+              (throw (new Throwable))
+              (catch Exception re
+                :Exception)
+              (catch Throwable t
+                :Throwable))))))
+  (testing "finally shouldn't change the return value"
+    (is (= 1 (runner (try 1 (finally (pause 2)))))))
+  (testing "exception handlers stack"
+    (is  (= "eee"
+            (runner
+             (try
+               (try
+                 (try
+                   (throw (pause (Exception. "e")))
+                   (catch Exception e
+                     (pause (throw (Exception. (str (.getMessage e) "e"))))))
+                 (catch Exception e
+                   (throw (throw (Exception. (str (.getMessage e) "e"))))))
+               (catch Exception e
+                 (.getMessage e)))))))
+  (testing "exception handlers and the class hierarchy"
+    (is
+     (runner
+      (try
+        (pause 10)
+        (throw (RuntimeException.))
+        (catch RuntimeException r
+          (pause true))
+        (catch Exception e
+          (pause false)))))
+    (is
+     (runner
+      (try
+        (pause 10)
+        (throw (RuntimeException.))
+        (catch Exception e
+          (pause true))))))
+  (testing "don't explode trying to compile this"
+    (is
+     (runner
+      (try
+        true
+        (catch Exception e
+          (pause 1)
+          e))))))
 
 
 (defmacro locals-test []
@@ -413,3 +482,23 @@
     (let [c (identity-chan 42)]
       (is (= [42 c] (<!! (go (async/alts! [c]))))
           "symbol translations apply to resolved symbols")))
+
+(deftest go-nests
+  (is (= [23 42] (<!! (<!! (go (let [let* 1 a 23] (go (let* [b 42] [a b])))))))))
+
+(defprotocol P
+  (x [p]))
+
+(defrecord R [z]
+  P
+  (x [this]
+    (go
+      (loop []
+        (if (zero? (rand-int 3))
+          [z (.z this)]
+          (recur))))))
+
+(deftest go-propagates-primitive-hints
+  (is (= "asd" (<!! (let [a (int 1)] (go (.substring "fasd" a))))))
+  (is (= 1 (<!! (let [a (int 1)] (go (Integer/valueOf a))))))
+  (is (= [1 1] (<!! (x (R. 1))))))

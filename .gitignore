@@ -9,8 +9,6 @@ out-adv-node
 /lib
 /classes
 /checkouts
-pom.xml.asc
-pom.xml
 *.jar
 *.class
 .lein-deps-sum
@@ -20,3 +18,4 @@ pom.xml
 tests.js
 tests.js.map
 out
+pom.xml.versionsBackup

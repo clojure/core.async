@@ -10,7 +10,7 @@
   clojure.core.async.impl.protocols)
 
 
-(def ^:const ^int MAX-QUEUE-SIZE 1024)
+(def ^:const ^{:tag 'int} MAX-QUEUE-SIZE 1024)
 
 (defprotocol ReadPort
   (take! [port fn1-handler] "derefable val if taken, nil if take was enqueued"))
@@ -29,7 +29,7 @@
   (commit [h] "commit to fulfilling its end of the transfer, returns cb. Must be called within lock"))
 
 (defprotocol Buffer
-  (full? [b] "returns true if buffer can accept put")
+  (full? [b] "returns true if buffer cannot accept put")
   (remove! [b] "remove and return next item from buffer, called under chan mutex")
   (add!* [b itm] "if room, add item to the buffer, returns b, called under chan mutex")
   (close-buf! [b] "called on chan closed under chan mutex, return ignored"))

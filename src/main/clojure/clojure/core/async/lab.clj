@@ -106,21 +106,3 @@
   writes."
   [& ports]
   (->BroadcastingWritePort (set ports)))
-
-;;;; Tools for creating processes
-
-(defn spool
-  "Take a sequence and puts each value on a channel and returns the channel.
-   If no channel is provided, an unbuffered channel is created. If the
-   sequence ends, the channel is closed."
-  ([s c]
-     (async/go
-      (loop [[f & r] s]
-        (if f
-          (do
-            (async/>! c f)
-            (recur r))
-          (async/close! c))))
-     c)
-  ([s]
-     (spool s (async/chan))))

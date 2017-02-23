@@ -199,21 +199,6 @@
 ;; and then translate the instructions for this
 ;; virtual-virtual-machine back into Clojure data.
 
-(defrecord ExceptionFrame [catch-block
-                           ^Class catch-exception
-                           finally-block
-                           continue-block
-                           prev])
-
-(defn add-exception-frame [state catch-block catch-exception finally-block continue-block]
-  (aset-all! state
-             EXCEPTION-FRAMES
-             (->ExceptionFrame catch-block
-                               catch-exception
-                               finally-block
-                               continue-block
-                               (aget-object state EXCEPTION-FRAMES))))
-
 ;; Here we define the instructions:
 
 (defprotocol IInstruction
@@ -401,99 +386,52 @@
                       ~STATE-IDX ~else-block))
          :recur)))
 
-(defrecord Try [catch-block catch-exception finally-block continue-block]
+(defrecord PushTry [catch-block]
   IInstruction
   (reads-from [this] [])
   (writes-to [this] [])
-  (block-references [this] [catch-block finally-block continue-block])
+  (block-references [this] [catch-block])
   IEmittableInstruction
   (emit-instruction [this state-sym]
-    `[~'_ (add-exception-frame ~state-sym ~catch-block ~catch-exception ~finally-block ~continue-block)]))
+    `[~'_ (aset-all! ~state-sym ~EXCEPTION-FRAMES (cons ~catch-block (aget-object ~state-sym ~EXCEPTION-FRAMES)))]))
 
-(defrecord ProcessExceptionWithValue [value]
-  IInstruction
-  (reads-from [this] [value])
-  (writes-to [this] [])
-  (block-references [this] [])
-  ITerminator
-  (terminate-block [this state-sym _]
-    `(do (aset-all! ~state-sym
-                    VALUE-IDX
-                    ~value)
-         (process-exception ~state-sym)
-         :recur)))
-
-(defrecord EndCatchFinally []
+(defrecord PopTry []
   IInstruction
   (reads-from [this] [])
   (writes-to [this] [])
   (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~'_ (aset-all! ~state-sym ~EXCEPTION-FRAMES (rest (aget-object ~state-sym ~EXCEPTION-FRAMES)))]))
+
+(defrecord CatchHandler [catches]
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] (map first catches))
   ITerminator
   (terminate-block [this state-sym _]
-    `(do (process-exception ~state-sym)
-         :recur)))
+    (let [ex (gensym 'ex)]
+      `(let [~ex (aget-object ~state-sym ~VALUE-IDX)]
+         (aset-all! ~state-sym ~CURRENT-EXCEPTION ~ex)
+         (cond
+          ~@(for [[handler-idx type] catches
+                  i [`(instance? ~type ~ex) ` (aset-all! ~state-sym
+                                                         ~STATE-IDX ~handler-idx
+                                                         ~CURRENT-EXCEPTION nil)]]
+              i)
+          :else (throw ~ex))
+         :recur))))
 
-(defn process-exception [state]
-  (let [exception-frame (aget-object state EXCEPTION-FRAMES)
-        catch-block (:catch-block exception-frame)
-        catch-exception (:catch-exception exception-frame)
-        exception (aget-object state CURRENT-EXCEPTION)]
-    (cond
-     (and exception
-          (not exception-frame))
-     (throw exception)
-
-     (and exception
-          catch-block
-          (instance? catch-exception exception))
-     (aset-all! state
-                STATE-IDX
-                catch-block
-                VALUE-IDX
-                exception
-                CURRENT-EXCEPTION
-                nil
-                EXCEPTION-FRAMES
-                (assoc exception-frame
-                  :catch-block nil
-                  :catch-exception nil))
-
-
-     (and exception
-          (not catch-block)
-          (not (:finally-block exception-frame)))
-
-     (do (aset-all! state
-                    EXCEPTION-FRAMES
-                    (:prev exception-frame))
-         (recur state))
-
-     (and exception
-          (not catch-block)
-          (:finally-block exception-frame))
-     (aset-all! state
-                STATE-IDX
-                (:finally-block exception-frame)
-                EXCEPTION-FRAMES
-                (assoc exception-frame
-                  :finally-block nil))
-
-     (and (not exception)
-          (:finally-block exception-frame))
-     (do (aset-all! state
-                    STATE-IDX
-                    (:finally-block exception-frame)
-                    EXCEPTION-FRAMES
-                    (assoc exception-frame
-                      :finally-block nil)))
-
-     (and (not exception)
-          (not (:finally-block exception-frame)))
-     (do (aset-all! state
-                   STATE-IDX
-                   (:continue-block exception-frame)
-                   EXCEPTION-FRAMES
-                   (:prev exception-frame))))))
+(defrecord EndFinally []
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~'_ (when-let [e# (aget-object ~state-sym ~CURRENT-EXCEPTION)]
+            (throw e#))]))
 
 ;; Dispatch clojure forms based on :op
 (def -item-to-ssa nil) ;; for help in the repl
@@ -605,10 +543,10 @@
    form))
 
 (defn let-binding-to-ssa
-  [{:keys [name init]}]
+  [{:keys [name init form]}]
   (gen-plan
    [bind-id (item-to-ssa init)
-    _ (push-alter-binding :locals assoc name bind-id)]
+    _ (push-alter-binding :locals assoc (with-meta name (meta form)) bind-id)]
    bind-id))
 
 (defmethod -item-to-ssa :let
@@ -624,13 +562,7 @@
 (defmethod -item-to-ssa :loop
   [{:keys [body bindings] :as ast}]
   (gen-plan
-   [local-val-ids (all (map ; not parallel bind
-                        (fn [{:keys [name init]}]
-                          (gen-plan
-                           [itm-id (item-to-ssa init)
-                            _ (push-alter-binding :locals assoc name itm-id)]
-                           itm-id))
-                        bindings))
+   [local-val-ids (all (map let-binding-to-ssa bindings))
     _ (all (for [_ bindings]
              (pop-binding :locals)))
     local-ids (all (map (comp add-instruction ->Const) local-val-ids))
@@ -639,8 +571,9 @@
     _ (add-instruction (->Jmp nil body-blk))
 
     _ (set-block body-blk)
-    _ (push-alter-binding :locals merge (zipmap (map :name bindings)
-                                                local-ids))
+    _ (push-alter-binding :locals merge (into {} (map (fn [id {:keys [name form]}]
+                                                        [name (vary-meta id merge (meta form))])
+                                                      local-ids bindings)))
     _ (push-binding :recur-point body-blk)
     _ (push-binding :recur-nodes local-ids)
 
@@ -706,47 +639,67 @@
 
 (defmethod -item-to-ssa :try
   [{:keys [catches body finally] :as ast}]
-  (let [catch (first catches)
-        {ex-bind :local ex :class catch-body :body} catch]
-    (gen-plan
-     [end-blk (add-block)
-      finally-blk (if finally
+  (gen-plan
+   [body-block (add-block)
+    exit-block (add-block)
+    ;; Two routes to the finally block, via normal execution and
+    ;; exception execution
+    finally-blk (if finally
                     (gen-plan
                      [cur-blk (get-block)
-                      blk (add-block)
-                      _ (set-block blk)
-                      value-id (add-instruction (->Const ::value))
+                      finally-blk (add-block)
+                      _ (set-block finally-blk)
+                      result-id (add-instruction (->Const ::value))
                       _ (item-to-ssa finally)
-                      _ (add-instruction (->EndCatchFinally))
+                      ;; rethrow exception on exception path
+                      _ (add-instruction (->EndFinally))
+                      _ (add-instruction (->Jmp result-id exit-block))
                       _ (set-block cur-blk)]
-                     blk)
-                    (no-op))
-      catch-blk (if catch
-                  (gen-plan
-                   [cur-blk (get-block)
-                    blk (add-block)
-                    _ (set-block blk)
-                    ex-id (add-instruction (->Const ::value))
-                    _ (push-alter-binding :locals assoc (:name ex-bind) ex-id)
-                    id (item-to-ssa catch-body)
-                    _ (add-instruction (->ProcessExceptionWithValue id))
-                    _ (pop-binding :locals)
-                    _ (set-block cur-blk)
-                    _ (push-alter-binding :catch (fnil conj []) [(:val ex) blk])]
-                   blk)
-                  (no-op))
-      body-blk (add-block)
-      _ (add-instruction (->Jmp nil body-blk))
-      _ (set-block body-blk)
-      _ (add-instruction (->Try catch-blk (:val ex) finally-blk end-blk))
-      body-id (item-to-ssa body)
-      _ (if catch
-          (pop-binding :catch)
-          (no-op))
-      _ (add-instruction (->ProcessExceptionWithValue body-id))
-      _ (set-block end-blk)
-      ret (add-instruction (->Const ::value))]
-     ret)))
+                     finally-blk)
+                    (gen-plan [] exit-block))
+    catch-blocks (all
+                  (for [{ex-bind :local {ex :val} :class catch-body :body} catches]
+                    (gen-plan
+                     [cur-blk (get-block)
+                      catch-blk (add-block)
+                      _ (set-block catch-blk)
+                      ex-id (add-instruction (->Const ::value))
+                      _ (push-alter-binding :locals assoc (:name ex-bind)
+                                            (vary-meta ex-id merge (when (:tag ex-bind)
+                                                                     {:tag (.getName ^Class (:tag ex-bind))})))
+                      result-id (item-to-ssa catch-body)
+                      ;; if there is a finally, jump to it after
+                      ;; handling the exception, if not jump to exit
+                      _ (add-instruction (->Jmp result-id finally-blk))
+                      _ (pop-binding :locals)
+                      _ (set-block cur-blk)]
+                     [catch-blk ex])))
+    ;; catch block handler routes exceptions to the correct handler,
+    ;; rethrows if there is no match
+    catch-handler-block (add-block)
+    cur-blk (get-block)
+    _ (set-block catch-handler-block)
+    _ (add-instruction (->CatchHandler catch-blocks))
+    _ (set-block cur-blk)
+    _ (add-instruction (->Jmp nil body-block))
+    _ (set-block body-block)
+    ;; the finally gets pushed on to the exception handler stack, so
+    ;; it will be executed if there is an exception
+    _ (if finally
+        (add-instruction (->PushTry finally-blk))
+        (no-op))
+    _ (add-instruction (->PushTry catch-handler-block))
+    body (item-to-ssa body)
+    _ (add-instruction (->PopTry))
+    _ (if finally
+        (add-instruction (->PopTry))
+        (no-op))
+    ;; if the body finishes executing normally, jump to the finally
+    ;; block, if it exists
+    _ (add-instruction (->Jmp body finally-blk))
+    _ (set-block exit-block)
+    ret (add-instruction (->Const ::value))]
+   ret))
 
 (defmethod -item-to-ssa :throw
   [{:keys [exception] :as ast}]
@@ -980,8 +933,11 @@
                                    (recur)
                                    result#)))
                              (catch Throwable ex#
-                               (aset-all! ~state-sym CURRENT-EXCEPTION ex#)
-                               (process-exception ~state-sym)
+                               (aset-all! ~state-sym ~VALUE-IDX ex#)
+                               (if (seq (aget-object ~state-sym ~EXCEPTION-FRAMES))
+                                 (aset-all! ~state-sym ~STATE-IDX (first (aget-object ~state-sym ~EXCEPTION-FRAMES))
+                                            ~EXCEPTION-FRAMES (rest (aget-object ~state-sym ~EXCEPTION-FRAMES)))
+                                 (throw ex#))
                                :recur)
                              (finally
                                (clojure.lang.Var/resetThreadBindingFrame old-frame#)))]
@@ -1085,12 +1041,23 @@
                            %)))
     ast))
 
-(defn make-env [input-env]
+(defn nested-go? [env]
+  (-> env vals first map?))
+
+(defn make-env [input-env crossing-env]
   (assoc (an-jvm/empty-env)
-    :locals (into {} (for [local input-env]
-                       [local {:op :local
-                               :form local
-                               :name local}]))))
+         :locals (into {}
+                       (if (nested-go? input-env)
+                         (for [[l expr] input-env
+                               :let [local (get crossing-env l)]]
+                           [local (-> expr
+                                      (assoc :form local)
+                                      (assoc :name local))])
+                         (for [l (keys input-env)
+                               :let [local (get crossing-env l)]]
+                           [local {:op :local
+                                   :form local
+                                   :name local}])))))
 
 (defn pdebug [x]
   (clojure.pprint/pprint x)
@@ -1105,12 +1072,38 @@
 (def run-passes
   (schedule passes))
 
-(defn state-machine [body num-user-params env user-transitions]
+(defn emit-hinted [local tag env]
+  (let [tag (or tag (-> local meta :tag))
+        init (list (get env local))]
+    (if-let [prim-fn (case (cond-> tag (string? tag) symbol)
+                       int `int
+                       long `long
+                       char `char
+                       float `float
+                       double `double
+                       byte `byte
+                       short `short
+                       boolean `boolean
+                       nil)]
+      [(vary-meta local dissoc :tag) (list prim-fn init)]
+      [(vary-meta local merge (when tag {:tag tag})) init])))
+
+(defn state-machine [body num-user-params [crossing-env env] user-transitions]
   (binding [an-jvm/run-passes run-passes]
-    (-> (an-jvm/analyze body (make-env env)
-                       {:passes-opts (merge an-jvm/default-passes-opts
-                                            {:uniquify/uniquify-env true
-                                             :mark-transitions/transitions user-transitions})})
-      (parse-to-state-machine user-transitions)
-      second
-      (emit-state-machine num-user-params user-transitions))))
+    (-> (an-jvm/analyze `(let [~@(if (nested-go? env)
+                                   (mapcat (fn [[l {:keys [tag]}]]
+                                             (emit-hinted l tag crossing-env))
+                                           env)
+                                   (mapcat (fn [[l ^clojure.lang.Compiler$LocalBinding lb]]
+                                             (emit-hinted l (when (.hasJavaClass lb)
+                                                              (.getName (.getJavaClass lb)))
+                                                          crossing-env))
+                                           env))]
+                           ~body)
+                        (make-env env crossing-env)
+                        {:passes-opts (merge an-jvm/default-passes-opts
+                                             {:uniquify/uniquify-env true
+                                              :mark-transitions/transitions user-transitions})})
+        (parse-to-state-machine user-transitions)
+        second
+        (emit-state-machine num-user-params user-transitions))))

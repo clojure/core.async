@@ -84,6 +84,7 @@ the Java system property `clojure.core.async.pool-size`."
   ([buf-or-n] (chan buf-or-n nil))
   ([buf-or-n xform] (chan buf-or-n xform nil))
   ([buf-or-n xform ex-handler]
+     (when (and buf-or-n (number? buf-or-n)) (assert (pos? buf-or-n) "fixed buffers must have size > 0"))
      (when xform (assert buf-or-n "buffer must be supplied when transducer is"))
      (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n) xform ex-handler)))
 
@@ -411,16 +412,18 @@ the Java system property `clojure.core.async.pool-size`."
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  `(let [c# (chan 1)
-         captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
-     (dispatch/run
-      (fn []
-        (let [f# ~(ioc/state-machine `(do ~@body) 1 (keys &env) ioc/async-custom-terminators)
-              state# (-> (f#)
-                         (ioc/aset-all! ioc/USER-START-IDX c#
-                                        ioc/BINDINGS-IDX captured-bindings#))]
-          (ioc/run-state-machine-wrapped state#))))
-     c#))
+  (let [crossing-env (zipmap (keys &env) (repeatedly gensym))]
+    `(let [c# (chan 1)
+           captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
+       (dispatch/run
+         (^:once fn* []
+          (let [~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~(vary-meta l dissoc :tag))]) crossing-env)
+                f# ~(ioc/state-machine `(do ~@body) 1 [crossing-env &env] ioc/async-custom-terminators)
+                state# (-> (f#)
+                           (ioc/aset-all! ioc/USER-START-IDX c#
+                                          ioc/BINDINGS-IDX captured-bindings#))]
+            (ioc/run-state-machine-wrapped state#))))
+       c#)))
 
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
@@ -428,7 +431,7 @@ the Java system property `clojure.core.async.pool-size`."
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
-  f when completed."
+  f when completed, then close."
   [f]
   (let [c (chan 1)]
     (let [binds (clojure.lang.Var/getThreadBindingFrame)]
@@ -446,7 +449,7 @@ the Java system property `clojure.core.async.pool-size`."
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
   calling thread. Returns a channel which will receive the result of
-  the body when completed."
+  the body when completed, then close."
   [& body]
   `(thread-call (fn [] ~@body)))
 
@@ -647,9 +650,14 @@ the Java system property `clojure.core.async.pool-size`."
   "Creates and returns a channel which contains the contents of coll,
   closing when exhausted."
   [coll]
-  (let [ch (chan (bounded-count 100 coll))]
-    (onto-chan ch coll)
-    ch))
+  (let [c (bounded-count 100 coll)]
+    (if (pos? c)
+      (let [ch (chan c)]
+        (onto-chan ch coll)
+        ch)
+      (let [ch (chan)]
+        (close! ch)
+        ch))))
 
 (defprotocol Mux
   (muxch* [_]))
