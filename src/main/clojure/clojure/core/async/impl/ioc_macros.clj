@@ -546,13 +546,19 @@
   [{:keys [name init form]}]
   (gen-plan
    [bind-id (item-to-ssa init)
-    _ (push-alter-binding :locals assoc (with-meta name (meta form)) bind-id)]
+    _ (push-alter-binding :locals assoc (vary-meta name merge (meta form)) bind-id)]
    bind-id))
 
 (defmethod -item-to-ssa :let
   [{:keys [bindings body]}]
   (gen-plan
    [let-ids (all (map let-binding-to-ssa bindings))
+
+    local-ids (all (map (comp add-instruction ->Const) let-ids))
+    _ (push-alter-binding :locals merge (into {} (map (fn [id {:keys [name form]}]
+                                                        [name (vary-meta id merge (meta form))])
+                                                      local-ids bindings)))
+
     body-id (item-to-ssa body)
     _ (all (map (fn [x]
                   (pop-binding :locals))
