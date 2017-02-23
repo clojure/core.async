@@ -51,7 +51,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* Next release
+* Release 0.3.427 on 2017.02.23
+  * [ASYNC-187](http://dev.clojure.org/jira/browse/ASYNC-187) - Tag metadata is lost in local closed over by a loop
   * [ASYNC-185](http://dev.clojure.org/jira/browse/ASYNC-185) - `thread` prevents clearing of body locals
   * [ASYNC-186](http://dev.clojure.org/jira/browse/ASYNC-186) - NPE when `go` closes over a local variable bound to nil
 * Release 0.3.426 on 2017.02.22
