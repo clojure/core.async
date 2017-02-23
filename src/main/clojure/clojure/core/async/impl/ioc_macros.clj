@@ -553,6 +553,7 @@
   [{:keys [bindings body]}]
   (gen-plan
    [let-ids (all (map let-binding-to-ssa bindings))
+    _ (all (map (fn [_] (pop-binding :locals)) bindings))
 
     local-ids (all (map (comp add-instruction ->Const) let-ids))
     _ (push-alter-binding :locals merge (into {} (map (fn [id {:keys [name form]}]
@@ -560,9 +561,7 @@
                                                       local-ids bindings)))
 
     body-id (item-to-ssa body)
-    _ (all (map (fn [x]
-                  (pop-binding :locals))
-                (range (count bindings))))]
+    _ (pop-binding :locals)]
    body-id))
 
 (defmethod -item-to-ssa :loop
