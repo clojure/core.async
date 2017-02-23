@@ -1096,7 +1096,7 @@
                                            env)
                                    (mapcat (fn [[l ^clojure.lang.Compiler$LocalBinding lb]]
                                              (emit-hinted l (when (.hasJavaClass lb)
-                                                              (.getName (.getJavaClass lb)))
+                                                              (some-> lb .getJavaClass .getName))
                                                           crossing-env))
                                            env))]
                            ~body)

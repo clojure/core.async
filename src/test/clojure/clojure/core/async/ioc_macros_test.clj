@@ -502,3 +502,6 @@
   (is (= "asd" (<!! (let [a (int 1)] (go (.substring "fasd" a))))))
   (is (= 1 (<!! (let [a (int 1)] (go (Integer/valueOf a))))))
   (is (= [1 1] (<!! (x (R. 1))))))
+
+(deftest ASYNC-186
+  (is (let [y nil] (go))))
