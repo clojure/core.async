@@ -5,7 +5,7 @@ A Clojure library designed to provide facilities for async programming and commu
 
 ## Releases and Dependency Information
 
-Latest release: 0.3.436
+Latest release: 0.3.441
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
@@ -13,7 +13,7 @@ Latest release: 0.3.436
 
 ```clj
  [org.clojure/clojure "1.6.0"]
- [org.clojure/core.async "0.3.436"]
+ [org.clojure/core.async "0.3.441"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -22,7 +22,7 @@ Latest release: 0.3.436
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.3.436</version>
+  <version>0.3.441</version>
 </dependency>
 ```
 
@@ -51,8 +51,9 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* Release 0.3.436 on 2017.02.23
+* Release 0.3.441 on 2017.02.23
   * [ASYNC-187](http://dev.clojure.org/jira/browse/ASYNC-187) - Tag metadata is lost in local closed over by a loop
+    * Related: [ASYNC-188](http://dev.clojure.org/jira/browse/ASYNC-188)
   * [ASYNC-185](http://dev.clojure.org/jira/browse/ASYNC-185) - `thread` prevents clearing of body locals
   * [ASYNC-186](http://dev.clojure.org/jira/browse/ASYNC-186) - NPE when `go` closes over a local variable bound to nil
 * Release 0.3.426 on 2017.02.22
