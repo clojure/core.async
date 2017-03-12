@@ -18,6 +18,18 @@ Andare preserves the namespaces present in `core.async`. Thus, bootstrap-compati
 | 0.2.0  | 0.2.374      |
 | 0.1.0  | 0.2.374      |
 
+## Testing
+
+```
+lein tach lumo
+```
+
+or
+
+```
+lein tach planck
+```
+
 ## License
 
 Revisions in this fork:

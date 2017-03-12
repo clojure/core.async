@@ -18,7 +18,8 @@
                                         [org.clojure/tools.reader "1.0.0-beta4"]]
                          :global-vars {*warn-on-reflection* false}}}
 
-  :plugins [[lein-cljsbuild "1.1.2"]]
+  :plugins [[lein-cljsbuild "1.1.2"]
+            [lein-tach "0.1.0"]]
 
   :clean-targets ["tests.js" "tests.js.map"
                   "out" "out-simp" "out-simp-node"
