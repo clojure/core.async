@@ -51,6 +51,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Release 0.3.445 on 2017.03.14
+  * Fix bad `:refer-clojure` clause that violates new spec in Clojure 1.9.0-alpha15
 * Release 0.3.441 on 2017.02.23
   * [ASYNC-187](http://dev.clojure.org/jira/browse/ASYNC-187) - Tag metadata is lost in local closed over by a loop
     * Related: [ASYNC-188](http://dev.clojure.org/jira/browse/ASYNC-188)
