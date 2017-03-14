@@ -5,7 +5,7 @@ A Clojure library providing facilities for async programming and communication.
 
 ## Releases and Dependency Information
 
-Latest release: 0.3.445
+Latest release: 0.3.442
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
@@ -13,7 +13,7 @@ Latest release: 0.3.445
 
 ```clj
  [org.clojure/clojure "1.6.0"]
- [org.clojure/core.async "0.3.445"]
+ [org.clojure/core.async "0.3.442"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -22,7 +22,7 @@ Latest release: 0.3.445
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.3.445</version>
+  <version>0.3.442</version>
 </dependency>
 ```
 
@@ -51,7 +51,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* Release 0.3.445 on 2017.03.14
+* Release 0.3.442 on 2017.03.14
   * Fix bad `:refer-clojure` clause that violates new spec in Clojure 1.9.0-alpha15
 * Release 0.3.441 on 2017.02.23
   * [ASYNC-187](http://dev.clojure.org/jira/browse/ASYNC-187) - Tag metadata is lost in local closed over by a loop
