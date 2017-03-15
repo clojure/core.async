@@ -19,3 +19,5 @@ tests.js
 tests.js.map
 out
 pom.xml.versionsBackup
+/.lumo_cache
+/.planck_cache
