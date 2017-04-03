@@ -414,21 +414,21 @@
   (async done
     (let [l (latch 3 done)]
       (testing "put on promise-chan fulfills all pending takers"
-        (go
           (let [c  (promise-chan)
                 t1 (go (<! c))
                 t2 (go (<! c))]
-            (>! c :val)
-            (is (= :val (<! t1) (<! t2)))
-            (testing "then puts succeed but are dropped"
-              (go (>! c :LOST))
-              (is (= :val (<! c))))
-            (testing "then takes succeed with the original value"
-              (is (= :val (<! c) (<! c) (<! c))))
-            (testing "then after close takes continue returning val"
-              (close! c)
-              (is (= :val (<! c) (<! c)))))
-          (inc! l)))
+            (go
+              (>! c :val)
+              (is (= :val (<! t1) (<! t2)))
+              (testing "then puts succeed but are dropped"
+                (go (>! c :LOST))
+                (is (= :val (<! c))))
+              (testing "then takes succeed with the original value"
+                (is (= :val (<! c) (<! c) (<! c))))
+              (testing "then after close takes continue returning val"
+                (close! c)
+                (is (= :val (<! c) (<! c))))
+              (inc! l))))
       (testing "close on promise-chan fulfills all pending takers"
         (go
           (let [c  (promise-chan)
