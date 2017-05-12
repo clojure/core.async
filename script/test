@@ -1,7 +1,7 @@
 rm -rf out
 mkdir -p out
 
-lein cljsbuild clean
+lein clean
 lein cljsbuild once
 
 if [ "$V8_HOME" == "" ]; then
