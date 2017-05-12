@@ -4,7 +4,7 @@
   (:require
    [cljs.core.async :refer
     [buffer dropping-buffer sliding-buffer put! take! chan promise-chan
-     close! take partition-by offer! poll!] :as async]
+     close! take partition-by offer! poll! <! >! alts!] :as async]
    [cljs.core.async.impl.dispatch :as dispatch]
    [cljs.core.async.impl.buffers :as buff]
    [cljs.core.async.impl.timers :as timers :refer [timeout]]
