@@ -51,16 +51,20 @@
         (if (and buf (not (impl/full? buf)))
           (do
             (impl/commit handler)
-            (let [done? (reduced? (add! buf val))]
-              (loop []
-                (when (and (pos? (.-length takes)) (pos? (count buf)))
-                  (let [^not-native taker (.pop takes)]
-                    (if ^boolean (impl/active? taker)
-                      (let [take-cb (impl/commit taker)
-                            val (impl/remove! buf)]
-                        (dispatch/run (fn [] (take-cb val))))
-                      (recur)))))
+            (let [done? (reduced? (add! buf val))
+                  take-cbs (loop [takers []]
+                             (if (and (pos? (.-length takes)) (pos? (count buf)))
+                               (let [^not-native taker (.pop takes)]
+                                 (if ^boolean (impl/active? taker)
+                                   (let [ret (impl/commit taker)
+                                         val (impl/remove! buf)]
+                                     (recur (conj takers (fn [] (ret val)))))
+                                   (recur takers)))
+                               takers))]
               (when done? (abort this))
+              (when (seq take-cbs)
+                (doseq [f take-cbs]
+                  (dispatch/run f)))
               (box true)))
           (let [taker (loop []
                         (let [^not-native taker (.pop takes)]
@@ -90,22 +94,25 @@
     (if (not ^boolean (impl/active? handler))
       nil
       (if (and (not (nil? buf)) (pos? (count buf)))
-        (let [_ (impl/commit handler)
-              retval (box (impl/remove! buf))]
-          (loop []
-            (when-not (impl/full? buf)
-              (let [putter (.pop puts)]
-                (when-not (nil? putter)
-                  (let [^not-native put-handler (.-handler putter)
-                        val (.-val putter)]
-                    (when ^boolean (impl/active? put-handler)
-                      (let [put-cb (impl/commit put-handler)]
-                        (impl/commit handler)
-                        (dispatch/run #(put-cb true))
-                        (when (reduced? (add! buf val))
-                          (abort this)))))
-                  (recur)))))
-          retval)
+        (do
+          (if-let [take-cb (impl/commit handler)]
+            (let [val (impl/remove! buf)
+                  [done? cbs] (when (pos? (.-length puts))
+                                (loop [cbs []]
+                                  (let [putter (.pop puts)
+                                        ^not-native put-handler (.-handler putter)
+                                        val (.-val putter)
+                                        cb (and ^boolean (impl/active? put-handler) (impl/commit put-handler))
+                                        cbs (if cb (conj cbs cb) cbs)
+                                        done? (when cb (reduced? (add! buf val)))]
+                                    (if (and (not done?) (not (impl/full? buf)) (pos? (.-length puts)))
+                                      (recur cbs)
+                                      [done? cbs]))))]
+              (when done?
+                (abort this))
+              (doseq [cb cbs]
+                (dispatch/run #(cb true)))
+              (box val))))
         (let [putter (loop []
                        (let [putter (.pop puts)]
                          (when putter
