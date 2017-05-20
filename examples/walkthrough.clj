@@ -1,7 +1,9 @@
 ;; This walkthrough introduces the core concepts of core.async.
 
 ;; The clojure.core.async namespace contains the public API.
-(require '[clojure.core.async :as async :refer :all])
+(require '[clojure.core.async :as async 
+                              :refer :all
+                              :exclude [map merge into reduce]])
 
 ;;;; CHANNELS
 
