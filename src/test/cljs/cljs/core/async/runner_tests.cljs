@@ -103,6 +103,12 @@
     (runner (set! test-target 42))
     (is= test-target 42))
 
+  (testing "property access"
+    (let [x (js-obj)]
+      (set! (.-foo x) 42)
+      (is= 42 (runner (.-foo x)))
+      (is= 42 (runner (. x -foo)))))
+
   (testing "keywords as functions"
     (is (= :bar
            (runner (:foo (pause {:foo :bar}))))))
