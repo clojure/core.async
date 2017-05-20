@@ -118,7 +118,7 @@ the Java system property `clojure.core.async.pool-size`."
   "takes a val from port. Must be called inside a (go ...) block. Will
   return nil if closed. Will park if nothing is available."
   [port]
-  (assert nil "<! used not in (go ...) block"))
+  (assert nil "<! used outside (go ...) block"))
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
@@ -150,7 +150,7 @@ the Java system property `clojure.core.async.pool-size`."
   inside a (go ...) block. Will park if no buffer space is available.
   Returns true unless port is already closed."
   [port val]
-  (assert nil ">! used not in (go ...) block"))
+  (assert nil ">! used outside (go ...) block"))
 
 (defn- nop [_])
 (def ^:private fhnop (fn-handler nop))
@@ -298,7 +298,7 @@ the Java system property `clojure.core.async.pool-size`."
   depended upon for side effects."
 
   [ports & {:as opts}]
-  (assert nil "alts! used not in (go ...) block"))
+  (assert nil "alts! used outside (go ...) block"))
 
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
