@@ -105,7 +105,7 @@ the Java system property `clojure.core.async.pool-size`."
   (timers/timeout msecs))
 
 (defn <!!
-  "takes a val from port. Will return nil if closed. Will block
+  "Takes a value from the channel. Will return nil if closed. Will block
   if nothing is available."
   [port]
   (let [p (promise)
@@ -115,13 +115,13 @@ the Java system property `clojure.core.async.pool-size`."
       (deref p))))
 
 (defn <!
-  "takes a val from port. Must be called inside a (go ...) block. Will
+  "Takes a value from the channel. Must be called inside a (go ...) block. Will
   return nil if closed. Will park if nothing is available."
   [port]
   (assert nil "<! used not in (go ...) block"))
 
 (defn take!
-  "Asynchronously takes a val from port, passing to fn1. Will pass nil
+  "Asynchronously takes a value from the channel, passing to fn1. Will pass nil
    if closed. If on-caller? (default true) is true, and value is
    immediately available, will call fn1 on calling thread.
    Returns nil."
@@ -136,8 +136,8 @@ the Java system property `clojure.core.async.pool-size`."
        nil)))
 
 (defn >!!
-  "puts a val into port. nil values are not allowed. Will block if no
-  buffer space is available. Returns true unless port is already closed."
+  "Puts a value into the channel. nil values are not allowed. Will block if no
+  buffer space is available. Returns true unless channel is already closed."
   [port val]
   (let [p (promise)
         ret (impl/put! port val (fn-handler (fn [open?] (deliver p open?))))]
@@ -146,9 +146,9 @@ the Java system property `clojure.core.async.pool-size`."
       (deref p))))
 
 (defn >!
-  "puts a val into port. nil values are not allowed. Must be called
+  "Puts a value into the channel. nil values are not allowed. Must be called
   inside a (go ...) block. Will park if no buffer space is available.
-  Returns true unless port is already closed."
+  Returns true unless the channel is already closed."
   [port val]
   (assert nil ">! used not in (go ...) block"))
 
@@ -156,11 +156,11 @@ the Java system property `clojure.core.async.pool-size`."
 (def ^:private fhnop (fn-handler nop))
 
 (defn put!
-  "Asynchronously puts a val into port, calling fn1 (if supplied) when
-   complete, passing false iff port is already closed. nil values are
+  "Asynchronously puts a value into the channel, calling fn1 (if supplied) when
+   complete, passing false iff channel is already closed. nil values are
    not allowed. If on-caller? (default true) is true, and the put is
    immediately accepted, will call fn1 on calling thread.  Returns
-   true unless port is already closed."
+   true unless the channel is already closed."
   ([port val]
      (if-let [ret (impl/put! port val fhnop)]
        @ret
