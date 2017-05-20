@@ -502,10 +502,10 @@ the Java system property `clojure.core.async.pool-size`."
                        true)))]
        (dotimes [_ n]
          (case type
-               :blocking (thread
+               :blocking (thread (loop[]
                           (let [job (<!! jobs)]
                             (when (process job)
-                              (recur))))
+                              (recur)))))
                :compute (go-loop []
                                    (let [job (<! jobs)]
                                      (when (process job)
