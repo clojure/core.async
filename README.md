@@ -57,8 +57,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* Release 0.3.xxx on 2017.05.26
-  * 
+* Release 0.3.443 on 2017.05.26
+  * [ASYNC-159](http://dev.clojure.org/jira/browse/ASYNC-159) - promise-chan in ClojureScript is broken 
 * Release 0.3.442 on 2017.03.14
   * Fix bad `:refer-clojure` clause that violates new spec in Clojure 1.9.0-alpha15
 * Release 0.3.441 on 2017.02.23
