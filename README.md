@@ -43,6 +43,12 @@ Latest release: 0.3.442
 
 [Contributing to Clojure projects](http://clojure.org/contributing) requires a signed Contributor Agreement. Pull requests and GitHub issues are not accepted; please use the [core.async JIRA project](http://dev.clojure.org/jira/browse/ASYNC) to report problems or enhancements.
 
+To run the ClojureScript tests:
+
+* lein cljsbuild once
+* open script/runtests.html
+* View JavaScript console for test results
+
 ## License
 
 Copyright © 2017 Rich Hickey and contributors
@@ -51,6 +57,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Release 0.3.xxx on 2017.05.26
+  * 
 * Release 0.3.442 on 2017.03.14
   * Fix bad `:refer-clojure` clause that violates new spec in Clojure 1.9.0-alpha15
 * Release 0.3.441 on 2017.02.23
