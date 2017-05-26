@@ -12,6 +12,7 @@ Andare preserves the namespaces present in `core.async`. Thus, bootstrap-compati
 
 | Andare | `core.async` |
 |:------:|:------------:|
+| 0.7.0  | 0.3.443      |
 | 0.6.0  | 0.3.442      |
 | 0.5.0  | 0.3.426      |
 | 0.4.0  | 0.2.395      |
