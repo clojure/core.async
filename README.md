@@ -22,6 +22,8 @@ Andare preserves the namespaces present in `core.async`. Thus, bootstrap-compati
 
 ## Testing
 
+[![Build Status](https://travis-ci.org/mfikes/andare.svg?branch=master)](https://travis-ci.org/mfikes/andare)
+
 ```
 lein tach lumo
 ```
