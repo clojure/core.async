@@ -5,7 +5,7 @@ A Clojure library providing facilities for async programming and communication.
 
 ## Releases and Dependency Information
 
-Latest release: 0.3.443
+Latest release: 0.3.465
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
@@ -13,7 +13,7 @@ Latest release: 0.3.443
 
 ```clj
  [org.clojure/clojure "1.6.0"]
- [org.clojure/core.async "0.3.443"]
+ [org.clojure/core.async "0.3.465"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -22,7 +22,7 @@ Latest release: 0.3.443
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.3.443</version>
+  <version>0.3.465</version>
 </dependency>
 ```
 
@@ -57,6 +57,9 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Release 0.3.465 on 2017.11.17
+  * [ASYNC-119](http://dev.clojure.org/jira/browse/ASYNC-119) Move macros to cljs.core.async ns (CLJS)
+  * [ASYNC-201](http://dev.clojure.org/jira/browse/ASYNC-201) Out-of-bounds index values passed in timers (CLJS)
 * Release 0.3.443 on 2017.05.26
   * [ASYNC-159](http://dev.clojure.org/jira/browse/ASYNC-159) - promise-chan in ClojureScript is broken 
 * Release 0.3.442 on 2017.03.14
