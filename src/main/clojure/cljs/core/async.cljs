@@ -7,7 +7,7 @@
               [cljs.core.async.impl.dispatch :as dispatch]
               [cljs.core.async.impl.ioc-helpers :as helpers])
     (:require-macros [cljs.core.async.impl.ioc-macros :as ioc]
-                     [cljs.core.async.macros :refer [go go-loop]]))
+                     [cljs.core.async :refer [go go-loop]]))
 
 (defn- fn-handler
   ([f] (fn-handler f true))
