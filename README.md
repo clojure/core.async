@@ -2,7 +2,31 @@
 
 A fork of [core.async](https://github.com/clojure/core.async) ported for use with bootstrapped ClojureScript. 
 
+## Releases and Dependency Information
+
 [![Clojars Project](https://img.shields.io/clojars/v/andare.svg)](https://clojars.org/andare)
+
+[Deps](https://clojure.org/guides/deps_and_cli) dependency information:
+
+```clj
+ {andare {:mvn/version "0.8.0"}}
+```  
+
+[Leiningen](https://github.com/technomancy/leiningen) dependency information:
+
+```clj
+ [andare "0.8.0"]
+```
+
+[Maven](http://maven.apache.org/) dependency information:
+
+```xml
+<dependency>
+  <groupId>andare</groupId>
+  <artifactId>andare</artifactId>
+  <version>0.8.0</version>
+</dependency>
+```
 
 ## Usage
 
