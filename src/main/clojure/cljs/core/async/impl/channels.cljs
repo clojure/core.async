@@ -97,7 +97,7 @@
         (do
           (if-let [take-cb (impl/commit handler)]
             (let [val (impl/remove! buf)
-                  [done? cbs] (when (pos? (.-length puts))
+                  [done? cbs] (when (and (not (impl/full? buf)) (pos? (.-length puts)))
                                 (loop [cbs []]
                                   (let [putter (.pop puts)
                                         ^not-native put-handler (.-handler putter)

@@ -396,6 +396,39 @@
           t (range 1 10)]
     (check-expanding-transducer b 3 3 t)))
 
+(deftest expanding-transducer-puts-can-ignore-buffer-fullness
+  (testing "non-blocking puts behave as expected"
+    ;; put coll, expanding xf,
+    (let [c (chan 1 (mapcat identity))]
+      (is (true? (>!! c [1 2 3])))
+      (is (= 1 (<!! c)))
+      (is (nil? (offer! c [4 5 6])))
+      (is (= 2 (<!! c)))
+      (is (= 3 (<!! c)))
+      (is (true? (offer! c [4 5 6])))))
+
+  (testing "blocking puts can execute during takes even when the buffer is full"
+    (let [c (chan 1 (mapcat identity))]
+      (is (true? (>!! c [1 2 3])))
+      (is (= 1 (<!! c)))
+      (is (nil? (offer! c [4 5 6])))
+      (let [counter (atom 0)
+            blocking-put (future (let [r (>!! c [4 5 6])]
+                                   (swap! counter inc)
+                                   r))]
+        (is (= 0 @counter))
+        (is (= 2 (<!! c)))
+
+        ;; Pass with patch applied:
+        (is (false? (deref blocking-put 10 false)))
+        (is (= 0 @counter))
+
+        ;; Pass on `master`:
+        ;; (is (true? (deref blocking-put 10 false)))
+        ;; (is (= 1 @counter))
+
+        (is (nil? (offer! c [7 8 9])))))))
+
 ;; in 1.7+, use (map f)
 (defn mapping [f]
   (fn [f1]

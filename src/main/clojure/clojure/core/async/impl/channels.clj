@@ -175,7 +175,7 @@
            (let [val (impl/remove! buf)
                  iter (.iterator puts)
                  [done? cbs]
-                 (when (.hasNext iter)
+                 (when (and (not (impl/full? buf)) (.hasNext iter))
                    (loop [cbs []
                           [^Lock putter val] (.next iter)]
                      (.lock putter)
@@ -300,4 +300,3 @@
                (add! buf val)
                (catch Throwable t
                  (handle buf exh t)))))))))
-
