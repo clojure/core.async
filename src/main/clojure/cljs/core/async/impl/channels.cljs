@@ -43,7 +43,7 @@
     (impl/close! this))
   impl/WritePort
   (put! [this val ^not-native handler]
-    (assert (not (nil? val)) "Can't put nil in on a channel")
+    (assert (not (nil? val)) "Can't put nil on a channel")
     ;; bug in CLJS compiler boolean inference - David
     (let [^boolean closed closed]
       (if (or closed (not ^boolean (impl/active? handler)))
