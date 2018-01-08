@@ -23,9 +23,8 @@ the Java system property `clojure.core.async.pool-size`."
             [clojure.core.async.impl.mutex :as mutex]
             [clojure.core.async.impl.concurrent :as conc]
             )
-  (:import [clojure.core.async ThreadLocalRandom]
-           [java.util.concurrent.locks Lock]
-           [java.util.concurrent Executors Executor]
+  (:import [java.util.concurrent.locks Lock]
+           [java.util.concurrent Executors Executor ThreadLocalRandom]
            [java.util ArrayList]))
 
 (alias 'core 'clojure.core)
