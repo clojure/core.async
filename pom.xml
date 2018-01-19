@@ -49,6 +49,7 @@
   </dependencies>
 
   <build>
+    <sourceDirectory>src/main/clojure</sourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
