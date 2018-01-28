@@ -4,7 +4,6 @@ os:
 language: java
 
 install:
-  - jdk_switcher use openjdk8
   - git clone https://github.com/mfikes/planck
   - cd planck; script/build; cd ..
   - export PATH=$PATH:planck/planck-c/build
