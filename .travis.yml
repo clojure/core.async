@@ -1,0 +1,12 @@
+os:
+  - osx
+
+language: java
+
+install:
+  - brew install leiningen clojure libzip icu4c
+  - git clone https://github.com/mfikes/planck
+  - cd planck; script/build; cd ..
+  - export PATH=$PATH:planck/planck-c/build
+
+script: lein test && lein tach planck

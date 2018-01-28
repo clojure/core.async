@@ -1,6 +1,6 @@
-(defproject org.clojure/core.async "0.1.0-SNAPSHOT"
-  :description "Facilities for async programming and communication in Clojure"
-  :url "https://github.com/clojure/core.async"
+(defproject andare "0.9.0"
+  :description "core.async for bootstrap ClojureScript"
+  :url "https://github.com/mfikes/andare"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :parent [org.clojure/pom.contrib "0.1.2"]
@@ -12,9 +12,16 @@
   :test-paths ["src/test/clojure"]
   :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :java-source-paths ["src/main/java"]
-  :profiles {:dev {:source-paths ["examples"]}}
+  :profiles {:dev {:source-paths ["examples"]}
+             :self-host {:dependencies [[org.clojure/clojure "1.8.0"]
+                                        [org.clojure/clojurescript "1.9.456"]
+                                        [org.clojure/tools.reader "1.0.0-beta4"]]
+                         :global-vars {*warn-on-reflection* false}}}
 
-  :plugins [[lein-cljsbuild "1.1.2"]]
+  :plugins [[lein-cljsbuild "1.1.2"]
+            [lein-tach "0.4.0"]]
+
+  :tach {:cache? true}
 
   :clean-targets ["tests.js" "tests.js.map"
                   "out" "out-simp" "out-simp-node"
