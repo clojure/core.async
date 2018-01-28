@@ -1,14 +1,12 @@
-language: java
+os:
+  - osx
 
-before_install:
-  - sudo add-apt-repository -y ppa:mfikes/planck
-  - sudo apt-get -qq update
-  - sudo apt-get install -y leiningen planck npm nodejs-legacy
-  - sudo npm install -g lumo-cljs
+language: java
 
 install:
   - jdk_switcher use openjdk8
+  - git clone https://github.com/mfikes/planck
+  - cd planck; script/build; cd ..
+  - export PATH=$PATH:planck/planck-c/build
 
-dist: trusty
-
-script: lein test && lein tach lumo
+script: lein test && lein tach planck
