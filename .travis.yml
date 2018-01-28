@@ -4,6 +4,8 @@ os:
 language: java
 
 install:
+  - brew install leiningen
+  - brew install clojure
   - git clone https://github.com/mfikes/planck
   - cd planck; script/build; cd ..
   - export PATH=$PATH:planck/planck-c/build
