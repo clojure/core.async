@@ -4,9 +4,9 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :parent [org.clojure/pom.contrib "0.1.2"]
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/tools.analyzer.jvm "0.7.0"]
-                 [org.clojure/clojurescript "1.7.170" :scope "provided"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/tools.analyzer.jvm "0.7.0" :exclusions [org.clojure/tools.reader]]
+                 [org.clojure/clojurescript "1.9.1069" :scope "provided"]] ;; CHANGE ME
   :global-vars {*warn-on-reflection* true}
   :source-paths ["src/main/clojure"]
   :test-paths ["src/test/clojure"]
@@ -14,7 +14,7 @@
   :java-source-paths ["src/main/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
-  :plugins [[lein-cljsbuild "1.1.2"]]
+  :plugins [[lein-cljsbuild "1.1.6"]]
 
   :clean-targets ["tests.js" "tests.js.map"
                   "out" "out-simp" "out-simp-node"
@@ -25,10 +25,10 @@
    [{:id "dev"
      :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
      :compiler {:main cljs.core.async.test-runner
-                :asset-path "../out"
                 :optimizations :none
-                :output-to "tests.js"
-                :output-dir "out"}}
+                :output-to "out/tests.js"
+                :output-dir "out"
+                :target :nashorn}} ;; run with `jjs out/tests.js`
     {:id "simple"
      :source-paths ["src/test/cljs" "src/main/clojure/cljs"]
      :compiler {:optimizations :simple

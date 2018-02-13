@@ -12,8 +12,6 @@
    [cljs.core.async.test-helpers :refer [latch inc!]]
    [cljs.test :as test :refer-macros [deftest is run-tests async testing]]))
 
-(enable-console-print!)
-
 (deftest test-put-take-chan-1
   (async done
     (let [c (chan 1)
