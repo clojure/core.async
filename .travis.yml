@@ -5,6 +5,8 @@ language: java
 
 before_install:
   - curl -sSL https://raw.githubusercontent.com/cljs-oss/canary/master/scripts/install-canary.sh | bash
+  - command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+  - rvm get stable
 
 install:
   - brew install leiningen clojure libzip icu4c
