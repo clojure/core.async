@@ -16,4 +16,4 @@ install:
 
 script: 
   - lein test
-  - lein tach planck
+  - JSC_useFTLJIT=false lein tach planck
