@@ -10,10 +10,10 @@
   "homepage": "https://github.com/mfikes/andare",
   "license": "EPL-1.0",
   "directories": {
-    "lib": "src"
+    "lib": "src/main/clojure"
   },
   "files": [
-    "src/*"
+    "src/main/clojure/*"
   ],
   "keywords": [
     "clojurescript",
