@@ -1,0 +1,25 @@
+{
+  "name": "andare",
+  "version": "0.9.0",
+  "description": "A fork of core.async ported for use with bootstrapped ClojureScript.",
+  "author": {
+    "name": "Mike Fikes",
+    "email": "mike@fikesfarm.com",
+    "url": "http://blog.fikesfarm.com"
+  },
+  "homepage": "https://github.com/mfikes/andare",
+  "license": "EPL-1.0",
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "src/*"
+  ],
+  "keywords": [
+    "clojurescript",
+    "planck",
+    "lumo",
+    "self-host",
+    "core.async"
+  ]
+}
