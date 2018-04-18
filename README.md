@@ -28,6 +28,14 @@ A fork of [core.async](https://github.com/clojure/core.async) ported for use wit
 </dependency>
 ```
 
+### Lumo
+
+[![NPM Version](http://img.shields.io/npm/v/andare.svg)](https://www.npmjs.org/package/andare)
+
+```shell
+npm install andare
+```
+
 ## Usage
 
 Andare preserves the namespaces present in `core.async`. Thus, bootstrap-compatible ClojureScript code that makes use of `core.async` can operate in self-hosted environments if you make the Andare artifact available for loading in lieu of the official `core.async` artifact.
