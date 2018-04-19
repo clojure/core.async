@@ -1,5 +1,6 @@
 (ns cljs.core.async
-  (:require [cljs.core.async.impl.ioc-macros :as ioc]))
+  (:require [cljs.core.async.impl.ioc-macros-runtime :refer [async-custom-terminators state-machine]])
+  (#?(:clj :require :cljs :require-macros) [cljs.core.async.impl.ioc-macros :refer [aset-all!]]))
 
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
@@ -15,9 +16,9 @@
   `(let [c# (cljs.core.async/chan 1)]
      (cljs.core.async.impl.dispatch/run
       (fn []
-        (let [f# ~(ioc/state-machine body 1 &env ioc/async-custom-terminators)
+        (let [f# ~(state-machine body 1 &env async-custom-terminators)
               state# (-> (f#)
-                         (ioc/aset-all! cljs.core.async.impl.ioc-helpers/USER-START-IDX c#))]
+                         (cljs.core.async.impl.ioc-macros/aset-all! cljs.core.async.impl.ioc-helpers/USER-START-IDX c#))]
           (cljs.core.async.impl.ioc-helpers/run-state-machine-wrapped state#))))
      c#))
 
