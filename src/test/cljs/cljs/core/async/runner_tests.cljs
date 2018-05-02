@@ -185,6 +185,28 @@
                (finally (reset! a true))))]
       (is (and @a v)))
 
+    (testing "https://dev.clojure.org/jira/browse/ASYNC-73"
+      (let [a (atom false)]
+        (runner
+         (try
+           (throw (js/Error. "asdf"))
+           (catch ExceptionInfo e)
+           (catch js/Error e)
+           (finally
+             (reset! a true))))
+        (is @a))
+      (is (runner
+           (try
+             (throw (new js/TypeError "unexpected"))
+             (catch ExceptionInfo e
+               false)
+             (catch :default e
+               true)))))
+
+    (testing "https://dev.clojure.org/jira/browse/ASYNC-172"
+      (is (= 123 (runner
+                  (try (throw 123)
+                       (catch :default e 123))))))
 
     (let [a (atom false)
           v (try (runner
@@ -193,7 +215,6 @@
                     (finally (reset! a true))))
                  (catch js/Error ex ex))]
       (is (and @a v)))
-
 
     (let [a (atom 0)
           v (runner

@@ -345,42 +345,54 @@
          :recur)))
 
 
-(defrecord Try [catch-block catch-exception finally-block continue-block]
+(defrecord PushTry [catch-block]
   IInstruction
   (reads-from [this] [])
   (writes-to [this] [])
-  (block-references [this] [catch-block finally-block continue-block])
+  (block-references [this] [catch-block])
   IEmittableInstruction
   (emit-instruction [this state-sym]
-    `[~'_ (cljs.core.async.impl.ioc-helpers/add-exception-frame ~state-sym
-                                                                ~catch-block
-                                                                ~catch-exception
-                                                                ~finally-block
-                                                                ~continue-block)]))
+    `[~'_ (aset-all! ~state-sym ~EXCEPTION-FRAMES (cons ~catch-block (aget ~state-sym ~EXCEPTION-FRAMES)))]))
 
-(defrecord ProcessExceptionWithValue [value]
-  IInstruction
-  (reads-from [this] [value])
-  (writes-to [this] [])
-  (block-references [this] [])
-  ITerminator
-  (terminate-block [this state-sym _]
-    `(do (aset-all! ~state-sym
-                    ~VALUE-IDX
-                    ~value)
-         (cljs.core.async.impl.ioc-helpers/process-exception ~state-sym)
-         :recur)))
-
-(defrecord EndCatchFinally []
+(defrecord PopTry []
   IInstruction
   (reads-from [this] [])
   (writes-to [this] [])
   (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~'_ (aset-all! ~state-sym ~EXCEPTION-FRAMES (rest (aget ~state-sym ~EXCEPTION-FRAMES)))]))
+
+(defrecord CatchHandler [catches]
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] (map first catches))
   ITerminator
   (terminate-block [this state-sym _]
-    `(do (cljs.core.async.impl.ioc-helpers/process-exception ~state-sym)
-         :recur)))
+    (let [ex (gensym 'ex)]
+      `(let [~ex (aget ~state-sym ~VALUE-IDX)]
+         (aset-all! ~state-sym ~CURRENT-EXCEPTION ~ex)
+         (cond
+          ~@(for [[handler-idx type] catches
+                  i [(if (= type :default)
+                       `true
+                       `(instance? ~type ~ex)) ` (aset-all! ~state-sym
+                                                           ~STATE-IDX ~handler-idx
+                                                           ~CURRENT-EXCEPTION nil)]]
+              i)
+          :else (throw ~ex))
+         :recur))))
 
+(defrecord EndFinally []
+  IInstruction
+  (reads-from [this] [])
+  (writes-to [this] [])
+  (block-references [this] [])
+  IEmittableInstruction
+  (emit-instruction [this state-sym]
+    `[~'_ (when-let [e# (aget ~state-sym ~CURRENT-EXCEPTION)]
+            (throw e#))]))
 
 
 ;; Dispatch clojure forms based on data type
@@ -560,52 +572,90 @@
       ret-id (add-instruction (->Dot target-id method args-ids))]
      ret-id)))
 
+(defn destructure-try
+  [body]
+  (reduce
+   (fn [accum form]
+     (case (:state accum)
+       :body (cond
+              (and (seq? form) (= (first form) 'catch)) (-> accum
+                                                            (assoc :state :catch)
+                                                            (update-in [:catches] conj form))
+              (and (seq? form) (= (first form) 'finally)) (-> accum
+                                                              (assoc :state :finally)
+                                                              (assoc :finally form))
+              :else (update-in accum [:body] conj form))
+       :catch (cond
+               (and (seq? form) (= (first form) 'catch)) (-> accum
+                                                             (assoc :state :catch)
+                                                             (update-in [:catches] conj form))
+               (and (seq? form) (= (first form) 'finally)) (-> accum
+                                                               (assoc :state :finally)
+                                                               (assoc :finally form))
+               :else (throw (Exception. "Only catch or finally clause can follow catch in try expression")))
+       :finally (throw (Exception. "finally clause must be last in try expression"))))
+   {:state :body
+    :body []
+    :catches []
+    :finally nil}
+   body))
+
 (defmethod sexpr-to-ssa 'try
   [[_ & body]]
-  (let [finally-fn (every-pred seq? (comp (partial = 'finally) first))
-        catch-fn (every-pred seq? (comp (partial = 'catch) first))
-        finally (next (first (filter finally-fn body)))
-        body (remove finally-fn body)
-        catch (next (first (filter catch-fn body)))
-        [ex ex-bind & catch-body] catch
-        body (remove catch-fn body)]
+  (let [{:keys [body catches finally] :as m} (destructure-try body)]
     (gen-plan
-     [end-blk (add-block)
+     [body-block (add-block)
+      exit-block (add-block)
       finally-blk (if finally
                     (gen-plan
                      [cur-blk (get-block)
-                      blk (add-block)
-                      _ (set-block blk)
-                      value-id (add-instruction (->Const ::value))
-                      _ (all (map item-to-ssa finally))
-                      _ (add-instruction (->EndCatchFinally))
+                      finally-blk (add-block)
+                      _ (set-block finally-blk)
+                      _ (add-instruction (->PopTry))
+                      result-id (add-instruction (->Const ::value))
+                      _ (item-to-ssa (cons 'do (rest finally)))
+                      ;; rethrow exception on exception path
+                      _ (add-instruction (->EndFinally))
+                      _ (add-instruction (->Jmp result-id exit-block))
                       _ (set-block cur-blk)]
-                     blk)
-                    (no-op))
-      catch-blk (if catch
-                  (gen-plan
-                   [cur-blk (get-block)
-                    blk (add-block)
-                    _ (set-block blk)
-                    ex-id (add-instruction (->Const ::value))
-                    _ (push-alter-binding :locals assoc ex-bind ex-id)
-                    ids (all (map item-to-ssa catch-body))
-                    _ (add-instruction (->ProcessExceptionWithValue (last ids)))
-                    _ (pop-binding :locals)
-                    _ (set-block cur-blk)
-                    _ (push-alter-binding :catch (fnil conj []) [ex blk])]
-                   blk)
-                  (no-op))
-      body-blk (add-block)
-      _ (add-instruction (->Jmp nil body-blk))
-      _ (set-block body-blk)
-      _ (add-instruction (->Try catch-blk ex finally-blk end-blk))
-      ids (all (map item-to-ssa body))
-      _ (if catch
-          (pop-binding :catch)
+                     finally-blk)
+                    (gen-plan [] exit-block))
+      catch-blocks (all
+                    (for [[_ ex ex-bind & catch-body] catches]
+                      (gen-plan
+                       [cur-blk (get-block)
+                        catch-blk (add-block)
+                        _ (set-block catch-blk)
+                        ex-id (add-instruction (->Const ::value))
+                        ;; TODO: type hint ex-bind?
+                        _ (push-alter-binding :locals assoc ex-bind ex-id)
+                        result-id (item-to-ssa (cons 'do catch-body))
+                        ;; if there is a finally, jump to it after
+                        ;; handling the exception, if not jump to exit
+                        _ (add-instruction (->Jmp result-id finally-blk))
+                        _ (pop-binding :locals)
+                        _ (set-block cur-blk)]
+                       [catch-blk ex])))
+      catch-handler-block (add-block)
+      cur-blk (get-block)
+      _ (set-block catch-handler-block)
+      _ (add-instruction (->PopTry))
+      _ (add-instruction (->CatchHandler catch-blocks))
+      _ (set-block cur-blk)
+      _ (add-instruction (->Jmp nil body-block))
+      _ (set-block body-block)
+      ;; the finally gets pushed on to the exception handler stack, so
+      ;; it will be executed if there is an exception
+      _ (if finally
+          (add-instruction (->PushTry finally-blk))
           (no-op))
-      _ (add-instruction (->ProcessExceptionWithValue (last ids)))
-      _ (set-block end-blk)
+      _ (add-instruction (->PushTry catch-handler-block))
+      body (item-to-ssa (cons 'do body))
+      _ (add-instruction (->PopTry))
+      ;; if the body finishes executing normally, jump to the finally
+      ;; block, if it exists
+      _ (add-instruction (->Jmp body finally-blk))
+      _ (set-block exit-block)
       ret (add-instruction (->Const ::value))]
      ret)))
 
@@ -866,9 +916,12 @@
                                       (if (cljs.core/keyword-identical? result# :recur)
                                         (recur)
                                         result#)))
-                                  (catch js/Object ex#
-                                    (aset-all! ~state-sym ~CURRENT-EXCEPTION ex#)
-                                    (cljs.core.async.impl.ioc-helpers/process-exception ~state-sym)
+                                  (catch :default ex#
+                                    (aset-all! ~state-sym ~VALUE-IDX ex#)
+                                    (if (seq (aget ~state-sym ~EXCEPTION-FRAMES))
+                                      (aset-all! ~state-sym
+                                                 ~STATE-IDX (first (aget ~state-sym ~EXCEPTION-FRAMES)))
+                                      (throw ex#))
                                     :recur))]
               (if (cljs.core/keyword-identical? ret-value# :recur)
                 (recur ~state-sym)
