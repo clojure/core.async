@@ -654,6 +654,13 @@
                      [cur-blk (get-block)
                       finally-blk (add-block)
                       _ (set-block finally-blk)
+                      ;; catch block has to pop itself off of
+                      ;; EXCEPTION-FRAMES.  every try/catch pushes at
+                      ;; least 1 frame on to EXCEPTION-FRAMES,
+                      ;; try/catch/finally pushes 2. The exception
+                      ;; handling machinery around the state machine
+                      ;; pops one off when handling an exception.
+                      _ (add-instruction (->PopTry))
                       result-id (add-instruction (->Const ::value))
                       _ (item-to-ssa finally)
                       ;; rethrow exception on exception path
@@ -684,6 +691,7 @@
     catch-handler-block (add-block)
     cur-blk (get-block)
     _ (set-block catch-handler-block)
+    _ (add-instruction (->PopTry)) ; pop catch-handler-block
     _ (add-instruction (->CatchHandler catch-blocks))
     _ (set-block cur-blk)
     _ (add-instruction (->Jmp nil body-block))
@@ -695,10 +703,7 @@
         (no-op))
     _ (add-instruction (->PushTry catch-handler-block))
     body (item-to-ssa body)
-    _ (add-instruction (->PopTry))
-    _ (if finally
-        (add-instruction (->PopTry))
-        (no-op))
+    _ (add-instruction (->PopTry)) ; pop catch-handler-block
     ;; if the body finishes executing normally, jump to the finally
     ;; block, if it exists
     _ (add-instruction (->Jmp body finally-blk))
@@ -940,8 +945,7 @@
                              (catch Throwable ex#
                                (aset-all! ~state-sym ~VALUE-IDX ex#)
                                (if (seq (aget-object ~state-sym ~EXCEPTION-FRAMES))
-                                 (aset-all! ~state-sym ~STATE-IDX (first (aget-object ~state-sym ~EXCEPTION-FRAMES))
-                                            ~EXCEPTION-FRAMES (rest (aget-object ~state-sym ~EXCEPTION-FRAMES)))
+                                 (aset-all! ~state-sym ~STATE-IDX (first (aget-object ~state-sym ~EXCEPTION-FRAMES)))
                                  (throw ex#))
                                :recur)
                              (finally

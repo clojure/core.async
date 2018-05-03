@@ -512,3 +512,20 @@
 
 (deftest ASYNC-186
   (is (let [y nil] (go))))
+
+(deftest ASYNC-198
+  (let [resp (runner
+              (try
+                (let [[r] (try
+                            (let [value (pause :any)]
+                              (throw (ex-info "Exception" {:type :inner})))
+                            (catch Throwable e
+                              [:outer-ok])
+                            (finally))]
+                  (throw (ex-info "Throwing outer exception" {:type :outer})))
+                (catch clojure.lang.ExceptionInfo ex
+                  (is (= (:outer  (:type (ex-data ex)))))
+                  :ok)
+                (catch UnsupportedOperationException ex
+                  :unsupported)))]
+    (is (= :ok resp))))
