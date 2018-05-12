@@ -40,19 +40,6 @@
   (close! [this]
     (impl/close! channel)))
 
-(defn timeout
-  "returns a channel that will close after msecs"
-  [^long msecs]
-  (let [timeout (+ (System/currentTimeMillis) msecs)
-        me (.ceilingEntry timeouts-map timeout)]
-    (or (when (and me (< (.getKey me) (+ timeout TIMEOUT_RESOLUTION_MS)))
-          (.channel ^TimeoutQueueEntry (.getValue me)))
-        (let [timeout-channel (channels/chan nil)
-              timeout-entry (TimeoutQueueEntry. timeout-channel timeout)]
-          (.put timeouts-map timeout timeout-entry)
-          (.put timeouts-queue timeout-entry)
-          timeout-channel))))
-
 (defn- timeout-worker
   []
   (let [q timeouts-queue]
@@ -63,6 +50,21 @@
       (recur))))
 
 (defonce timeout-daemon
-  (doto (Thread. ^Runnable timeout-worker "clojure.core.async.timers/timeout-daemon")
-    (.setDaemon true)
-    (.start)))
+  (delay
+   (doto (Thread. ^Runnable timeout-worker "clojure.core.async.timers/timeout-daemon")
+     (.setDaemon true)
+     (.start))))
+
+(defn timeout
+  "returns a channel that will close after msecs"
+  [^long msecs]
+  @timeout-daemon
+  (let [timeout (+ (System/currentTimeMillis) msecs)
+        me (.ceilingEntry timeouts-map timeout)]
+    (or (when (and me (< (.getKey me) (+ timeout TIMEOUT_RESOLUTION_MS)))
+          (.channel ^TimeoutQueueEntry (.getValue me)))
+        (let [timeout-channel (channels/chan nil)
+              timeout-entry (TimeoutQueueEntry. timeout-channel timeout)]
+          (.put timeouts-map timeout timeout-entry)
+          (.put timeouts-queue timeout-entry)
+          timeout-channel))))
