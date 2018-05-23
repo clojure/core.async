@@ -27,7 +27,7 @@ Latest release: 0.4.474
 
 ## Documentation
 
-* [Rationale](http://clojure.com/blog/2013/06/28/clojure-core-async-channels.html)
+* [Rationale](https://clojure.org/news/2013/06/28/clojure-clore-async-channels)
 * [API docs](http://clojure.github.io/core.async/)
 * [Code walkthrough](https://github.com/clojure/core.async/blob/master/examples/walkthrough.clj)
 
