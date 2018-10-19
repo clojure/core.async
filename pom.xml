@@ -56,6 +56,43 @@
         <artifactId>versions-maven-plugin</artifactId>
         <version>2.3</version>
       </plugin>
+      <plugin>
+        <groupId>com.theoryinpractise</groupId>
+        <artifactId>clojure-maven-plugin</artifactId>
+        <version>1.7.1</version>
+        <configuration>
+            <temporaryOutputDirectory>true</temporaryOutputDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>clojure-compile</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <compileDeclaredNamespaceOnly>true</compileDeclaredNamespaceOnly>
+              <namespaces>
+                <namespace>clojure.core.async.impl.ioc-alt</namespace>
+                <namespace>clojure.core.async.impl.buffers</namespace>
+                <namespace>clojure.core.async.impl.exec.threadpool</namespace>
+                <namespace>clojure.core.async.lab</namespace>
+                <namespace>clojure.core.async</namespace>
+                <namespace>clojure.core.async.impl.mutex</namespace>
+                <namespace>clojure.core.async.impl.dispatch</namespace>
+                <namespace>clojure.core.async.impl.concurrent</namespace>
+                <namespace>clojure.core.async.impl.protocols</namespace>
+                <namespace>clojure.core.async.impl.ioc-macros</namespace>
+                <namespace>clojure.core.async.impl.channels</namespace>
+                <namespace>clojure.core.async.impl.timers</namespace>
+                <namespace>cljs.core.async.macros</namespace>
+                <namespace>cljs.core.async.impl.ioc-macros</namespace>
+                <namespace>cljs.core.async</namespace>
+              </namespaces>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>
