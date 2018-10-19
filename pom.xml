@@ -73,21 +73,7 @@
             <configuration>
               <compileDeclaredNamespaceOnly>true</compileDeclaredNamespaceOnly>
               <namespaces>
-                <namespace>clojure.core.async.impl.ioc-alt</namespace>
-                <namespace>clojure.core.async.impl.buffers</namespace>
-                <namespace>clojure.core.async.impl.exec.threadpool</namespace>
-                <namespace>clojure.core.async.lab</namespace>
-                <namespace>clojure.core.async</namespace>
-                <namespace>clojure.core.async.impl.mutex</namespace>
-                <namespace>clojure.core.async.impl.dispatch</namespace>
-                <namespace>clojure.core.async.impl.concurrent</namespace>
-                <namespace>clojure.core.async.impl.protocols</namespace>
-                <namespace>clojure.core.async.impl.ioc-macros</namespace>
-                <namespace>clojure.core.async.impl.channels</namespace>
-                <namespace>clojure.core.async.impl.timers</namespace>
-                <namespace>cljs.core.async.macros</namespace>
-                <namespace>cljs.core.async.impl.ioc-macros</namespace>
-                <namespace>cljs.core.async</namespace>
+                <namespace>!clojure.core.*</namespace>
               </namespaces>
             </configuration>
           </execution>
