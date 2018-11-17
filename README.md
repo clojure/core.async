@@ -9,6 +9,12 @@ Latest release: 0.4.474
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
+[deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
+
+```clj
+  org.clojure/core.async {:mvn/version "0.4.474"}
+ ```
+
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
