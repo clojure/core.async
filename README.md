@@ -5,20 +5,20 @@ A Clojure library providing facilities for async programming and communication.
 
 ## Releases and Dependency Information
 
-Latest release: 0.4.474
+Latest release: 0.4.490
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "0.4.474"}
+  org.clojure/core.async {:mvn/version "0.4.490"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "0.4.474"]
+ [org.clojure/core.async "0.4.490"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -27,7 +27,7 @@ Latest release: 0.4.474
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.4.474</version>
+  <version>0.4.490</version>
 </dependency>
 ```
 
@@ -62,7 +62,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* next
+* Release 0.4.490 on 2018.11.19
   * [ASYNC-216](https://dev.clojure.org/jira/browse/ASYNC-216) Delay start of timeout thread
   * [ASYNC-218](https://dev.clojure.org/jira/browse/ASYNC-218) Fix docstring for put!
   * [ASYNC-213](https://dev.clojure.org/jira/browse/ASYNC-213) Small addition to promise-chan docstring
