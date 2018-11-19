@@ -65,6 +65,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 * next
   * [ASYNC-216](https://dev.clojure.org/jira/browse/ASYNC-216) Delay start of timeout thread
   * [ASYNC-218](https://dev.clojure.org/jira/browse/ASYNC-218) Fix docstring for put!
+  * [ASYNC-213](https://dev.clojure.org/jira/browse/ASYNC-213) Small addition to promise-chan docstring
 * Release 0.4.474 on 2018.01.08
   * Fix typo in error message
   * Remove Java code, depend on Java 1.7+
