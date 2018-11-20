@@ -92,7 +92,8 @@ the Java system property `clojure.core.async.pool-size`."
   exception-handler. A promise channel can take exactly one value that consumers
   will receive. Once full, puts complete but val is dropped (no transfer).
   Consumers will block until either a value is placed in the channel or the
-  channel is closed. See chan for the semantics of xform and ex-handler."
+  channel is closed, then return the value (or nil) forever. See chan for the
+  semantics of xform and ex-handler."
   ([] (promise-chan nil))
   ([xform] (promise-chan xform nil))
   ([xform ex-handler]

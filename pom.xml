@@ -3,7 +3,7 @@
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
   <!-- Don't set this manually! Call script/build/update_version -->
-  <version>0.4.475-SNAPSHOT</version>
+  <version>0.4.491-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>core.async</name>
   <description>Facilities for async programming and communication in Clojure</description>
@@ -44,16 +44,40 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.analyzer.jvm</artifactId>
-      <version>0.7.0</version>
+      <version>0.7.2</version>
     </dependency>
   </dependencies>
 
   <build>
+    <sourceDirectory>src/main/clojure</sourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
         <version>2.3</version>
+      </plugin>
+      <plugin>
+        <groupId>com.theoryinpractise</groupId>
+        <artifactId>clojure-maven-plugin</artifactId>
+        <version>1.7.1</version>
+        <configuration>
+            <temporaryOutputDirectory>true</temporaryOutputDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>clojure-compile</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <compileDeclaredNamespaceOnly>true</compileDeclaredNamespaceOnly>
+              <namespaces>
+                <namespace>!clojure.core.*</namespace>
+              </namespaces>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
