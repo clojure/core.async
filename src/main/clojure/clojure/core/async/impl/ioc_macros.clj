@@ -36,8 +36,7 @@
 (def ^:const VALUE-IDX 2)
 (def ^:const BINDINGS-IDX 3)
 (def ^:const EXCEPTION-FRAMES 4)
-(def ^:const CURRENT-EXCEPTION 5)
-(def ^:const USER-START-IDX 6)
+(def ^:const USER-START-IDX 5)
 
 (defn aset-object [^AtomicReferenceArray arr idx ^Object o]
   (.set arr idx o))
@@ -413,25 +412,21 @@
   (terminate-block [this state-sym _]
     (let [ex (gensym 'ex)]
       `(let [~ex (aget-object ~state-sym ~VALUE-IDX)]
-         (aset-all! ~state-sym ~CURRENT-EXCEPTION ~ex)
          (cond
           ~@(for [[handler-idx type] catches
-                  i [`(instance? ~type ~ex) ` (aset-all! ~state-sym
-                                                         ~STATE-IDX ~handler-idx
-                                                         ~CURRENT-EXCEPTION nil)]]
+                  i [`(instance? ~type ~ex) `(aset-all! ~state-sym ~STATE-IDX ~handler-idx)]]
               i)
           :else (throw ~ex))
          :recur))))
 
-(defrecord EndFinally []
+(defrecord EndFinally [exception-local]
   IInstruction
-  (reads-from [this] [])
+  (reads-from [this] [exception-local])
   (writes-to [this] [])
   (block-references [this] [])
   IEmittableInstruction
   (emit-instruction [this state-sym]
-    `[~'_ (when-let [e# (aget-object ~state-sym ~CURRENT-EXCEPTION)]
-            (throw e#))]))
+    `[~'_ (throw ~exception-local)]))
 
 ;; Dispatch clojure forms based on :op
 (def -item-to-ssa nil) ;; for help in the repl
@@ -644,72 +639,77 @@
 
 (defmethod -item-to-ssa :try
   [{:keys [catches body finally] :as ast}]
-  (gen-plan
-   [body-block (add-block)
-    exit-block (add-block)
-    ;; Two routes to the finally block, via normal execution and
-    ;; exception execution
-    finally-blk (if finally
-                    (gen-plan
-                     [cur-blk (get-block)
-                      finally-blk (add-block)
-                      _ (set-block finally-blk)
-                      ;; catch block has to pop itself off of
-                      ;; EXCEPTION-FRAMES.  every try/catch pushes at
-                      ;; least 1 frame on to EXCEPTION-FRAMES,
-                      ;; try/catch/finally pushes 2. The exception
-                      ;; handling machinery around the state machine
-                      ;; pops one off when handling an exception.
-                      _ (add-instruction (->PopTry))
-                      result-id (add-instruction (->Const ::value))
-                      _ (item-to-ssa finally)
-                      ;; rethrow exception on exception path
-                      _ (add-instruction (->EndFinally))
-                      _ (add-instruction (->Jmp result-id exit-block))
-                      _ (set-block cur-blk)]
-                     finally-blk)
-                    (gen-plan [] exit-block))
-    catch-blocks (all
-                  (for [{ex-bind :local {ex :val} :class catch-body :body} catches]
-                    (gen-plan
-                     [cur-blk (get-block)
-                      catch-blk (add-block)
-                      _ (set-block catch-blk)
-                      ex-id (add-instruction (->Const ::value))
-                      _ (push-alter-binding :locals assoc (:name ex-bind)
-                                            (vary-meta ex-id merge (when (:tag ex-bind)
-                                                                     {:tag (.getName ^Class (:tag ex-bind))})))
-                      result-id (item-to-ssa catch-body)
-                      ;; if there is a finally, jump to it after
-                      ;; handling the exception, if not jump to exit
-                      _ (add-instruction (->Jmp result-id finally-blk))
-                      _ (pop-binding :locals)
-                      _ (set-block cur-blk)]
-                     [catch-blk ex])))
-    ;; catch block handler routes exceptions to the correct handler,
-    ;; rethrows if there is no match
-    catch-handler-block (add-block)
-    cur-blk (get-block)
-    _ (set-block catch-handler-block)
-    _ (add-instruction (->PopTry)) ; pop catch-handler-block
-    _ (add-instruction (->CatchHandler catch-blocks))
-    _ (set-block cur-blk)
-    _ (add-instruction (->Jmp nil body-block))
-    _ (set-block body-block)
-    ;; the finally gets pushed on to the exception handler stack, so
-    ;; it will be executed if there is an exception
-    _ (if finally
-        (add-instruction (->PushTry finally-blk))
-        (no-op))
-    _ (add-instruction (->PushTry catch-handler-block))
-    body (item-to-ssa body)
-    _ (add-instruction (->PopTry)) ; pop catch-handler-block
-    ;; if the body finishes executing normally, jump to the finally
-    ;; block, if it exists
-    _ (add-instruction (->Jmp body finally-blk))
-    _ (set-block exit-block)
-    ret (add-instruction (->Const ::value))]
-   ret))
+  (let [make-finally (fn [exit-block rethrow?]
+                       (if finally
+                         (gen-plan
+                          [cur-blk (get-block)
+                           finally-blk (add-block)
+                           _ (set-block finally-blk)
+                           ;; catch block has to pop itself off of
+                           ;; EXCEPTION-FRAMES.  every try/catch pushes at
+                           ;; least 1 frame on to EXCEPTION-FRAMES,
+                           ;; try/catch/finally pushes 2. The exception
+                           ;; handling machinery around the state machine
+                           ;; pops one off when handling an exception.
+                           _ (add-instruction (->PopTry))
+                           result-id (add-instruction (->Const ::value))
+                           _ (item-to-ssa finally)
+                           ;; rethrow exception on exception path
+                           _  (if rethrow?
+                                (add-instruction (->EndFinally result-id))
+                                (no-op))
+                           _ (add-instruction (->Jmp result-id exit-block))
+                           _ (set-block cur-blk)]
+                          finally-blk)
+                         (gen-plan [] exit-block)))]
+    (gen-plan
+     [body-block (add-block)
+      exit-block (add-block)
+      ;; Two routes to the finally block, via normal execution and
+      ;; exception execution
+      finally-blk (make-finally exit-block false)
+      exception-finally-blk (make-finally exit-block true)
+      catch-blocks (all
+                    (for [{ex-bind :local {ex :val} :class catch-body :body} catches]
+                      (gen-plan
+                       [cur-blk (get-block)
+                        catch-blk (add-block)
+                        _ (set-block catch-blk)
+                        ex-id (add-instruction (->Const ::value))
+                        _ (push-alter-binding :locals assoc (:name ex-bind)
+                                              (vary-meta ex-id merge (when (:tag ex-bind)
+                                                                       {:tag (.getName ^Class (:tag ex-bind))})))
+                        result-id (item-to-ssa catch-body)
+                        ;; if there is a finally, jump to it after
+                        ;; handling the exception, if not jump to exit
+                        _ (add-instruction (->Jmp result-id finally-blk))
+                        _ (pop-binding :locals)
+                        _ (set-block cur-blk)]
+                       [catch-blk ex])))
+      ;; catch block handler routes exceptions to the correct handler,
+      ;; rethrows if there is no match
+      catch-handler-block (add-block)
+      cur-blk (get-block)
+      _ (set-block catch-handler-block)
+      _ (add-instruction (->PopTry)) ; pop catch-handler-block
+      _ (add-instruction (->CatchHandler catch-blocks))
+      _ (set-block cur-blk)
+      _ (add-instruction (->Jmp nil body-block))
+      _ (set-block body-block)
+      ;; the finally gets pushed on to the exception handler stack, so
+      ;; it will be executed if there is an exception
+      _ (if finally
+          (add-instruction (->PushTry exception-finally-blk))
+          (no-op))
+      _ (add-instruction (->PushTry catch-handler-block))
+      body (item-to-ssa body)
+      _ (add-instruction (->PopTry)) ; pop catch-handler-block
+      ;; if the body finishes executing normally, jump to the finally
+      ;; block, if it exists
+      _ (add-instruction (->Jmp body finally-blk))
+      _ (set-block exit-block)
+      ret (add-instruction (->Const ::value))]
+     ret)))
 
 (defmethod -item-to-ssa :throw
   [{:keys [exception] :as ast}]
