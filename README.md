@@ -87,6 +87,6 @@ lein test
 ## License
 
 Revisions in this fork:
-Copyright © 2016–2018 Mike Fikes and Contributors
+Copyright © 2016–2019 Mike Fikes and Contributors
 
 Distributed under the Eclipse Public License, the same as Clojure.
