@@ -5,20 +5,20 @@ A Clojure library providing facilities for async programming and communication.
 
 ## Releases and Dependency Information
 
-Latest release: 0.4.490
+Latest release: 0.4.500
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "0.4.490"}
+  org.clojure/core.async {:mvn/version "0.4.500"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "0.4.490"]
+ [org.clojure/core.async "0.4.500"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -27,7 +27,7 @@ Latest release: 0.4.490
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.4.490</version>
+  <version>0.4.500</version>
 </dependency>
 ```
 
@@ -61,7 +61,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* Release next
+* Release 0.4.500 on 2019.06.11
   * [ASYNC-227](https://clojure.atlassian.net/browse/ASYNC-227) cljs alts! isn't non-deterministic
   * [ASYNC-224](https://clojure.atlassian.net/browse/ASYNC-224) Fix bad putter unwrapping in channel abort
   * [ASYNC-226](https://clojure.atlassian.net/browse/ASYNC-226) Fix bad cljs test code
