@@ -3,10 +3,6 @@ os:
 
 language: java
 
-before_install:
-  - command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
-  - rvm get stable
-
 install:
   - brew install leiningen clojure lumo
 
