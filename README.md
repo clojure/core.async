@@ -63,6 +63,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 * Release next
   * [ASYNC-224](https://clojure.atlassian.net/browse/ASYNC-224) Fix bad putter unwrapping in channel abort
+  * [ASYNC-226](https://clojure.atlassian.net/browse/ASYNC-226) Fix bad cljs test code
 * Release 0.4.490 on 2018.11.19
   * [ASYNC-216](https://clojure.atlassian.net/browse/ASYNC-216) Delay start of timeout thread
   * [ASYNC-218](https://clojure.atlassian.net/browse/ASYNC-218) Fix docstring for put!
