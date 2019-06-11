@@ -24,7 +24,7 @@
                            c#))]
      (when (satisfies? cljs.core.async.impl.protocols.Channel body-chan#)
        (cljs.core.async.macros/go
-         (let [[v# _] (cljs.core.async/alts! [body-chan# (timeout#)] :priority true)]
+         (let [[v# c#] (cljs.core.async/alts! [body-chan# (timeout#)] :priority true)]
            (assert (not= ::timeout v#)
                    (str "test timed out: " ~nm ))))
        true)))

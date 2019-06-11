@@ -5,7 +5,8 @@
               [cljs.core.async.impl.buffers :as buffers]
               [cljs.core.async.impl.timers :as timers]
               [cljs.core.async.impl.dispatch :as dispatch]
-              [cljs.core.async.impl.ioc-helpers :as helpers])
+              [cljs.core.async.impl.ioc-helpers :as helpers]
+              [goog.array :as garray])
     (:require-macros [cljs.core.async.impl.ioc-macros :as ioc]
                      [cljs.core.async :refer [go go-loop]]))
 
@@ -140,15 +141,9 @@
   [n]
   (let [a (make-array n)]
     (dotimes [x n]
-      (aset a x 0))
-    (loop [i 1]
-      (if (= i n)
-        a
-        (do
-          (let [j (rand-int i)]
-            (aset a i (aget a j))
-            (aset a j i)
-            (recur (inc i))))))))
+      (aset a x x))
+    (garray/shuffle a)
+    a))
 
 (defn- alt-flag []
   (let [flag (atom true)]
@@ -172,6 +167,7 @@
 (defn do-alts
   "returns derefable [val port] if immediate, nil if enqueued"
   [fret ports opts]
+  (assert (pos? (count ports)) "alts must have at least one channel operation")
   (let [flag (alt-flag)
         n (count ports)
         idxs (random-array n)

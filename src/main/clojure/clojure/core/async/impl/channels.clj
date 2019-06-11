@@ -52,7 +52,7 @@
    [this]
    (let [iter (.iterator puts)]
      (when (.hasNext iter)
-       (loop [^Lock putter (.next iter)]
+       (loop [[^Lock putter] (.next iter)]
          (.lock putter)
          (let [put-cb (and (impl/active? putter) (impl/commit putter))]
            (.unlock putter)
