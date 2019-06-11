@@ -34,7 +34,7 @@ Latest release: 0.4.490
 ## Documentation
 
 * [Rationale](https://clojure.org/news/2013/06/28/clojure-clore-async-channels)
-* [API docs](http://clojure.github.io/core.async/)
+* [API docs](https://clojure.github.io/core.async/)
 * [Code walkthrough](https://github.com/clojure/core.async/blob/master/examples/walkthrough.clj)
 
 ## Presentations
@@ -42,11 +42,10 @@ Latest release: 0.4.490
 * [Rich Hickey on core.async](http://www.infoq.com/presentations/clojure-core-async)
 * [Tim Baldridge on core.async](http://www.youtube.com/watch?v=enwIIGzhahw) from Clojure/conj 2013 ([code](https://github.com/halgari/clojure-conj-2013-core.async-examples)).
 * Tim Baldridge on go macro internals - [part 1](https://www.youtube.com/watch?v=R3PZMIwXN_g) [part 2](https://www.youtube.com/watch?v=SI7qtuuahhU)
-* David Nolen [core.async webinar](http://go.cognitect.com/core_async_webinar_recording)
 
 ## Contributing 
 
-[Contributing to Clojure projects](http://clojure.org/contributing) requires a signed Contributor Agreement. Pull requests and GitHub issues are not accepted; please use the [core.async JIRA project](http://dev.clojure.org/jira/browse/ASYNC) to report problems or enhancements.
+[Contributing to Clojure projects](https://clojure.org/community/contributing) requires a signed Contributor Agreement. Pull requests and GitHub issues are not accepted; please use the [core.async JIRA project](https://clojure.atlassian.net/browse/ASYNC) to report problems or enhancements.
 
 To run the ClojureScript tests:
 
@@ -62,34 +61,36 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Release next
+  * [ASYNC-224](https://clojure.atlassian.net/browse/ASYNC-224) Fix bad putter unwrapping in channel abort
 * Release 0.4.490 on 2018.11.19
-  * [ASYNC-216](https://dev.clojure.org/jira/browse/ASYNC-216) Delay start of timeout thread
-  * [ASYNC-218](https://dev.clojure.org/jira/browse/ASYNC-218) Fix docstring for put!
-  * [ASYNC-213](https://dev.clojure.org/jira/browse/ASYNC-213) Small addition to promise-chan docstring
+  * [ASYNC-216](https://clojure.atlassian.net/browse/ASYNC-216) Delay start of timeout thread
+  * [ASYNC-218](https://clojure.atlassian.net/browse/ASYNC-218) Fix docstring for put!
+  * [ASYNC-213](https://clojure.atlassian.net/browse/ASYNC-213) Small addition to promise-chan docstring
 * Release 0.4.474 on 2018.01.08
   * Fix typo in error message
   * Remove Java code, depend on Java 1.7+
   * Add deps.edn, can now be used as a git dependency
 * Release 0.3.465 on 2017.11.17
-  * [ASYNC-119](http://dev.clojure.org/jira/browse/ASYNC-119) Move macros to cljs.core.async ns (CLJS)
-  * [ASYNC-201](http://dev.clojure.org/jira/browse/ASYNC-201) Out-of-bounds index values passed in timers (CLJS)
+  * [ASYNC-119](https://clojure.atlassian.net/browse/ASYNC-119) Move macros to cljs.core.async ns (CLJS)
+  * [ASYNC-201](https://clojure.atlassian.net/browse/ASYNC-201) Out-of-bounds index values passed in timers (CLJS)
 * Release 0.3.443 on 2017.05.26
-  * [ASYNC-159](http://dev.clojure.org/jira/browse/ASYNC-159) - promise-chan in ClojureScript is broken 
+  * [ASYNC-159](https://clojure.atlassian.net/browse/ASYNC-159) - promise-chan in ClojureScript is broken 
 * Release 0.3.442 on 2017.03.14
   * Fix bad `:refer-clojure` clause that violates new spec in Clojure 1.9.0-alpha15
 * Release 0.3.441 on 2017.02.23
-  * [ASYNC-187](http://dev.clojure.org/jira/browse/ASYNC-187) - Tag metadata is lost in local closed over by a loop
-    * Related: [ASYNC-188](http://dev.clojure.org/jira/browse/ASYNC-188)
-  * [ASYNC-185](http://dev.clojure.org/jira/browse/ASYNC-185) - `thread` prevents clearing of body locals
-  * [ASYNC-186](http://dev.clojure.org/jira/browse/ASYNC-186) - NPE when `go` closes over a local variable bound to nil
+  * [ASYNC-187](https://clojure.atlassian.net/browse/ASYNC-187) - Tag metadata is lost in local closed over by a loop
+    * Related: [ASYNC-188](https://clojure.atlassian.net/browse/ASYNC-188)
+  * [ASYNC-185](https://clojure.atlassian.net/browse/ASYNC-185) - `thread` prevents clearing of body locals
+  * [ASYNC-186](https://clojure.atlassian.net/browse/ASYNC-186) - NPE when `go` closes over a local variable bound to nil
 * Release 0.3.426 on 2017.02.22
-  * [ASYNC-169](http://dev.clojure.org/jira/browse/ASYNC-169) - handling of catch and finally inside go blocks was broken, causing a number of issues. Related: [ASYNC-100](http://dev.clojure.org/jira/browse/ASYNC-100), [ASYNC-173](http://dev.clojure.org/jira/browse/ASYNC-173), [ASYNC-180](http://dev.clojure.org/jira/browse/ASYNC-180), [ASYNC-179](http://dev.clojure.org/jira/browse/ASYNC-179), [ASYNC-122](http://dev.clojure.org/jira/browse/ASYNC-122), [ASYNC-78](http://dev.clojure.org/jira/browse/ASYNC-78), [ASYNC-168](http://dev.clojure.org/jira/browse/ASYNC-168)
-  * [ASYNC-138](http://dev.clojure.org/jira/browse/ASYNC-138) - go blocks do not allow closed over locals to be cleared which can lead to a memory leak. Related: [ASYNC-32](http://dev.clojure.org/jira/browse/ASYNC-32)
-  * [ASYNC-155](http://dev.clojure.org/jira/browse/ASYNC-155) - preserve loop binding metadata when inside a go block
-  * [ASYNC-54](http://dev.clojure.org/jira/browse/ASYNC-54) - fix bad type hint on MAX-QUEUE-SIZE
-  * [ASYNC-177](http://dev.clojure.org/jira/browse/ASYNC-177) - fix typo in Buffer protocol full? method
-  * [ASYNC-70](http://dev.clojure.org/jira/browse/ASYNC-70) - docstring change in thread, thread-call
-  * [ASYNC-143](http://dev.clojure.org/jira/browse/ASYNC-143) - assert that fixed buffers must have size > 0
+  * [ASYNC-169](https://clojure.atlassian.net/browse/ASYNC-169) - handling of catch and finally inside go blocks was broken, causing a number of issues. Related: [ASYNC-100](https://clojure.atlassian.net/browse/ASYNC-100), [ASYNC-173](https://clojure.atlassian.net/browse/ASYNC-173), [ASYNC-180](https://clojure.atlassian.net/browse/ASYNC-180), [ASYNC-179](https://clojure.atlassian.net/browse/ASYNC-179), [ASYNC-122](https://clojure.atlassian.net/browse/ASYNC-122), [ASYNC-78](https://clojure.atlassian.net/browse/ASYNC-78), [ASYNC-168](https://clojure.atlassian.net/browse/ASYNC-168)
+  * [ASYNC-138](https://clojure.atlassian.net/browse/ASYNC-138) - go blocks do not allow closed over locals to be cleared which can lead to a memory leak. Related: [ASYNC-32](https://clojure.atlassian.net/browse/ASYNC-32)
+  * [ASYNC-155](https://clojure.atlassian.net/browse/ASYNC-155) - preserve loop binding metadata when inside a go block
+  * [ASYNC-54](https://clojure.atlassian.net/browse/ASYNC-54) - fix bad type hint on MAX-QUEUE-SIZE
+  * [ASYNC-177](https://clojure.atlassian.net/browse/ASYNC-177) - fix typo in Buffer protocol full? method
+  * [ASYNC-70](https://clojure.atlassian.net/browse/ASYNC-70) - docstring change in thread, thread-call
+  * [ASYNC-143](https://clojure.atlassian.net/browse/ASYNC-143) - assert that fixed buffers must have size > 0
   * Update tools.analyzer.jvm dependency
 * Release 0.2.395 on 2016.10.12
   * Add async version of transduce
@@ -101,18 +102,18 @@ Distributed under the Eclipse Public License, the same as Clojure.
 * Release 0.2.382 on 2016.06.13
   * Important: Change default dispatch thread pool size to 8.
   * Add Java system property `clojure.core.async.pool-size` to set the dispatch thread pool size
-  * [ASYNC-152](http://dev.clojure.org/jira/browse/ASYNC-152) - disable t.a.jvm's warn-on-reflection pass 
+  * [ASYNC-152](https://clojure.atlassian.net/browse/ASYNC-152) - disable t.a.jvm's warn-on-reflection pass 
 * Release 0.2.374 on 2015.11.11
-  * [ASYNC-149](http://dev.clojure.org/jira/browse/ASYNC-149) - fix error compiling recur inside case in a go block
+  * [ASYNC-149](https://clojure.atlassian.net/browse/ASYNC-149) - fix error compiling recur inside case in a go block
   * Updated tools.analyzer.jvm version (and other upstream deps)
   * Updated to latest clojurescript and cljsbuild versions
 * Release 0.2.371 on 2015.10.28
-  * [ASYNC-124](http://dev.clojure.org/jira/browse/ASYNC-124) - dispatch multiple pending takers from expanding transducer
-  * [ASYNC-103](http://dev.clojure.org/jira/browse/ASYNC-103) - NEW promise-chan
-  * [ASYNC-104](http://dev.clojure.org/jira/browse/ASYNC-104) - NEW non-blocking offer!, poll!
-  * [ASYNC-101](http://dev.clojure.org/jira/browse/ASYNC-101) - async/reduce now respects reduced
-  * [ASYNC-112](http://dev.clojure.org/jira/browse/ASYNC-112) - replace "transformer" with "transducer" in deprecation messages
-  * [ASYNC-6](http://dev.clojure.org/jira/browse/ASYNC-6) - alts! docs updated to explicitly state ports is a vector
+  * [ASYNC-124](https://clojure.atlassian.net/browse/ASYNC-124) - dispatch multiple pending takers from expanding transducer
+  * [ASYNC-103](https://clojure.atlassian.net/browse/ASYNC-103) - NEW promise-chan
+  * [ASYNC-104](https://clojure.atlassian.net/browse/ASYNC-104) - NEW non-blocking offer!, poll!
+  * [ASYNC-101](https://clojure.atlassian.net/browse/ASYNC-101) - async/reduce now respects reduced
+  * [ASYNC-112](https://clojure.atlassian.net/browse/ASYNC-112) - replace "transformer" with "transducer" in deprecation messages
+  * [ASYNC-6](https://clojure.atlassian.net/browse/ASYNC-6) - alts! docs updated to explicitly state ports is a vector
   * Support (try (catch :default)) in CLJS exception handling
   * Use cljs.test
   * Updated tools.analyzer.jvm version (and other upstream deps)
