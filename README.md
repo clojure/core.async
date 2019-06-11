@@ -62,6 +62,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 ## Changelog
 
 * Release next
+  * [ASYNC-227](https://clojure.atlassian.net/browse/ASYNC-227) cljs alts! isn't non-deterministic
   * [ASYNC-224](https://clojure.atlassian.net/browse/ASYNC-224) Fix bad putter unwrapping in channel abort
   * [ASYNC-226](https://clojure.atlassian.net/browse/ASYNC-226) Fix bad cljs test code
 * Release 0.4.490 on 2018.11.19
