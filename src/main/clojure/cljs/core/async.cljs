@@ -167,6 +167,7 @@
 (defn do-alts
   "returns derefable [val port] if immediate, nil if enqueued"
   [fret ports opts]
+  (assert (pos? (count ports)) "alts must have at least one channel operation")
   (let [flag (alt-flag)
         n (count ports)
         idxs (random-array n)
