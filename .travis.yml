@@ -4,8 +4,9 @@ os:
 language: java
 
 install:
-  - brew install leiningen clojure lumo
+  - brew install leiningen clojure lumo planck
 
 script: 
   - lein test
   - lein tach lumo
+  - lein tach planck
