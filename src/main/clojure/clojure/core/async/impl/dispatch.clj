@@ -13,7 +13,20 @@
 
 (set! *warn-on-reflection* true)
 
-(defonce executor (delay (tp/thread-pool-executor)))
+(defonce ^:private dispatch-thread-flag (ThreadLocal.))
+
+(defonce executor (delay (tp/thread-pool-executor
+                           #(.set ^ThreadLocal dispatch-thread-flag true))))
+
+(def ^:private go-checking
+  (delay (Boolean/getBoolean "clojure.core.async.go-checking")))
+
+(defn check-blocking-in-dispatch
+  "If go-checking is enabled and the current thread is a dispatch pool thread,
+  throw an exception with the blocking op"
+  [blocking-op]
+  (when (and @go-checking (.get ^ThreadLocal dispatch-thread-flag))
+    (throw (IllegalStateException. (str "Invalid blocking operation called in dispatch thread: " blocking-op)))))
 
 (defn run
   "Runs Runnable r in a thread pool thread"

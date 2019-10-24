@@ -15,15 +15,23 @@
 (defn counted-thread-factory
   "Create a ThreadFactory that maintains a counter for naming Threads.
      name-format specifies thread names - use %d to include counter
-     daemon is a flag for whether threads are daemons or not"
-  [name-format daemon]
-  (let [counter (atom 0)]
-    (reify
-      ThreadFactory
-      (newThread [this runnable]
-        (doto (Thread. runnable)
-          (.setName (format name-format (swap! counter inc)))
-          (.setDaemon daemon))))))
+     daemon is a flag for whether threads are daemons or not
+     opts is an options map:
+       init-fn - function to run when thread is created"
+  ([name-format daemon]
+    (counted-thread-factory name-format daemon nil))
+  ([name-format daemon {:keys [init-fn] :as opts}]
+   (let [counter (atom 0)]
+     (reify
+       ThreadFactory
+       (newThread [this runnable]
+         (let [body (if init-fn
+                      (fn [] (init-fn) (.run ^Runnable runnable))
+                      runnable)
+               t (Thread. ^Runnable body)]
+           (doto t
+             (.setName (format name-format (swap! counter inc)))
+             (.setDaemon daemon))))))))
 
 (defonce
   ^{:doc "Number of processors reported by the JVM"}
