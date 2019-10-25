@@ -112,7 +112,7 @@ Recommended for use primarily at dev time."
   "takes a val from port. Will return nil if closed. Will block
   if nothing is available. Not intended for use in (go ...) blocks."
   [port]
-  (dispatch/check-blocking-in-dispatch "<!!")
+  (dispatch/check-blocking-in-dispatch)
   (let [p (promise)
         ret (impl/take! port (fn-handler (fn [v] (deliver p v))))]
     (if ret
@@ -150,7 +150,7 @@ Recommended for use primarily at dev time."
   buffer space is available. Returns true unless port is already closed.
   Not intended for use in (go ...) blocks."
   [port val]
-  (dispatch/check-blocking-in-dispatch ">!!")
+  (dispatch/check-blocking-in-dispatch)
   (let [p (promise)
         ret (impl/put! port val (fn-handler (fn [open?] (deliver p open?))))]
     (if ret
@@ -286,7 +286,7 @@ Recommended for use primarily at dev time."
   be made as if by >!!, will block until completed, and not intended
   for use in (go ...) blocks."
   [ports & {:as opts}]
-  (dispatch/check-blocking-in-dispatch "alts!!")
+  (dispatch/check-blocking-in-dispatch)
   (let [p (promise)
         ret (do-alts (partial deliver p) ports opts)]
     (if ret
@@ -362,7 +362,7 @@ Recommended for use primarily at dev time."
   not intended for use in (go ...) blocks."
 
   [& clauses]
-  (dispatch/check-blocking-in-dispatch "alt!!")
+  (dispatch/check-blocking-in-dispatch)
   (do-alt `alts!! clauses))
 
 (defmacro alt!

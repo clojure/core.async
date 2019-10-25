@@ -24,9 +24,9 @@
 (defn check-blocking-in-dispatch
   "If go-checking is enabled and the current thread is a dispatch pool thread,
   throw an exception with the blocking op"
-  [blocking-op]
+  []
   (when (.get ^ThreadLocal throw-on-block)
-    (throw (IllegalStateException. (str "Invalid blocking operation call in dispatch thread: " blocking-op)))))
+    (throw (IllegalStateException. "Invalid blocking call in dispatch thread"))))
 
 (defn run
   "Runs Runnable r in a thread pool thread"
