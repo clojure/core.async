@@ -26,7 +26,7 @@
   throw an exception with the blocking op"
   [blocking-op]
   (when (and @go-checking (.get ^ThreadLocal dispatch-thread-flag))
-    (throw (IllegalStateException. (str "Invalid blocking operation called in dispatch thread: " blocking-op)))))
+    (throw (IllegalStateException. (str "Invalid blocking operation call in dispatch thread: " blocking-op)))))
 
 (defn run
   "Runs Runnable r in a thread pool thread"
