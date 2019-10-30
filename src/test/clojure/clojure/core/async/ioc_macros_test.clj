@@ -452,8 +452,7 @@
         ;; don't spam stderr
         (Thread/setDefaultUncaughtExceptionHandler
           (reify java.lang.Thread$UncaughtExceptionHandler
-            (uncaughtException [_ _thread throwable]
-              (assert (= msg (.getMessage throwable))))))
+            (uncaughtException [_ _thread _throwable])))
         (testing "threads"
           (is (nil? (<!! (thread (assert false msg)))))
           (is (nil? (<!! (thread (alts!! [(identity-chan 42)])
