@@ -446,14 +446,25 @@
                          acc))))))))
 
   (deftest close-on-exception-tests
-    (testing "threads"
-      (is (nil? (<!! (thread (assert false "This exception is expected")))))
-      (is (nil? (<!! (thread (alts!! [(identity-chan 42)])
-                             (assert false "This exception is expected"))))))
-    (testing "go blocks"
-      (is (nil? (<!! (go (assert false "This exception is expected")))))
-      (is (nil? (<!! (go (alts! [(identity-chan 42)])
-                         (assert false "This exception is expected")))))))
+    (let [eh (Thread/getDefaultUncaughtExceptionHandler)
+          msg "This exception is expected"]
+      (try
+        ;; don't spam stderr
+        (Thread/setDefaultUncaughtExceptionHandler
+          (reify java.lang.Thread$UncaughtExceptionHandler
+            (uncaughtException [_ _thread throwable]
+              (assert (= msg (.getMessage throwable))))))
+        (testing "threads"
+          (is (nil? (<!! (thread (assert false msg)))))
+          (is (nil? (<!! (thread (alts!! [(identity-chan 42)])
+                           (assert false msg))))))
+        (testing "go blocks"
+          (is (nil? (<!! (go (assert false msg)))))
+          (is (nil? (<!! (go (alts! [(identity-chan 42)])
+                             (assert false msg))))))
+        (finally
+          ;; restore
+          (Thread/setDefaultUncaughtExceptionHandler eh)))))
 
 (deftest resolution-tests
     (let [<! (constantly 42)]
