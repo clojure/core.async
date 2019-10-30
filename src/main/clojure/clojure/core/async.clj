@@ -527,14 +527,10 @@ Recommended for use primarily at dev time."
                        true)))]
        (dotimes [_ n]
          (case type
-               :blocking (thread
-                          (let [job (<!! jobs)]
-                            (when (process job)
-                              (recur))))
-               :compute (go-loop []
-                                   (let [job (<! jobs)]
-                                     (when (process job)
-                                       (recur))))
+               (:blocking :compute) (thread
+                                      (let [job (<!! jobs)]
+                                        (when (process job)
+                                          (recur))))
                :async (go-loop []
                                  (let [job (<! jobs)]
                                    (when (async job)
