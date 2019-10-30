@@ -339,12 +339,9 @@
 
 
   (defn identity-chan
-    "Defines a channel that instantly writes the given value"
+    "Defines a channel that contains the given value"
     [x]
-    (let [c (chan 1)]
-      (>!! c x)
-      (close! c)
-      c))
+    (to-chan [x]))
 
   (deftest async-test
     (testing "values are returned correctly"
@@ -436,19 +433,17 @@
                        (chan) ([v] :failed)
                        :default 42))))))
 
-    (testing "alt obeys its random-array initialization"
-      (is (= #{:two}
-             (with-redefs [clojure.core.async/random-array
-                           (constantly (int-array [1 2 0]))]
-               (<!! (go (loop [acc #{}
-                               cnt 0]
-                          (if (< cnt 10)
-                            (let [label (alt!
-                                         (identity-chan :one) ([v] v)
-                                         (identity-chan :two) ([v] v)
-                                         (identity-chan :three) ([v] v))]
-                              (recur (conj acc label) (inc cnt)))
-                            acc)))))))))
+    (testing "alt random checks all chans"
+      (is (= #{:one :two :three}
+            (<!! (go (loop [acc #{}
+                            cnt 0]
+                       (if (< cnt 20)
+                         (let [label (alt!
+                                      (identity-chan :one) ([v] v)
+                                      (identity-chan :two) ([v] v)
+                                      (identity-chan :three) ([v] v))]
+                           (recur (conj acc label) (inc cnt)))
+                         acc))))))))
 
   (deftest close-on-exception-tests
     (testing "threads"
