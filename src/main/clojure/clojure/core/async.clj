@@ -108,16 +108,20 @@ Recommended for use primarily at dev time."
   [^long msecs]
   (timers/timeout msecs))
 
-(defn <!!
+(def <!!
   "takes a val from port. Will return nil if closed. Will block
   if nothing is available. Not intended for use in (go ...) blocks."
-  [port]
-  (dispatch/check-blocking-in-dispatch)
-  (let [p (promise)
-        ret (impl/take! port (fn-handler (fn [v] (deliver p v))))]
-    (if ret
-      @ret
-      (deref p))))
+  (letfn [(<!!* [port]
+            (let [p (promise)
+                  ret (impl/take! port (fn-handler (fn [v] (deliver p v))))]
+              (if ret
+                @ret
+                (deref p))))]
+    (if (Boolean/getBoolean "clojure.core.async.go-checking")
+      (fn [port]
+        (dispatch/check-blocking-in-dispatch)
+        (<!!* port))
+      <!!*)))
 
 (defn <!
   "takes a val from port. Must be called inside a (go ...) block. Will
@@ -145,17 +149,21 @@ Recommended for use primarily at dev time."
              (dispatch/run #(fn1 val)))))
        nil)))
 
-(defn >!!
+(def >!!
   "puts a val into port. nil values are not allowed. Will block if no
   buffer space is available. Returns true unless port is already closed.
   Not intended for use in (go ...) blocks."
-  [port val]
-  (dispatch/check-blocking-in-dispatch)
-  (let [p (promise)
-        ret (impl/put! port val (fn-handler (fn [open?] (deliver p open?))))]
-    (if ret
-      @ret
-      (deref p))))
+  (letfn [(>!!* [port val]
+            (let [p (promise)
+                  ret (impl/put! port val (fn-handler (fn [open?] (deliver p open?))))]
+              (if ret
+                @ret
+                (deref p))))]
+    (if (Boolean/getBoolean "clojure.core.async.go-checking")
+      (fn [port val]
+        (dispatch/check-blocking-in-dispatch)
+        (>!!* port val))
+      >!!*)))
 
 (defn >!
   "puts a val into port. nil values are not allowed. Must be called
@@ -281,17 +289,21 @@ Recommended for use primarily at dev time."
          (when got
            (channels/box [(:default opts) :default])))))))
 
-(defn alts!!
+(def alts!!
   "Like alts!, except takes will be made as if by <!!, and puts will
   be made as if by >!!, will block until completed, and not intended
   for use in (go ...) blocks."
-  [ports & {:as opts}]
-  (dispatch/check-blocking-in-dispatch)
-  (let [p (promise)
-        ret (do-alts (partial deliver p) ports opts)]
-    (if ret
-      @ret
-      (deref p))))
+  (letfn [(alts!!* [ports & {:as opts}]
+            (let [p (promise)
+                  ret (do-alts (partial deliver p) ports opts)]
+              (if ret
+                @ret
+                (deref p))))]
+    (if (Boolean/getBoolean "clojure.core.async.go-checking")
+      (fn [ports & opts]
+        (dispatch/check-blocking-in-dispatch)
+        (apply alts!!* ports opts))
+      alts!!*)))
 
 (defn alts!
   "Completes at most one of several channel operations. Must be called
@@ -362,7 +374,6 @@ Recommended for use primarily at dev time."
   not intended for use in (go ...) blocks."
 
   [& clauses]
-  (dispatch/check-blocking-in-dispatch)
   (do-alt `alts!! clauses))
 
 (defmacro alt!
