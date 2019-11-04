@@ -3,6 +3,7 @@
             [cljs.core.async.buffer-tests]
             [cljs.core.async.pipeline-test]
             [cljs.core.async.timers-test]
+            [cljs.core.async.interop-tests]
             [cljs.core.async.tests]
             [cljs.core.async.runner-tests]))
 
@@ -11,4 +12,5 @@
   'cljs.core.async.pipeline-test
   'cljs.core.async.buffer-tests
   'cljs.core.async.timers-test
+  'cljs.core.async.interop-tests
   'cljs.core.async.tests)
