@@ -120,7 +120,7 @@ primarily during development."
 (def
   ^{:arglists '([port])
     :doc "takes a val from port. Will return nil if closed. Will block
-          if nothing is available. Not intended for use in (go ...) blocks."}
+  if nothing is available. Not intended for use in (go ...) blocks."}
   <!!
   (checked-blocking-op
     (fn [port]
@@ -159,8 +159,8 @@ primarily during development."
 (def
   ^{:arglists '([port val])
     :doc "puts a val into port. nil values are not allowed. Will block if no
-          buffer space is available. Returns true unless port is already closed.
-          Not intended for use in (go ...) blocks."}
+  buffer space is available. Returns true unless port is already closed.
+  Not intended for use in (go ...) blocks."}
   >!!
   (checked-blocking-op
     (fn [port val]
@@ -297,8 +297,8 @@ primarily during development."
 (def
   ^{:arglists '([ports & {:as opts}])
     :doc "Like alts!, except takes will be made as if by <!!, and puts will
-          be made as if by >!!, will block until completed, and not intended
-          for use in (go ...) blocks."}
+  be made as if by >!!, will block until completed, and not intended
+  for use in (go ...) blocks."}
   alts!!
   (checked-blocking-op
     (fn [ports & {:as opts}]
