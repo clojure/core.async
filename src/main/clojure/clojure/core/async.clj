@@ -15,7 +15,8 @@ the Java system property `clojure.core.async.pool-size`.
 
 Set Java system property `clojure.core.async.go-checking` to true
 to validate go blocks do not invoke core.async blocking operations.
-Recommended for use primarily at dev time."
+Property is read once, at namespace load time. Recommended for use
+primarily during development."
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
   (:require [clojure.core.async.impl.protocols :as impl]
