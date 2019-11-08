@@ -109,26 +109,26 @@ primarily during development."
   [^long msecs]
   (timers/timeout msecs))
 
-(defn- checked-blocking-op
-  [op]
-  (if (Boolean/getBoolean "clojure.core.async.go-checking")
-    (fn [& args]
-      (dispatch/check-blocking-in-dispatch)
-      (apply op args))
-    op))
+(defmacro defblockingop
+  [op doc arglist & body]
+  (let [as (mapv #(list 'quote %) arglist)]
+    `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
+       (if (Boolean/getBoolean "clojure.core.async.go-checking")
+         (fn ~arglist
+           (dispatch/check-blocking-in-dispatch)
+           ~@body)
+         (fn ~arglist
+           ~@body)))))
 
-(def
-  ^{:arglists '([port])
-    :doc "takes a val from port. Will return nil if closed. Will block
-  if nothing is available. Not intended for use in (go ...) blocks."}
-  <!!
-  (checked-blocking-op
-    (fn [port]
-      (let [p (promise)
-            ret (impl/take! port (fn-handler (fn [v] (deliver p v))))]
-        (if ret
-          @ret
-          (deref p))))))
+(defblockingop <!!
+  "takes a val from port. Will return nil if closed. Will block
+  if nothing is available. Not intended for use in (go ...) blocks."
+  [port]
+  (let [p (promise)
+        ret (impl/take! port (fn-handler (fn [v] (deliver p v))))]
+    (if ret
+      @ret
+      (deref p))))
 
 (defn <!
   "takes a val from port. Must be called inside a (go ...) block. Will
@@ -156,19 +156,16 @@ primarily during development."
              (dispatch/run #(fn1 val)))))
        nil)))
 
-(def
-  ^{:arglists '([port val])
-    :doc "puts a val into port. nil values are not allowed. Will block if no
+(defblockingop >!!
+  "puts a val into port. nil values are not allowed. Will block if no
   buffer space is available. Returns true unless port is already closed.
-  Not intended for use in (go ...) blocks."}
-  >!!
-  (checked-blocking-op
-    (fn [port val]
-      (let [p (promise)
-            ret (impl/put! port val (fn-handler (fn [open?] (deliver p open?))))]
-        (if ret
-          @ret
-          (deref p))))))
+  Not intended for use in (go ...) blocks."
+  [port val]
+  (let [p (promise)
+        ret (impl/put! port val (fn-handler (fn [open?] (deliver p open?))))]
+    (if ret
+      @ret
+      (deref p))))
 
 (defn >!
   "puts a val into port. nil values are not allowed. Must be called
@@ -294,19 +291,16 @@ primarily during development."
          (when got
            (channels/box [(:default opts) :default])))))))
 
-(def
-  ^{:arglists '([ports & {:as opts}])
-    :doc "Like alts!, except takes will be made as if by <!!, and puts will
+(defblockingop alts!!
+  "Like alts!, except takes will be made as if by <!!, and puts will
   be made as if by >!!, will block until completed, and not intended
-  for use in (go ...) blocks."}
-  alts!!
-  (checked-blocking-op
-    (fn [ports & {:as opts}]
-      (let [p (promise)
-            ret (do-alts (partial deliver p) ports opts)]
-        (if ret
-          @ret
-          (deref p))))))
+  for use in (go ...) blocks."
+  [ports & opts]
+  (let [p (promise)
+        ret (do-alts (partial deliver p) ports (apply hash-map opts))]
+    (if ret
+      @ret
+      (deref p))))
 
 (defn alts!
   "Completes at most one of several channel operations. Must be called
