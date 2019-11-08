@@ -3,6 +3,7 @@
                             partition-by])
   (:require [clojure.core.async.impl.ioc-macros :as ioc]
             [clojure.core.async :refer :all :as async]
+            [clojure.set :as set]
             [clojure.test :refer :all])
   (:import [java.io FileInputStream ByteArrayOutputStream File]))
 
@@ -434,7 +435,7 @@
                        :default 42))))))
 
     (testing "alt random checks all chans"
-      (is (= #{:one :two :three}
+      (is (set/subset?
             (<!! (go (loop [acc #{}
                             cnt 0]
                        (if (< cnt 20)
@@ -443,7 +444,8 @@
                                       (identity-chan :two) ([v] v)
                                       (identity-chan :three) ([v] v))]
                            (recur (conj acc label) (inc cnt)))
-                         acc))))))))
+                         acc))))
+            #{:one :two :three}))))
 
   (deftest close-on-exception-tests
     (let [eh (Thread/getDefaultUncaughtExceptionHandler)
