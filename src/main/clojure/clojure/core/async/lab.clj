@@ -6,7 +6,7 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
 
-(ns clojure.core.async.lab
+(ns ^{:skip-wiki true} clojure.core.async.lab
   "core.async HIGHLY EXPERIMENTAL feature exploration
 
   Caveats:
