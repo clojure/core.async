@@ -16,7 +16,9 @@ the Java system property `clojure.core.async.pool-size`.
 Set Java system property `clojure.core.async.go-checking` to true
 to validate go blocks do not invoke core.async blocking operations.
 Property is read once, at namespace load time. Recommended for use
-primarily during development."
+primarily during development. Invalid blocking calls will throw in
+go block threads - use Thread.setDefaultUncaughtExceptionHandler()
+to catch and handle."
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
   (:require [clojure.core.async.impl.protocols :as impl]
@@ -122,7 +124,10 @@ primarily during development."
 
 (defblockingop <!!
   "takes a val from port. Will return nil if closed. Will block
-  if nothing is available. Not intended for use in (go ...) blocks."
+  if nothing is available.
+  Not intended for use in direct or transitive calls from (go ...) blocks.
+  Use the clojure.core.async.go-checking flag to detect invalid use (see
+  namespace docs)."
   [port]
   (let [p (promise)
         ret (impl/take! port (fn-handler (fn [v] (deliver p v))))]
@@ -159,7 +164,9 @@ primarily during development."
 (defblockingop >!!
   "puts a val into port. nil values are not allowed. Will block if no
   buffer space is available. Returns true unless port is already closed.
-  Not intended for use in (go ...) blocks."
+  Not intended for use in direct or transitive calls from (go ...) blocks.
+  Use the clojure.core.async.go-checking flag to detect invalid use (see
+  namespace docs)."
   [port val]
   (let [p (promise)
         ret (impl/put! port val (fn-handler (fn [open?] (deliver p open?))))]
@@ -293,8 +300,10 @@ primarily during development."
 
 (defblockingop alts!!
   "Like alts!, except takes will be made as if by <!!, and puts will
-  be made as if by >!!, will block until completed, and not intended
-  for use in (go ...) blocks."
+  be made as if by >!!, will block until completed.
+  Not intended for use in direct or transitive calls from (go ...) blocks.
+  Use the clojure.core.async.go-checking flag to detect invalid use (see
+  namespace docs)."
   [ports & opts]
   (let [p (promise)
         ret (do-alts (partial deliver p) ports (apply hash-map opts))]
