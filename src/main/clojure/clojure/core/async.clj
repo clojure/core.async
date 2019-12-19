@@ -56,6 +56,7 @@ to catch and handle."
 (defn buffer
   "Returns a fixed buffer of size n. When full, puts will block/park."
   [n]
+  (assert (pos? n) "fixed buffers must have size > 0")
   (buffers/fixed-buffer n))
 
 (defn dropping-buffer
@@ -90,7 +91,6 @@ to catch and handle."
   ([buf-or-n] (chan buf-or-n nil))
   ([buf-or-n xform] (chan buf-or-n xform nil))
   ([buf-or-n xform ex-handler]
-     (when (and buf-or-n (number? buf-or-n)) (assert (pos? buf-or-n) "fixed buffers must have size > 0"))
      (when xform (assert buf-or-n "buffer must be supplied when transducer is"))
      (channels/chan (if (number? buf-or-n) (buffer buf-or-n) buf-or-n) xform ex-handler)))
 
