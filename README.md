@@ -61,6 +61,9 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* next release
+  * [ASYNC-198](https://clojure.atlassian.net/browse/ASYNC-198) Fix exception rewriting in go can replace return value
+  * [ASYNC-220](https://clojure.atlassian.net/browse/ASYNC-220) Fix exception in go finally swallows exception of outer try
 * Release 0.6.532 on 2019.12.02
   * Bump tools.analyzer.jvm dep to 0.7.3
 * Release 0.5.527 on 2019.11.12
