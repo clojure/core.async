@@ -529,3 +529,12 @@
                 (catch UnsupportedOperationException ex
                   :unsupported)))]
     (is (= :ok resp))))
+
+(deftest ASYNC-212
+  (is (= 42
+         (<!! (go
+                (let [a nil
+                      foo (identity a)]
+                  (if foo
+                    (<! foo)
+                    42)))))))

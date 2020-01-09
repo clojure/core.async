@@ -226,8 +226,9 @@
 (defrecord RawCode [ast locals]
   IInstruction
   (reads-from [this]
-    (keep (or locals #{})
-          (map :name (-> ast :env :locals vals))))
+    (for [local (map :name (-> ast :env :locals vals))
+          :when (contains? locals local)]
+      (get locals local)))
   (writes-to [this] [(:id this)])
   (block-references [this] [])
   IEmittableInstruction
@@ -236,8 +237,7 @@
       `[~@(->> (-> ast :env :locals vals)
                (map #(select-keys % [:op :name :form]))
                (filter (fn [local]
-                         (when locals
-                           (get locals (:name local)))))
+                         (contains? locals (:name local))))
                set
                (mapcat
                 (fn [local]
