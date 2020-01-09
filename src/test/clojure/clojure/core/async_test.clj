@@ -283,7 +283,18 @@
       (admix mx (a/to-chan [4 5 6]))
 
       (is (= #{1 2 3 4 5 6}
-             (<!! (a/into #{} (a/take 6 out)))))))
+             (<!! (a/into #{} (a/take 6 out))))))
+
+    ;; ASYNC-145
+    (let [out (chan 2500)
+          mix (mix out)]
+      (dotimes [i 2048]
+        (let [c (chan)]
+          (admix mix c)
+          (put! c i)))
+
+      (is (= (set (range 2048))
+            (<!! (a/into #{} (a/take 2048 out)))))))
 
   (testing "pub-sub"
     (let [a-ints (chan 5)
