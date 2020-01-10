@@ -285,10 +285,10 @@
       (tap m t-2)
       (tap m t-3)
       (close! t-3)
-      (is (= 1 (a/poll! t-1)))
+      (is (= 1 (<!! t-1)))
       (is (= nil (a/poll! t-1))) ;; t-2 hasn't taken yet
-      (is (= 1 (a/poll! t-2)))
-      (is (= 2 (a/poll! t-1))) ;; now available
+      (is (= 1 (<!! t-2)))
+      (is (= 2 (<!! t-1))) ;; now available
       (is (= nil (a/poll! t-1)))))
 
   (testing "mix"
