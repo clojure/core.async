@@ -5,20 +5,20 @@ A Clojure library providing facilities for async programming and communication.
 
 ## Releases and Dependency Information
 
-Latest release: 0.6.532
+Latest release: 0.7.559
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "0.6.532"}
+  org.clojure/core.async {:mvn/version "0.7.559"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "0.6.532"]
+ [org.clojure/core.async "0.7.559"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -27,7 +27,7 @@ Latest release: 0.6.532
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.6.532</version>
+  <version>0.7.559</version>
 </dependency>
 ```
 
@@ -61,7 +61,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* next release
+* Release 0.7.599 on 2020.01.10
   * [ASYNC-198](https://clojure.atlassian.net/browse/ASYNC-198) Fix exception rewriting in go can replace return value
   * [ASYNC-220](https://clojure.atlassian.net/browse/ASYNC-220) Fix exception in go finally swallows exception of outer try
   * [ASYNC-229](https://clojure.atlassian.net/browse/ASYNC-229) Fix go finally block executed twice
