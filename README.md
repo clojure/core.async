@@ -69,6 +69,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
   * [ASYNC-145](https://clojure.atlassian.net/browse/ASYNC-145) Fix mix throws error when many channels added
   * [ASYNC-170](https://clojure.atlassian.net/browse/ASYNC-170) Fix binding in go block throws assertion error
   * [ASYNC-127](https://clojure.atlassian.net/browse/ASYNC-127) Fix mult to work as doc'ed with all taps accepting before next
+  * [ASYNC-210](https://clojure.atlassian.net/browse/ASYNC-210) Fix puts allowed when buffer still full from expanding transducer
 * Release 0.6.532 on 2019.12.02
   * Bump tools.analyzer.jvm dep to 0.7.3
 * Release 0.5.527 on 2019.11.12
