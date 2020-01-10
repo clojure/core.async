@@ -419,13 +419,9 @@
         (is (= 0 @counter))
         (is (= 2 (<!! c)))
 
-        ;; Pass with patch applied:
+        ;; don't allow puts, buffer still full
         (is (false? (deref blocking-put 10 false)))
         (is (= 0 @counter))
-
-        ;; Pass on `master`:
-        ;; (is (true? (deref blocking-put 10 false)))
-        ;; (is (= 1 @counter))
 
         (is (nil? (offer! c [7 8 9])))))))
 
