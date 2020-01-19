@@ -61,7 +61,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* Release 0.7.599 on 2020.01.10
+* Release 0.7.559 on 2020.01.10
   * [ASYNC-198](https://clojure.atlassian.net/browse/ASYNC-198) (CLJ) Fix exception rewriting in go can replace return value
   * [ASYNC-220](https://clojure.atlassian.net/browse/ASYNC-220) (CLJ) Fix exception in go finally swallows exception of outer try
   * [ASYNC-229](https://clojure.atlassian.net/browse/ASYNC-229) (CLJ) Fix go finally block executed twice
