@@ -1036,7 +1036,7 @@ to catch and handle."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; deprecated - do not use ;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn map<
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   [f ch]
   (reify
    impl/Channel
@@ -1068,7 +1068,7 @@ to catch and handle."
 
 (defn map>
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   [f ch]
   (reify
    impl/Channel
@@ -1084,7 +1084,7 @@ to catch and handle."
 
 (defn filter>
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   [p ch]
   (reify
    impl/Channel
@@ -1102,13 +1102,13 @@ to catch and handle."
 
 (defn remove>
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   [p ch]
   (filter> (complement p) ch))
 
 (defn filter<
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   ([p ch] (filter< p ch nil))
   ([p ch buf-or-n]
      (let [out (chan buf-or-n)]
@@ -1123,7 +1123,7 @@ to catch and handle."
 
 (defn remove<
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   ([p ch] (remove< p ch nil))
   ([p ch buf-or-n] (filter< (complement p) ch buf-or-n)))
 
@@ -1139,7 +1139,7 @@ to catch and handle."
 
 (defn mapcat<
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   ([f in] (mapcat< f in nil))
   ([f in buf-or-n]
     (let [out (chan buf-or-n)]
@@ -1148,7 +1148,7 @@ to catch and handle."
 
 (defn mapcat>
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   ([f out] (mapcat> f out nil))
   ([f out buf-or-n]
      (let [in (chan buf-or-n)]
@@ -1157,7 +1157,7 @@ to catch and handle."
 
 (defn unique
  "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   ([ch]
      (unique ch nil))
   ([ch buf-or-n]
@@ -1175,7 +1175,7 @@ to catch and handle."
 
 (defn partition
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   ([n ch]
      (partition n ch nil))
   ([n ch buf-or-n]
@@ -1200,7 +1200,7 @@ to catch and handle."
 
 (defn partition-by
   "Deprecated - this function will be removed. Use transducer instead"
-  {:deprecated "0.1.319.0-6b1aca-alpha"}
+  {:deprecated "0.1.319.0-6b1aca-alpha", :skip-wiki true}
   ([f ch]
      (partition-by f ch nil))
   ([f ch buf-or-n]
