@@ -44,7 +44,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.analyzer.jvm</artifactId>
-      <version>0.7.3</version>
+      <version>1.0.0</version>
     </dependency>
   </dependencies>
 
