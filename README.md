@@ -5,20 +5,20 @@ A Clojure library providing facilities for async programming and communication.
 
 ## Releases and Dependency Information
 
-Latest release: 0.7.559
+Latest release: 1.0.567
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "0.7.559"}
+  org.clojure/core.async {:mvn/version "1.0.567"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "0.7.559"]
+ [org.clojure/core.async "1.0.567"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -27,7 +27,7 @@ Latest release: 0.7.559
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>0.7.559</version>
+  <version>1.0.567</version>
 </dependency>
 ```
 
@@ -55,12 +55,13 @@ To run the ClojureScript tests:
 
 ## License
 
-Copyright © 2017-2019 Rich Hickey and contributors
+Copyright © 2017-2020 Rich Hickey and contributors
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Release 1.0.567 on 2020.02.18
 * Release 0.7.559 on 2020.01.10
   * [ASYNC-198](https://clojure.atlassian.net/browse/ASYNC-198) (CLJ) Fix exception rewriting in go can replace return value
   * [ASYNC-220](https://clojure.atlassian.net/browse/ASYNC-220) (CLJ) Fix exception in go finally swallows exception of outer try
