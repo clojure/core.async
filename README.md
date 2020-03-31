@@ -64,7 +64,12 @@ Distributed under the Eclipse Public License, the same as Clojure.
 ## Changelog
 
 * next
-  * Bumped up dep to tools.analyzer.jvm 1.0.0
+  * Bumped deps - clojure 1.9, clojurescript 1.10.1.597, cljsbuild 1.1.7, tools.analyzer.jvm 1.0.0
+  * [ASYNC-165](https://clojure.atlassian.net/browse/ASYNC-165) (CLJS) Fix inlining of let binding
+  * [ASYNC-184](https://clojure.atlassian.net/browse/ASYNC-184) (CLJS) Port CLJ exception handling fixes
+  * [ASYNC-228](https://clojure.atlassian.net/browse/ASYNC-228) (CLJS) Fix skip list for CLJS timers
+  * [ASYNC-96](https://clojure.atlassian.net/browse/ASYNC-96) (CLJS) Fix full checking in fixed buffer
+  * [ASYNC-230](https://clojure.atlassian.net/browse/ASYNC-230) (CLJS) Add js/Promise interop via core.async.interop
 * Release 1.0.567 on 2020.02.18
 * Release 0.7.559 on 2020.01.10
   * [ASYNC-198](https://clojure.atlassian.net/browse/ASYNC-198) (CLJ) Fix exception rewriting in go can replace return value
