@@ -467,3 +467,17 @@
   (go
     (= [1 2 3 4 5]
       (<! (async/transduce (map inc) conj [] (async/to-chan (range 5)))))))
+
+(def ^:dynamic foo 42)
+
+(deftest test-locals-alias-globals
+  (async done
+    (go
+      (let [old foo]
+        (set! foo 45)
+        (is (= foo 45))
+        (is (= old 42))
+        (set! foo old)
+        (is (= old 42))
+        (is (= foo 42)))
+      (done))))
