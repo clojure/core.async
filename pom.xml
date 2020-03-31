@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.clojure</groupId>
     <artifactId>pom.contrib</artifactId>
-    <version>0.2.2</version>
+    <version>1.0.0</version>
   </parent>
 
   <scm>
@@ -31,14 +31,14 @@
   </scm>
 
   <properties>
-    <clojure.version>1.7.0</clojure.version>
+    <clojure.version>1.9.0</clojure.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojurescript</artifactId>
-      <version>0.0-2311</version>
+      <version>1.10.597</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -54,7 +54,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
-        <version>2.3</version>
+        <version>2.7</version>
       </plugin>
       <plugin>
         <groupId>com.theoryinpractise</groupId>

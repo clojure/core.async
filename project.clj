@@ -3,10 +3,10 @@
   :url "https://github.com/clojure/core.async"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :parent [org.clojure/pom.contrib "0.1.2"]
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/tools.analyzer.jvm "0.7.3"]
-                 [org.clojure/clojurescript "1.7.170" :scope "provided"]]
+  :parent [org.clojure/pom.contrib "1.0.0"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/tools.analyzer.jvm "1.0.0"]
+                 [org.clojure/clojurescript "1.10.597" :scope "provided"]]
   :global-vars {*warn-on-reflection* true}
   :source-paths ["src/main/clojure"]
   :test-paths ["src/test/clojure"]
@@ -14,7 +14,7 @@
   :java-source-paths ["src/main/java"]
   :profiles {:dev {:source-paths ["examples"]}}
 
-  :plugins [[lein-cljsbuild "1.1.2"]]
+  :plugins [[lein-cljsbuild "1.1.7"]]
 
   :clean-targets ["tests.js" "tests.js.map"
                   "out" "out-simp" "out-simp-node"
