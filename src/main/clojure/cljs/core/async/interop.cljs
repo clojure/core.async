@@ -7,6 +7,7 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns cljs.core.async.interop
+  (:require-macros [cljs.core.async.interop])
   (:require [cljs.core.async :as async]))
 
 (defn p->c
