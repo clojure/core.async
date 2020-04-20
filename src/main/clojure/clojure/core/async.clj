@@ -584,7 +584,7 @@ to catch and handle."
   should be used for computational parallelism. If you have multiple
   blocking operations to put in flight, use pipeline-blocking instead,
   If you have multiple asynchronous operations to put in flight, use
-  pipeline-async instead."
+  pipeline-async instead. See chan for semantics of ex-handler."
   ([n to xf from] (pipeline n to xf from true))
   ([n to xf from close?] (pipeline n to xf from close? nil))
   ([n to xf from close? ex-handler] (pipeline* n to xf from close? ex-handler :compute)))
