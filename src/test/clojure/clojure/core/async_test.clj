@@ -203,9 +203,24 @@
     (is (= [1 3 5]
            (<!! (a/into [] (a/remove< even? (a/to-chan [1 2 3 4 5 6])))))))
 
-  (testing "onto-chan"
+  (testing "to-chan"
     (is (= (range 10)
-           (<!! (a/into [] (a/to-chan (range 10)))))))
+           (<!! (a/into [] (a/to-chan (range 10))))))
+    (is (= (range 10)
+          (<!! (a/into [] (a/to-chan! (range 10))))))
+    (is (= (range 10)
+          (<!! (a/into [] (a/to-chan!! (range 10)))))))
+
+  (testing "onto-chan"
+    (let [ch (chan 10)]
+      (a/onto-chan ch (range 10))
+      (is (= (range 10) (<!! (a/into [] ch)))))
+    (let [ch (chan 10)]
+      (a/onto-chan! ch (range 10))
+      (is (= (range 10) (<!! (a/into [] ch)))))
+    (let [ch (chan 10)]
+      (a/onto-chan!! ch (range 10))
+      (is (= (range 10) (<!! (a/into [] ch))))))
 
   (testing "filter>"
     (is (= [2 4 6]
