@@ -1,6 +1,6 @@
 (ns clojure.core.pipeline-test
   (:require [clojure.test :refer (deftest is are)]
-            [clojure.core.async :as a :refer [<! >! <!! >!! go go-loop thread chan close! to-chan
+            [clojure.core.async :as a :refer [<! >! <!! >!! go go-loop thread chan close! to-chan!
 			                                  pipeline pipeline-blocking pipeline-async]]))
 
 ;; in Clojure 1.7, use (map f) instead of this
@@ -15,7 +15,7 @@
          (f1 result (apply f input inputs))))))
 
 (defn pipeline-tester [pipeline-fn n inputs xf]
-  (let [cin (to-chan inputs)
+  (let [cin (to-chan! inputs)
         cout (chan 1)]
     (pipeline-fn n cout xf cin)
     (<!! (go-loop [acc []] 
@@ -43,16 +43,16 @@
 (deftest test-close?
   (doseq [pf [pipeline pipeline-blocking]]
     (let [cout (chan 1)]
-      (pf 5 cout identity-mapping (to-chan [1]) true)
+      (pf 5 cout identity-mapping (to-chan! [1]) true)
       (is (= 1 (<!! cout)))
       (is (= nil (<!! cout))))
     (let [cout (chan 1)]
-      (pf 5 cout identity-mapping (to-chan [1]) false)
+      (pf 5 cout identity-mapping (to-chan! [1]) false)
       (is (= 1 (<!! cout)))
       (>!! cout :more)
       (is (= :more (<!! cout))))
     (let [cout (chan 1)]
-      (pf 5 cout identity-mapping (to-chan [1]) nil)
+      (pf 5 cout identity-mapping (to-chan! [1]) nil)
       (is (= 1 (<!! cout)))
       (>!! cout :more)
       (is (= :more (<!! cout))))))
@@ -63,7 +63,7 @@
           chex (chan 1)
           ex-mapping (mapping (fn [x] (if (= x 3) (throw (ex-info "err" {:data x})) x)))
           ex-handler (fn [e] (do (>!! chex e) :err))]
-      (pf 5 cout ex-mapping (to-chan [1 2 3 4]) true ex-handler)
+      (pf 5 cout ex-mapping (to-chan! [1 2 3 4]) true ex-handler)
       (is (= 1 (<!! cout)))
       (is (= 2 (<!! cout)))
       (is (= :err (<!! cout)))

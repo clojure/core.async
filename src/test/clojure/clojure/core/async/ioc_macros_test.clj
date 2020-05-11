@@ -342,7 +342,7 @@
   (defn identity-chan
     "Defines a channel that contains the given value"
     [x]
-    (to-chan [x]))
+    (to-chan! [x]))
 
   (deftest async-test
     (testing "values are returned correctly"

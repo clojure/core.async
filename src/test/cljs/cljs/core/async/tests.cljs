@@ -150,7 +150,7 @@
   (async done
     (go
       (is (= [2 3 4 5]
-            (<! (async/into [] (async/map< inc (async/to-chan [1 2 3 4]))))))
+            (<! (async/into [] (async/map< inc (async/to-chan! [1 2 3 4]))))))
       (done))))
 
 (deftest test-map>
@@ -159,7 +159,7 @@
       (is (= [2 3 4 5]
              (let [out (chan)
                    in (async/map> inc out)]
-               (async/onto-chan in [1 2 3 4])
+               (async/onto-chan! in [1 2 3 4])
                (<! (async/into [] out)))))
       (done))))
 
@@ -167,14 +167,14 @@
   (async done
     (go
       (is (= [2 4 6]
-             (<! (async/into [] (async/filter< even? (async/to-chan [1 2 3 4 5 6]))))))
+             (<! (async/into [] (async/filter< even? (async/to-chan! [1 2 3 4 5 6]))))))
       (done))))
 
 (deftest test-remoev<
   (async done
     (go
       (is (= [1 3 5]
-             (<! (async/into [] (async/remove< even? (async/to-chan [1 2 3 4 5 6]))))))
+             (<! (async/into [] (async/remove< even? (async/to-chan! [1 2 3 4 5 6]))))))
       (done))))
 
 (deftest test-filter>
@@ -183,7 +183,7 @@
       (is (= [2 4 6]
              (let [out (chan)
                    in (async/filter> even? out)]
-               (async/onto-chan in [1 2 3 4 5 6])
+               (async/onto-chan! in [1 2 3 4 5 6])
                (<! (async/into [] out)))))
       (done))))
 
@@ -193,7 +193,7 @@
       (is (= [1 3 5]
              (let [out (chan)
                    in (async/remove> even? out)]
-               (async/onto-chan in [1 2 3 4 5 6])
+               (async/onto-chan! in [1 2 3 4 5 6])
                (<! (async/into [] out)))))
       (done))))
 
@@ -201,7 +201,7 @@
   (async done
     (go
       (is (= [0 0 1 0 1 2]
-             (<! (async/into [] (async/mapcat< range (async/to-chan [1 2 3]))))))
+             (<! (async/into [] (async/mapcat< range (async/to-chan! [1 2 3]))))))
       (done))))
 
 (deftest test-mapcat>
@@ -210,7 +210,7 @@
       (is (= [0 0 1 0 1 2]
              (let [out (chan)
                    in (async/mapcat> range out)]
-               (async/onto-chan in [1 2 3])
+               (async/onto-chan! in [1 2 3])
                (<! (async/into [] out)))))
       (done))))
 
@@ -219,7 +219,7 @@
     (go
       (is (= [1 2 3 4 5]
              (let [out (chan)]
-               (async/pipe (async/to-chan [1 2 3 4 5])
+               (async/pipe (async/to-chan! [1 2 3 4 5])
                  out)
                (<! (async/into [] out)))))
       (done))))
@@ -228,7 +228,7 @@
   (async done
     ;; Must provide buffers for channels else the tests won't complete
     (go
-      (let [[even odd] (async/split even? (async/to-chan [1 2 3 4 5 6]) 5 5)]
+      (let [[even odd] (async/split even? (async/to-chan! [1 2 3 4 5 6]) 5 5)]
         (is (= [2 4 6] (<! (async/into [] even))))
         (is (= [1 3 5] (<! (async/into [] odd)))))
       (done))))
@@ -239,10 +239,10 @@
       (is (= [0 4 8 12]
              (<! (async/into []
                    (async/map +
-                     [(async/to-chan (range 4))
-                      (async/to-chan (range 4))
-                      (async/to-chan (range 4))
-                      (async/to-chan (range 4))])))))
+                     [(async/to-chan! (range 4))
+                      (async/to-chan! (range 4))
+                      (async/to-chan! (range 4))
+                      (async/to-chan! (range 4))])))))
       (done))))
 
 (deftest test-merge
@@ -254,10 +254,10 @@
             (frequencies
               (<! (async/into []
                     (async/merge
-                      [(async/to-chan (range 4))
-                       (async/to-chan (range 4))
-                       (async/to-chan (range 4))
-                       (async/to-chan (range 4))]))))))
+                      [(async/to-chan! (range 4))
+                       (async/to-chan! (range 4))
+                       (async/to-chan! (range 4))
+                       (async/to-chan! (range 4))]))))))
       (done))))
 
 (deftest test-mult
@@ -269,7 +269,7 @@
             m (async/mult src)]
         (async/tap m a)
         (async/tap m b)
-        (async/pipe (async/to-chan (range 4)) src)
+        (async/pipe (async/to-chan! (range 4)) src)
         (is (= [0 1 2 3] (<! (async/into [] a))))
         (is (= [0 1 2 3] (<! (async/into [] b))))
         (done)))))
@@ -283,8 +283,8 @@
             take6 (go (dotimes [x 6]
                         (>! take-out (<! out)))
                     (close! take-out))]
-        (async/admix mx (async/to-chan [1 2 3]))
-        (async/admix mx (async/to-chan [4 5 6]))
+        (async/admix mx (async/to-chan! [1 2 3]))
+        (async/admix mx (async/to-chan! [4 5 6]))
         (is (= #{1 2 3 4 5 6} (<! (async/into #{} take-out))))
         (done)))))
 
@@ -304,7 +304,7 @@
         (async/sub p :string b-strs)
         (async/sub p :int a-ints)
         (async/sub p :int b-ints)
-        (async/pipe (async/to-chan [1 "a" 2 "b" 3 "c"]) src)
+        (async/pipe (async/to-chan! [1 "a" 2 "b" 3 "c"]) src)
         (is (= [1 2 3]
               (<! (async/into [] a-ints))))
         (is (= [1 2 3]
@@ -319,14 +319,14 @@
   (async done
     (go
       (is (= [1 2 3 4]
-             (<! (async/into [] (async/unique (async/to-chan [1 1 2 2 3 3 3 3 4]))))))
+             (<! (async/into [] (async/unique (async/to-chan! [1 1 2 2 3 3 3 3 4]))))))
       (done))))
 
 (deftest test-partition
   (async done
     (go
       (is (= [[1 2] [2 3]]
-             (<! (async/into [] (async/partition 2 (async/to-chan [1 2 2 3]))))))
+             (<! (async/into [] (async/partition 2 (async/to-chan! [1 2 2 3]))))))
       (done))))
 
 
@@ -334,18 +334,18 @@
   (async done
     (go
       (is (= [["a" "b"] [1 :2 3] ["c"]]
-             (<! (async/into [] (async/partition-by string? (async/to-chan ["a" "b" 1 :2 3 "c"]))))))
+             (<! (async/into [] (async/partition-by string? (async/to-chan! ["a" "b" 1 :2 3 "c"]))))))
       (done))))
 
 (deftest test-reduce
   (async done
     (let [l (latch 3 done)]
-      (go (is (= 0 (<! (async/reduce + 0 (async/to-chan [])))))
+      (go (is (= 0 (<! (async/reduce + 0 (async/to-chan! [])))))
         (inc! l))
-      (go (is (= 45 (<! (async/reduce + 0 (async/to-chan (range 10))))))
+      (go (is (= 45 (<! (async/reduce + 0 (async/to-chan! (range 10))))))
         (inc! l))
       (go (is (= :foo (<! (async/reduce #(if (= %2 2) (reduced :foo) %1) 0
-                            (async/to-chan (range 10))))))
+                            (async/to-chan! (range 10))))))
         (inc! l)))))
 
 (deftest dispatch-bugs
@@ -474,7 +474,7 @@
 (deftest test-transduce
   (go
     (= [1 2 3 4 5]
-      (<! (async/transduce (map inc) conj [] (async/to-chan (range 5)))))))
+      (<! (async/transduce (map inc) conj [] (async/to-chan! (range 5)))))))
 
 (def ^:dynamic foo 42)
 

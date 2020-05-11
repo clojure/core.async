@@ -189,19 +189,19 @@
 (deftest ops-tests
   (testing "map<"
     (is (= [2 3 4 5]
-           (<!! (a/into [] (a/map< inc (a/to-chan [1 2 3 4])))))))
+           (<!! (a/into [] (a/map< inc (a/to-chan! [1 2 3 4])))))))
   (testing "map>"
     (is (= [2 3 4 5]
            (let [out (chan)
                  in (a/map> inc out)]
-             (a/onto-chan in [1 2 3 4])
+             (a/onto-chan! in [1 2 3 4])
              (<!! (a/into [] out))))))
   (testing "filter<"
     (is (= [2 4 6]
-           (<!! (a/into [] (a/filter< even? (a/to-chan [1 2 3 4 5 6])))))))
+           (<!! (a/into [] (a/filter< even? (a/to-chan! [1 2 3 4 5 6])))))))
   (testing "remove<"
     (is (= [1 3 5]
-           (<!! (a/into [] (a/remove< even? (a/to-chan [1 2 3 4 5 6])))))))
+           (<!! (a/into [] (a/remove< even? (a/to-chan! [1 2 3 4 5 6])))))))
 
   (testing "to-chan"
     (is (= (range 10)
@@ -226,45 +226,45 @@
     (is (= [2 4 6]
            (let [out (chan)
                  in (filter> even? out)]
-             (a/onto-chan in [1 2 3 4 5 6])
+             (a/onto-chan! in [1 2 3 4 5 6])
              (<!! (a/into [] out))))))
   (testing "remove>"
     (is (= [1 3 5]
            (let [out (chan)
                  in (remove> even? out)]
-             (a/onto-chan in [1 2 3 4 5 6])
+             (a/onto-chan! in [1 2 3 4 5 6])
              (<!! (a/into [] out))))))
   (testing "mapcat<"
     (is (= [0 0 1 0 1 2]
            (<!! (a/into [] (mapcat< range
-                                    (a/to-chan [1 2 3])))))))
+                                    (a/to-chan! [1 2 3])))))))
   (testing "mapcat>"
     (is (= [0 0 1 0 1 2]
            (let [out (chan)
                  in (mapcat> range out)]
-             (a/onto-chan in [1 2 3])
+             (a/onto-chan! in [1 2 3])
              (<!! (a/into [] out))))))
 
 
   (testing "pipe"
     (is (= [1 2 3 4 5]
            (let [out (chan)]
-             (pipe (a/to-chan [1 2 3 4 5])
+             (pipe (a/to-chan! [1 2 3 4 5])
                    out)
              (<!! (a/into [] out))))))
   (testing "split"
     ;; Must provide buffers for channels else the tests won't complete
-    (let [[even odd] (a/split even? (a/to-chan [1 2 3 4 5 6]) 5 5)]
+    (let [[even odd] (a/split even? (a/to-chan! [1 2 3 4 5 6]) 5 5)]
       (is (= [2 4 6]
              (<!! (a/into [] even))))
       (is (= [1 3 5]
              (<!! (a/into [] odd))))))
   (testing "map"
     (is (= [0 4 8 12]
-           (<!! (a/into [] (a/map + [(a/to-chan (range 4))
-                                     (a/to-chan (range 4))
-                                     (a/to-chan (range 4))
-                                     (a/to-chan (range 4))]))))))
+           (<!! (a/into [] (a/map + [(a/to-chan! (range 4))
+                                     (a/to-chan! (range 4))
+                                     (a/to-chan! (range 4))
+                                     (a/to-chan! (range 4))]))))))
   (testing "merge"
     ;; merge uses alt, so results can be in any order, we're using
     ;; frequencies as a way to make sure we get the right result.
@@ -272,10 +272,10 @@
             1 4
             2 4
             3 4}
-           (frequencies (<!! (a/into [] (a/merge [(a/to-chan (range 4))
-                                                  (a/to-chan (range 4))
-                                                  (a/to-chan (range 4))
-                                                  (a/to-chan (range 4))])))))))
+           (frequencies (<!! (a/into [] (a/merge [(a/to-chan! (range 4))
+                                                  (a/to-chan! (range 4))
+                                                  (a/to-chan! (range 4))
+                                                  (a/to-chan! (range 4))])))))))
 
   (testing "mult"
     (let [a (chan 4)
@@ -284,14 +284,14 @@
           m (mult src)]
       (tap m a)
       (tap m b)
-      (pipe (a/to-chan (range 4)) src)
+      (pipe (a/to-chan! (range 4)) src)
       (is (= [0 1 2 3]
              (<!! (a/into [] a))))
       (is (= [0 1 2 3]
              (<!! (a/into [] b)))))
 
     ;; ASYNC-127
-    (let [ch (to-chan [1 2 3])
+    (let [ch (to-chan! [1 2 3])
           m (mult ch)
           t-1 (chan)
           t-2 (chan)
@@ -309,8 +309,8 @@
   (testing "mix"
     (let [out (chan)
           mx (mix out)]
-      (admix mx (a/to-chan [1 2 3]))
-      (admix mx (a/to-chan [4 5 6]))
+      (admix mx (a/to-chan! [1 2 3]))
+      (admix mx (a/to-chan! [4 5 6]))
 
       (is (= #{1 2 3 4 5 6}
              (<!! (a/into #{} (a/take 6 out))))))
@@ -340,7 +340,7 @@
       (sub p :string b-strs)
       (sub p :int a-ints)
       (sub p :int b-ints)
-      (pipe (a/to-chan [1 "a" 2 "b" 3 "c"]) src)
+      (pipe (a/to-chan! [1 "a" 2 "b" 3 "c"]) src)
       (is (= [1 2 3]
              (<!! (a/into [] a-ints))))
       (is (= [1 2 3]
@@ -352,19 +352,19 @@
 
   (testing "unique"
     (is (= [1 2 3 4]
-           (<!! (a/into [] (a/unique (a/to-chan [1 1 2 2 3 3 3 3 4])))))))
+           (<!! (a/into [] (a/unique (a/to-chan! [1 1 2 2 3 3 3 3 4])))))))
 
   (testing "partition"
     (is (= [[1 2] [2 3]]
-           (<!! (a/into [] (a/partition 2 (a/to-chan [1 2 2 3])))))))
+           (<!! (a/into [] (a/partition 2 (a/to-chan! [1 2 2 3])))))))
   (testing "partition-by"
     (is (= [["a" "b"] [1 :2 3] ["c"]]
-           (<!! (a/into [] (a/partition-by string? (a/to-chan ["a" "b" 1 :2 3 "c"])))))))
+           (<!! (a/into [] (a/partition-by string? (a/to-chan! ["a" "b" 1 :2 3 "c"])))))))
 
   (testing "reduce"
-    (is (= 0 (<!! (a/reduce + 0 (a/to-chan [])))))
-    (is (= 45 (<!! (a/reduce + 0 (a/to-chan (range 10))))))
-    (is (= :foo (<!! (a/reduce #(if (= %2 2) (reduced :foo) %1) 0 (a/to-chan (range 10)))))))
+    (is (= 0 (<!! (a/reduce + 0 (a/to-chan! [])))))
+    (is (= 45 (<!! (a/reduce + 0 (a/to-chan! (range 10))))))
+    (is (= :foo (<!! (a/reduce #(if (= %2 2) (reduced :foo) %1) 0 (a/to-chan! (range 10)))))))
   )
 
 ;; transducer yielding n copies of each input value
@@ -395,7 +395,7 @@
       (take! c #(do
                  (when (some? %) (swap! res conj %))
                  (swap! counter inc))))
-    (onto-chan c input)
+    (onto-chan! c input)
 
     ;; wait for all takers to report
     (while (< @counter takers)
@@ -452,4 +452,4 @@
 
 (deftest test-transduce
   (is (= [1 2 3 4 5]
-         (<!! (a/transduce (mapping inc) conj [] (a/to-chan (range 5)))))))
+         (<!! (a/transduce (mapping inc) conj [] (a/to-chan! (range 5)))))))

@@ -10,11 +10,11 @@
   (:require-macros [cljs.core.async.macros :as m :refer [go go-loop]])
   (:require [cljs.core.async.test-helpers :refer [latch inc!]]
             [cljs.core.async :as a
-             :refer [<! >! chan close! to-chan pipeline-async pipeline put!]]
+             :refer [<! >! chan close! to-chan! pipeline-async pipeline put!]]
             [cljs.test :refer-macros [deftest is testing async]]))
 
 (defn pipeline-tester [pipeline-fn n inputs xf]
-  (let [cin (to-chan inputs)
+  (let [cin (to-chan! inputs)
         cout (chan 1)]
     (pipeline-fn n cout xf cin)
     (go-loop [acc []]
@@ -58,16 +58,16 @@
   (async done
     (go
       (let [cout (chan 1)]
-        (pipeline 5 cout (map identity) (to-chan [1]) true)
+        (pipeline 5 cout (map identity) (to-chan! [1]) true)
         (is (= 1 (<! cout)))
         (is (= nil (<! cout))))
       (let [cout (chan 1)]
-        (pipeline 5 cout (map identity) (to-chan [1]) false)
+        (pipeline 5 cout (map identity) (to-chan! [1]) false)
         (is (= 1 (<! cout)))
         (>! cout :more)
         (is (= :more (<! cout))))
       (let [cout (chan 1)]
-        (pipeline 5 cout (map identity) (to-chan [1]) nil)
+        (pipeline 5 cout (map identity) (to-chan! [1]) nil)
         (is (= 1 (<! cout)))
         (>! cout :more)
         (is (= :more (<! cout))))
@@ -80,7 +80,7 @@
             chex (chan 1)
             ex-mapping (map (fn [x] (if (= x 3) (throw (ex-info "err" {:data x})) x)))
             ex-handler (fn [e] (do (put! chex e) :err))]
-        (pipeline 5 cout ex-mapping (to-chan [1 2 3 4]) true ex-handler)
+        (pipeline 5 cout ex-mapping (to-chan! [1 2 3 4]) true ex-handler)
         (is (= 1 (<! cout)))
         (is (= 2 (<! cout)))
         (is (= :err (<! cout)))
