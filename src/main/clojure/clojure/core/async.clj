@@ -669,14 +669,16 @@ to catch and handle."
         (recur (inc i) (next s))
         i))))
 
-(defn onto-chan
+(defn onto-chan!
   "Puts the contents of coll into the supplied channel.
 
   By default the channel will be closed after the items are copied,
   but can be determined by the close? parameter.
 
-  Returns a channel which will close after the items are copied."
-  ([ch coll] (onto-chan ch coll true))
+  Returns a channel which will close after the items are copied.
+
+  If accessing coll might block, use onto-chan!! instead"
+  ([ch coll] (onto-chan! ch coll true))
   ([ch coll close?]
      (go-loop [vs (seq coll)]
               (if (and vs (>! ch (first vs)))
@@ -684,14 +686,53 @@ to catch and handle."
                 (when close?
                   (close! ch))))))
 
-(defn to-chan
+(defn to-chan!
   "Creates and returns a channel which contains the contents of coll,
-  closing when exhausted."
+  closing when exhausted.
+
+  If accessing coll might block, use to-chan!! instead"
   [coll]
   (let [c (bounded-count 100 coll)]
     (if (pos? c)
       (let [ch (chan c)]
-        (onto-chan ch coll)
+        (onto-chan! ch coll)
+        ch)
+      (let [ch (chan)]
+        (close! ch)
+        ch))))
+
+(defn onto-chan
+  "Deprecated - use onto-chan! or onto-chan!!"
+  {:deprecated "1.2"}
+  ([ch coll] (onto-chan! ch coll true))
+  ([ch coll close?] (onto-chan! ch coll close?)))
+
+(defn to-chan
+  "Deprecated - use to-chan! or to-chan!!"
+  {:deprecated "1.2"}
+  [coll]
+  (to-chan! coll))
+
+(defn onto-chan!!
+  "Like onto-chan! for use when accessing coll might block,
+  e.g. a lazy seq of blocking operations"
+  ([ch coll] (onto-chan!! ch coll true))
+  ([ch coll close?]
+   (thread
+     (loop [vs (seq coll)]
+       (if (and vs (>!! ch (first vs)))
+         (recur (next vs))
+         (when close?
+           (close! ch)))))))
+
+(defn to-chan!!
+  "Like to-chan! for use when accessing coll might block,
+  e.g. a lazy seq of blocking operations"
+  [coll]
+  (let [c (bounded-count 100 coll)]
+    (if (pos? c)
+      (let [ch (chan c)]
+        (onto-chan!! ch coll)
         ch)
       (let [ch (chan)]
         (close! ch)
