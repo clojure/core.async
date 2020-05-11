@@ -386,7 +386,7 @@
       (let [ret (<! (reduce f init ch))]
         (f ret)))))
 
-(defn onto-chan
+(defn onto-chan!
   "Puts the contents of coll into the supplied channel.
 
   By default the channel will be closed after the items are copied,
@@ -402,14 +402,25 @@
                   (close! ch))))))
 
 
-(defn to-chan
+(defn to-chan!
   "Creates and returns a channel which contains the contents of coll,
   closing when exhausted."
   [coll]
   (let [ch (chan (bounded-count 100 coll))]
-    (onto-chan ch coll)
+    (onto-chan! ch coll)
     ch))
 
+(defn onto-chan
+  "Deprecated - use onto-chan!"
+  {:deprecated "1.2"}
+  ([ch coll] (onto-chan! ch coll true))
+  ([ch coll close?] (onto-chan! ch coll close?)))
+
+(defn to-chan
+  "Deprecated - use to-chan!"
+  {:deprecated "1.2"}
+  [coll]
+  (to-chan! coll))
 
 (defprotocol Mux
   (muxch* [_]))
