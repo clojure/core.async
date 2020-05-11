@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Index - core.async 1.1.583-SNAPSHOT API documentation</title>
+    <title>Index - core.async 1.2.594-SNAPSHOT API documentation</title>
     <link rel="icon" href="static/favicon.png" />
     <link rel="shortcut icon" href="static/favicon.png" />
     <link rel="stylesheet" href="static/clojure.css" type="text/css" media="all" />
@@ -25,7 +25,7 @@ namespace.
       <div id="leftcolumn"><div style="text-align: center;"></div>
 <div class="menu">
   <div class="WikiCustomNav WikiElement wiki">
-    <span class="toc-header"><span id="project-name">core.async</span> <span id="version">1.1.583-SNAPSHOT</span> API</span><br />
+    <span class="toc-header"><span id="project-name">core.async</span> <span id="version">1.2.594-SNAPSHOT</span> API</span><br />
     <ul>
       <li><a href="index.html" class="wiki_link">Overview</a></li>
       <li><a href="api-index.html" class="wiki_link">API Index</a></li>
@@ -41,7 +41,7 @@ namespace.
 	  <div class="contentBox"><div class="innerContentBox">
               <div class="wiki wikiPage" id="content_view">
                 <div id="right-sidebar"></div>
-                <div id="content-tag"><h1 id="overview">Index of Public Functions and Variables - <span id="header-project">core.async</span> <span id="header-version">1.1.583-SNAPSHOT</span><span id="header-status-block"> (<span id="header-status">in development</span>)</span></h1>
+                <div id="content-tag"><h1 id="overview">Index of Public Functions and Variables - <span id="header-project">core.async</span> <span id="header-version">1.2.594-SNAPSHOT</span><span id="header-status-block"> (<span id="header-status">in development</span>)</span></h1>
 This page has an alphabetical index of all the documented functions and variables
 in <span class="project-name-span">core.async</span>.
 
@@ -158,7 +158,9 @@ Shortcuts:<br />
   <h2 id="O"><span id="section-head">O</span></h2>
   <pre>
 <span id="section-content"> <a href="index.html#clojure.core.async/offer!">offer!</a><span id="line-content">                       function      clojure.core.async Puts a val into port if it's possible to do so imm...
-</span></span><span id="section-content"> <a href="index.html#clojure.core.async/onto-chan">onto-chan</a><span id="line-content">                    function      clojure.core.async Puts the contents of coll into the supplied channe...
+</span></span><span id="section-content"> <a href="index.html#clojure.core.async/onto-chan">onto-chan</a><span id="line-content">                    function      clojure.core.async Deprecated - use onto-chan! or onto-chan!!.
+</span></span><span id="section-content"> <a href="index.html#clojure.core.async/onto-chan!">onto-chan!</a><span id="line-content">                   function      clojure.core.async Puts the contents of coll into the supplied channe...
+</span></span><span id="section-content"> <a href="index.html#clojure.core.async/onto-chan!!">onto-chan!!</a><span id="line-content">                  function      clojure.core.async Like onto-chan! for use when accessing coll might ...
 </span></span>
   </pre>
 </div><div id="index-body">
@@ -203,7 +205,9 @@ Shortcuts:<br />
 </span></span><span id="section-content"> <a href="index.html#clojure.core.async/thread">thread</a><span id="line-content">                       macro         clojure.core.async Executes the body in another thread, returning imm...
 </span></span><span id="section-content"> <a href="index.html#clojure.core.async/thread-call">thread-call</a><span id="line-content">                  function      clojure.core.async Executes f in another thread, returning immediatel...
 </span></span><span id="section-content"> <a href="index.html#clojure.core.async/timeout">timeout</a><span id="line-content">                      function      clojure.core.async Returns a channel that will close after msecs.
-</span></span><span id="section-content"> <a href="index.html#clojure.core.async/to-chan">to-chan</a><span id="line-content">                      function      clojure.core.async Creates and returns a channel which contains the c...
+</span></span><span id="section-content"> <a href="index.html#clojure.core.async/to-chan">to-chan</a><span id="line-content">                      function      clojure.core.async Deprecated - use to-chan! or to-chan!!.
+</span></span><span id="section-content"> <a href="index.html#clojure.core.async/to-chan!">to-chan!</a><span id="line-content">                     function      clojure.core.async Creates and returns a channel which contains the c...
+</span></span><span id="section-content"> <a href="index.html#clojure.core.async/to-chan!!">to-chan!!</a><span id="line-content">                    function      clojure.core.async Like to-chan! for use when accessing coll might bl...
 </span></span><span id="section-content"> <a href="index.html#clojure.core.async/toggle">toggle</a><span id="line-content">                       function      clojure.core.async Atomically sets the state(s) of one or more channe...
 </span></span><span id="section-content"> <a href="index.html#clojure.core.async/transduce">transduce</a><span id="line-content">                    function      clojure.core.async async/reduces a channel with a transformation (xfo...
 </span></span>
