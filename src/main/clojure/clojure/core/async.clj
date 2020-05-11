@@ -670,12 +670,14 @@ to catch and handle."
         i))))
 
 (defn onto-chan!
-  "Puts the contents of coll into the supplied channel in a go loop.
+  "Puts the contents of coll into the supplied channel.
 
   By default the channel will be closed after the items are copied,
   but can be determined by the close? parameter.
 
-  Returns a channel which will close after the items are copied."
+  Returns a channel which will close after the items are copied.
+
+  If accessing coll might block, use onto-chan!!"
   ([ch coll] (onto-chan! ch coll true))
   ([ch coll close?]
      (go-loop [vs (seq coll)]
@@ -686,7 +688,7 @@ to catch and handle."
 
 (defn to-chan!
   "Creates and returns a channel which contains the contents of coll,
-  closing when exhausted, using a go loop"
+  closing when exhausted. If accessing coll might block, use onto-chan!!"
   [coll]
   (let [c (bounded-count 100 coll)]
     (if (pos? c)
@@ -698,22 +700,20 @@ to catch and handle."
         ch))))
 
 (defn onto-chan
-  "Same as onto-chan!"
+  "Deprecated - use onto-chan! or onto-chan!!"
+  {:deprecated "1.2"}
   ([ch coll] (onto-chan! ch coll true))
   ([ch coll close?] (onto-chan! ch coll close?)))
 
 (defn to-chan
-  "Same as to-chan!"
+  "Deprecated - use to-chan! or to-chan!!"
+  {:deprecated "1.2"}
   [coll]
   (to-chan! coll))
 
 (defn onto-chan!!
-  "Puts the contents of coll into the supplied channel on a separate thread.
-
-  By default the channel will be closed after the items are copied,
-  but can be determined by the close? parameter.
-
-  Returns a channel which will close after the items are copied."
+  "Like onto-chan! but use when accessing coll might block,
+  e.g. a lazy seq of blocking operations"
   ([ch coll] (onto-chan!! ch coll true))
   ([ch coll close?]
    (thread
@@ -724,8 +724,8 @@ to catch and handle."
            (close! ch)))))))
 
 (defn to-chan!!
-  "Creates and returns a channel which contains the contents of coll,
-  closing when exhausted, using a separate thread."
+  "Like to-chan! but use when accessing coll might block,
+  e.g. a lazy seq of blocking operations"
   [coll]
   (let [c (bounded-count 100 coll)]
     (if (pos? c)
