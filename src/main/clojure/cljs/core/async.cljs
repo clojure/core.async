@@ -393,7 +393,7 @@
   but can be determined by the close? parameter.
 
   Returns a channel which will close after the items are copied."
-  ([ch coll] (onto-chan ch coll true))
+  ([ch coll] (onto-chan! ch coll true))
   ([ch coll close?]
      (go-loop [vs (seq coll)]
               (if (and vs (>! ch (first vs)))
