@@ -186,7 +186,7 @@ to catch and handle."
 
 (defn put!
   "Asynchronously puts a val into port, calling fn1 (if supplied) when
-   complete, passing false iff port is already closed. nil values are
+   complete, passing false if port is already closed. nil values are
    not allowed. If on-caller? (default true) is true, and the put is
    immediately accepted, will call fn1 on calling thread.
 
