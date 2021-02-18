@@ -193,7 +193,7 @@
                (finally (reset! a true))))]
       (is (and @a v)))
 
-    (testing "https://dev.clojure.org/jira/browse/ASYNC-73"
+    (testing "https://clojure.atlassian.net/browse/ASYNC-73"
       (let [a (atom false)]
         (runner
          (try
@@ -211,7 +211,7 @@
              (catch :default e
                true)))))
 
-    (testing "https://dev.clojure.org/jira/browse/ASYNC-172"
+    (testing "https://clojure.atlassian.net/browse/ASYNC-172"
       (is (= 123 (runner
                   (try (throw 123)
                        (catch :default e 123))))))
