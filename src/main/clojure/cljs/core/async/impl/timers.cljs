@@ -76,8 +76,13 @@
             (loop [i 0]
               (when (<= i level)
                 (let [links (.-forward (aget update i))]
-                  (aset (.-forward x) i (aget links i))
-                  (aset links i x))
+                  (if (< i (alength (.-forward x)))
+                    (aset (.-forward x) i (aget links i))
+                    (.push (.-forward x) (when (< i (alength links))
+                                           (aget links i))))
+                  (if (< i (alength links))
+                    (aset links i x)
+                    (.push links x)))
                 (recur (inc i)))))))))
 
   (remove [coll k]
