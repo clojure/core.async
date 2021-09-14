@@ -63,6 +63,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* next
+  * Update dep for tools.analyzer.jvm to 1.2.0
 * Release 1.3.618 on 2021.04.26
   * [ASYNC-237](https://clojure.atlassian.net/browse/ASYNC-237): (cljs) timeout timers access array elements with out-of-bounds index
 * Release 1.3.610 on 2020.07.24
