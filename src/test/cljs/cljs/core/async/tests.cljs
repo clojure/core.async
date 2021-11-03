@@ -18,7 +18,8 @@
    [cljs.core.async.impl.timers :as timers :refer [timeout]]
    [cljs.core.async.impl.protocols :refer [full? add! remove!]]
    [cljs.core.async.test-helpers :refer [latch inc!]]
-   [cljs.test :as test :refer-macros [deftest is run-tests async testing]]))
+   [cljs.test :as test :refer-macros [deftest is run-tests async testing]]
+   [goog.object :as gobj]))
 
 (enable-console-print!)
 
@@ -489,3 +490,36 @@
         (is (= old 42))
         (is (= foo 42)))
       (done))))
+
+(deftest test-js-literals
+  (async done
+    (go
+      (let [arr #js [1 2 3]]
+        (is (= 2 (aget arr 1))))
+      (let [obj #js {:foo 1}]
+        (is (= 1 (gobj/get obj "foo"))))
+      (testing "ASYNC-132 / 117- can't close over local in #js in go"
+        (let [bar 42]
+          (is (= 42 (aget #js [1 bar 3] 1)))
+          (is (= 42 (gobj/get #js {:foo bar} "foo")))))
+      (done))))
+
+(deftest test-js-literals-chans
+  (let [c0 (chan)
+        c1 (chan)]
+   (async done
+     (go
+       (let [arr #js [1 (<! c0) 3]]
+         (is (= 2 (aget arr 1))))
+       (let [obj #js {:foo (<! c1)}]
+         (is (= 1 (gobj/get obj "foo"))))
+       (done))
+     (go
+       (>! c0 2)
+       (>! c1 1)))))
+
+(comment
+
+  (test/run-tests)
+
+  )
