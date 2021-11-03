@@ -16,7 +16,8 @@
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
             [cljs.analyzer :as cljs])
-  (:import [java.util.concurrent.locks Lock]))
+  (:import [cljs.tagged_literals JSValue]
+           [java.util.concurrent.locks Lock]))
 
 (defn debug [x]
   (binding [*out* *err*]
@@ -403,6 +404,7 @@
                           (map? x) :map
                           (set? x) :set
                           (vector? x) :vector
+                          (instance? JSValue x) :js-value
                           :else :default)))
 
 (defn item-to-ssa [x]
@@ -792,6 +794,13 @@
 (defmethod -item-to-ssa :vector
   [x]
   (-item-to-ssa `(vector ~@x)))
+
+(defmethod -item-to-ssa :js-value
+  [^JSValue x]
+  (let [items (.-val x)]
+    (if (map? items)
+      (-item-to-ssa `(cljs.core/js-obj ~@(mapcat (fn [[k v]] [(name k) v]) items)))
+      (-item-to-ssa `(cljs.core/array ~@items)))))
 
 (defmethod -item-to-ssa :set
   [x]
