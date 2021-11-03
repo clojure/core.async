@@ -7,20 +7,20 @@ A Clojure library providing facilities for async programming and communication.
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
-Latest release: 1.3.618
+Latest release: 1.4.627
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "1.3.618"}
+  org.clojure/core.async {:mvn/version "1.4.627"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "1.3.618"]
+ [org.clojure/core.async "1.4.627"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -29,7 +29,7 @@ Latest release: 1.3.618
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>1.3.618</version>
+  <version>1.4.627</version>
 </dependency>
 ```
 
@@ -63,10 +63,12 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* next
+* Release 1.4.627 on 2021.11.03
+  * [ASYNC-132](https://clojure.atlassian.net/browse/ASYNC-132) (CLJS) Can't close over locals in #js in go)
+  * [ASYNC-117](https://clojure.atlassian.net/browse/ASYNC-117) (CLJS) let-bindings unavailable in #js literals in go-blocks
   * Update dep for tools.analyzer.jvm to 1.2.0
 * Release 1.3.618 on 2021.04.26
-  * [ASYNC-237](https://clojure.atlassian.net/browse/ASYNC-237): (cljs) timeout timers access array elements with out-of-bounds index
+  * [ASYNC-237](https://clojure.atlassian.net/browse/ASYNC-237) (CLJS) timeout timers access array elements with out-of-bounds index
 * Release 1.3.610 on 2020.07.24
   * Update dep for tools.analyzer.jvm to 1.1.0
 * Release 1.2.603 on 2020.05.11
