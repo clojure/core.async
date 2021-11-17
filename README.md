@@ -63,6 +63,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* next
+  * [ASYNC-235](https://clojure.atlassian.net/browse/ASYNC-235) (both) Fix ioc-macros/return-chan registers a callback with incorrect arity
 * Release 1.4.627 on 2021.11.03
   * [ASYNC-132](https://clojure.atlassian.net/browse/ASYNC-132) (CLJS) Can't close over locals in #js in go)
   * [ASYNC-117](https://clojure.atlassian.net/browse/ASYNC-117) (CLJS) let-bindings unavailable in #js literals in go-blocks
