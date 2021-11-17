@@ -1015,18 +1015,20 @@ to catch and handle."
                            (when (zero? (swap! dctr dec))
                              (put! dchan (java.util.Arrays/copyOf rets cnt)))))
                        (range cnt))]
-       (go-loop []
-         (reset! dctr cnt)
-         (dotimes [i cnt]
-           (try
-             (take! (chs i) (done i))
-             (catch Exception e
-               (swap! dctr dec))))
-         (let [rets (<! dchan)]
-           (if (some nil? rets)
-             (close! out)
-             (do (>! out (apply f rets))
-                 (recur)))))
+       (if (zero? cnt)
+         (close! out)
+         (go-loop []
+           (reset! dctr cnt)
+           (dotimes [i cnt]
+             (try
+               (take! (chs i) (done i))
+               (catch Exception e
+                 (swap! dctr dec))))
+           (let [rets (<! dchan)]
+             (if (some nil? rets)
+               (close! out)
+               (do (>! out (apply f rets))
+                   (recur))))))
        out)))
 
 (defn merge
