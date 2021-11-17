@@ -1,6 +1,7 @@
 *.iml
 *init.clj
 .idea
+.nrepl-port
 out-simp
 out-simp-node
 out-adv
