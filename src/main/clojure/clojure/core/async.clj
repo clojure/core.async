@@ -601,13 +601,12 @@ to catch and handle."
   must be a function of two arguments, the first an input value and
   the second a channel on which to place the result(s). The
   presumption is that af will return immediately, having launched some
-  asynchronous operation (i.e. in another thread) whose completion/
-  callback will put results on the channel, then close! it. Outputs
-  will be returned in order relative to the inputs. By default, the
-  to channel will be closed when the from channel closes, but can be
-  determined by the close?  parameter. Will stop consuming the from
-  channel if the to channel closes.
-  See also pipeline, pipeline-blocking."
+  asynchronous operation whose completion/callback will put results on
+  the channel, then close! it. Outputs will be returned in order
+  relative to the inputs. By default, the to channel will be closed
+  when the from channel closes, but can be determined by the close?
+  parameter. Will stop consuming the from channel if the to channel
+  closes. See also pipeline, pipeline-blocking."
   ([n to af from] (pipeline-async n to af from true))
   ([n to af from close?] (pipeline* n to af from close? nil :async)))
 

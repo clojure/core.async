@@ -311,14 +311,14 @@
   "Takes elements from the from channel and supplies them to the to
   channel, subject to the async function af, with parallelism n. af
   must be a function of two arguments, the first an input value and
-  the second a channel on which to place the result(s). af must close!
-  the channel before returning.  The presumption is that af will
-  return immediately, having launched some asynchronous operation
-  whose completion/callback will manipulate the result channel. Outputs
-  will be returned in order relative to  the inputs. By default, the to
-  channel will be closed when the from channel closes, but can be
-  determined by the close?  parameter. Will stop consuming the from
-  channel if the to channel closes."
+  the second a channel on which to place the result(s). The
+  presumption is that af will return immediately, having launched some
+  asynchronous operation whose completion/callback will put results on
+  the channel, then close! it. Outputs will be returned in order
+  relative to the inputs. By default, the to channel will be closed
+  when the from channel closes, but can be determined by the close?
+  parameter. Will stop consuming the from channel if the to channel
+  closes. See also pipeline, pipeline-blocking."
   ([n to af from] (pipeline-async n to af from true))
   ([n to af from close?] (pipeline* n to af from close? nil :async)))
 
