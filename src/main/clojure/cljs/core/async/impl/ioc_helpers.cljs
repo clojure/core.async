@@ -69,7 +69,7 @@
 (defn return-chan [state value]
   (let [^not-native c (aget state USER-START-IDX)]
            (when-not (nil? value)
-             (impl/put! c value (fn-handler (fn [] nil))))
+             (impl/put! c value (fn-handler (fn [_] nil))))
            (impl/close! c)
            c))
 
