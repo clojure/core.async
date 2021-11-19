@@ -46,49 +46,53 @@
     (assert (not (nil? val)) "Can't put nil on a channel")
     ;; bug in CLJS compiler boolean inference - David
     (let [^boolean closed closed]
-      (if (or closed (not ^boolean (impl/active? handler)))
+      (if (not ^boolean (impl/active? handler))
         (box (not closed))
-        (if (and buf (not (impl/full? buf)))
+        (if closed
           (do
             (impl/commit handler)
-            (let [done? (reduced? (add! buf val))
-                  take-cbs (loop [takers []]
-                             (if (and (pos? (.-length takes)) (pos? (count buf)))
-                               (let [^not-native taker (.pop takes)]
-                                 (if ^boolean (impl/active? taker)
-                                   (let [ret (impl/commit taker)
-                                         val (impl/remove! buf)]
-                                     (recur (conj takers (fn [] (ret val)))))
-                                   (recur takers)))
-                               takers))]
-              (when done? (abort this))
-              (when (seq take-cbs)
-                (doseq [f take-cbs]
-                  (dispatch/run f)))
-              (box true)))
-          (let [taker (loop []
-                        (let [^not-native taker (.pop takes)]
-                          (when taker
-                            (if (impl/active? taker)
-                              taker
-                              (recur)))))]
-            (if taker
-              (let [take-cb (impl/commit taker)]
-                (impl/commit handler)
-                (dispatch/run (fn [] (take-cb val)))
-                (box true))
-              (do
-                (if (> dirty-puts MAX_DIRTY)
-                  (do (set! dirty-puts 0)
-                      (.cleanup puts put-active?))
-                  (set! dirty-puts (inc dirty-puts)))
-                (when (impl/blockable? handler)
-                  (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
-                    (str "No more than " impl/MAX-QUEUE-SIZE
-                         " pending puts are allowed on a single channel."
-                         " Consider using a windowed buffer."))
-                  (.unbounded-unshift puts (PutBox. handler val)))
-                nil)))))))
+            (box false))
+          (if (and buf (not (impl/full? buf)))
+            (do
+              (impl/commit handler)
+              (let [done? (reduced? (add! buf val))
+                    take-cbs (loop [takers []]
+                               (if (and (pos? (.-length takes)) (pos? (count buf)))
+                                 (let [^not-native taker (.pop takes)]
+                                   (if ^boolean (impl/active? taker)
+                                     (let [ret (impl/commit taker)
+                                           val (impl/remove! buf)]
+                                       (recur (conj takers (fn [] (ret val)))))
+                                     (recur takers)))
+                                 takers))]
+                (when done? (abort this))
+                (when (seq take-cbs)
+                  (doseq [f take-cbs]
+                    (dispatch/run f)))
+                (box true)))
+            (let [taker (loop []
+                          (let [^not-native taker (.pop takes)]
+                            (when taker
+                              (if (impl/active? taker)
+                                taker
+                                (recur)))))]
+              (if taker
+                (let [take-cb (impl/commit taker)]
+                  (impl/commit handler)
+                  (dispatch/run (fn [] (take-cb val)))
+                  (box true))
+                (do
+                  (if (> dirty-puts MAX_DIRTY)
+                    (do (set! dirty-puts 0)
+                        (.cleanup puts put-active?))
+                    (set! dirty-puts (inc dirty-puts)))
+                  (when (impl/blockable? handler)
+                    (assert (< (.-length puts) impl/MAX-QUEUE-SIZE)
+                      (str "No more than " impl/MAX-QUEUE-SIZE
+                        " pending puts are allowed on a single channel."
+                        " Consider using a windowed buffer."))
+                    (.unbounded-unshift puts (PutBox. handler val)))
+                  nil))))))))
   impl/ReadPort
   (take! [this ^not-native handler]
     (if (not ^boolean (impl/active? handler))

@@ -71,8 +71,12 @@
    (.lock mutex)
    (cleanup this)
    (if @closed
-     (do (.unlock mutex)
-         (box false))
+     (let [^Lock handler handler]
+       (.lock handler)
+       (when (impl/active? handler) (impl/commit handler))
+       (.unlock handler)
+       (.unlock mutex)
+       (box false))
      (let [^Lock handler handler]
        (if (and buf (not (impl/full? buf)) (not (.isEmpty takes)))
          (do

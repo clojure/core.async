@@ -454,3 +454,13 @@
 (deftest test-transduce
   (is (= [1 2 3 4 5]
          (<!! (a/transduce (mapping inc) conj [] (a/to-chan! (range 5)))))))
+
+(deftest test-write-on-closed
+  (let [closed (doto (a/chan) a/close!)
+        open (a/chan)]
+    (is (= :ok
+           (try
+             (dotimes [_ 1e4] (a/alts!! [open [closed true]] :priority true))
+             :ok
+             (catch AssertionError e
+               :ko))))))

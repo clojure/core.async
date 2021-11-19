@@ -518,6 +518,19 @@
        (>! c0 2)
        (>! c1 1)))))
 
+(deftest test-write-on-closed
+  (let [closed (doto (chan) close!)
+        open (chan)]
+    (async done
+      (go
+        (is (= :ok
+              (try
+                (dotimes [_ 1e4] (alts! [open [closed true]] :priority true))
+                :ok
+                (catch :default e
+                  :ko))))
+        (done)))))
+
 (comment
 
   (test/run-tests)
