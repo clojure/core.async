@@ -7,20 +7,20 @@ A Clojure library providing facilities for async programming and communication.
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
-Latest release: 1.4.627
+Latest release: 1.5.640
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "1.4.627"}
+  org.clojure/core.async {:mvn/version "1.5.640"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "1.4.627"]
+ [org.clojure/core.async "1.5.640"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -29,7 +29,7 @@ Latest release: 1.4.627
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>1.4.627</version>
+  <version>1.5.640</version>
 </dependency>
 ```
 
@@ -63,7 +63,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* next
+* Release 1.5.640 on 2021.11.23
+  * [ASYNC-204](https://clojure.atlassian.net/browse/ASYNC-204) (both) On put to closed channel, commit handler to allow pending alt ops to be cleaned up
   * [ASYNC-235](https://clojure.atlassian.net/browse/ASYNC-235) (both) Fix ioc-macros/return-chan registers a callback with incorrect arity
   * [ASYNC-144](https://clojure.atlassian.net/browse/ASYNC-144) (both) Tweak docstring in pipeline-async
   * [ASYNC-238](https://clojure.atlassian.net/browse/ASYNC-238) (both) Fix a/map with empty chan vector hangs
