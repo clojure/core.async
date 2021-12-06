@@ -63,6 +63,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* Next release
+  * Update dep for tools.analyzer.jvm to 1.2.1
 * Release 1.5.640 on 2021.11.23
   * [ASYNC-204](https://clojure.atlassian.net/browse/ASYNC-204) (both) On put to closed channel, commit handler to allow pending alt ops to be cleaned up
   * [ASYNC-235](https://clojure.atlassian.net/browse/ASYNC-235) (both) Fix ioc-macros/return-chan registers a callback with incorrect arity
