@@ -63,6 +63,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* next
+  * Update dep for tools.analyzer.jvm to 1.2.2
 * Release 1.5.644 on 2021.12.06
   * Update dep for tools.analyzer.jvm to 1.2.1
 * Release 1.5.640 on 2021.11.23
