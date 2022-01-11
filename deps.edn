@@ -3,4 +3,11 @@
  {org.clojure/tools.analyzer.jvm {:mvn/version "1.2.2"}}
  :aliases
  {:cljs-test {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.597"}}
-              :extra-paths ["src/test/cljs"]}}}
+              :extra-paths ["src/test/cljs"]}
+
+  ;; For compile test purposes
+  ;; clj -T:build compile
+  :build
+  {:deps {io.github.clojure/tools.build {:tag "v0.6.6" :sha "4d41c26"}}
+   :ns-default build}
+  }}
