@@ -16,8 +16,7 @@
             [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
             [cljs.analyzer :as cljs])
-  (:import [cljs.tagged_literals JSValue]
-           [java.util.concurrent.locks Lock]))
+  (:import [cljs.tagged_literals JSValue]))
 
 (defn debug [x]
   (binding [*out* *err*]
