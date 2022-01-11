@@ -30,18 +30,17 @@
   (pprint x)
   x)
 
+(def ^{:const true :tag 'long} FN-IDX 0)
+(def ^{:const true :tag 'long} STATE-IDX 1)
+(def ^{:const true :tag 'long} VALUE-IDX 2)
+(def ^{:const true :tag 'long} BINDINGS-IDX 3)
+(def ^{:const true :tag 'long} EXCEPTION-FRAMES 4)
+(def ^{:const true :tag 'long} USER-START-IDX 5)
 
-(def ^:const FN-IDX 0)
-(def ^:const STATE-IDX 1)
-(def ^:const VALUE-IDX 2)
-(def ^:const BINDINGS-IDX 3)
-(def ^:const EXCEPTION-FRAMES 4)
-(def ^:const USER-START-IDX 5)
-
-(defn aset-object [^AtomicReferenceArray arr idx ^Object o]
+(defn aset-object [^AtomicReferenceArray arr ^long idx o]
   (.set arr idx o))
 
-(defn aget-object [^AtomicReferenceArray arr idx]
+(defn aget-object [^AtomicReferenceArray arr ^long idx]
   (.get arr idx))
 
 (defmacro aset-all!
