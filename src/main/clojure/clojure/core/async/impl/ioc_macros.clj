@@ -234,14 +234,16 @@
   IEmittableInstruction
   (emit-instruction [this state-sym]
     (if (not-empty (reads-from this))
-      `[~@(->> (-> ast :env :locals vals)
-               (map #(select-keys % [:op :name :form]))
-               (filter (fn [local]
-                         (contains? locals (:name local))))
-               set
-               (mapcat
+      `[~@(into []
+            (comp
+              (map #(select-keys % [:op :name :form]))
+              (filter (fn [local]
+                        (contains? locals (:name local))))
+              (distinct)
+              (mapcat
                 (fn [local]
-                  `[~(:form local) ~(get locals (:name local))]))) 
+                  `[~(:form local) ~(get locals (:name local))])))
+            (-> ast :env :locals vals))
         ~(:id this) ~(:form ast)]
       `[~(:id this) ~(:form ast)])))
 
@@ -880,17 +882,17 @@
 
 (defn count-persistent-values
   [index]
-  (->> (keys index)
-       (filter instruction?)
-       (filter (partial persistent-value? index))
-       count))
+  (transduce
+    (comp (filter instruction?) (filter (partial persistent-value? index)))
+    (completing (fn [acc _] (inc acc))) 0 (keys index)))
 
 (defn- build-block-preamble [local-map idx state-sym blk]
-  (let [args (->> (mapcat reads-from blk)
-                  (filter instruction?)
-                  (filter (partial persistent-value? idx))
-                  set
-                  vec)]
+  (let [args (into [] (comp
+                        (mapcat reads-from)
+                        (filter instruction?)
+                        (filter (partial persistent-value? idx))
+                        (distinct))
+               blk)]
     (if (empty? args)
       []
       (mapcat (fn [sym]
@@ -903,12 +905,12 @@
    (butlast blk)))
 
 (defn- build-new-state [local-map idx state-sym blk]
-  (let [results (->> blk
-                     (mapcat writes-to)
-                     (filter instruction?)
-                     (filter (partial persistent-value? idx))
-                     set
-                     vec)
+  (let [results (into [] (comp
+                           (mapcat writes-to)
+                           (filter instruction?)
+                           (filter (partial persistent-value? idx))
+                           (distinct))
+                    blk)
         results (interleave (map (partial id-for-inst local-map) results) results)]
     (if-not (empty? results)
       [state-sym `(aset-all! ~state-sym ~@results)]

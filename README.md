@@ -63,6 +63,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* next
+  * Perf improvements in go macro compilation
 * Release 1.5.648 on 2021.12.14
   * Update dep for tools.analyzer.jvm to 1.2.2
 * Release 1.5.644 on 2021.12.06
