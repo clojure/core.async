@@ -11,7 +11,7 @@
 
 ;; Idea taken from Potemkin: https://github.com/ztellman/potemkin/blob/master/src/potemkin/namespaces.clj
 (defn- setup-macro-shim
-  [src dst]
+  [^clojure.lang.Var src ^clojure.lang.Var dst]
   (alter-meta! dst merge (dissoc (meta src) :name))
   (.setMacro dst)
   (add-watch src dst
