@@ -24,7 +24,7 @@
    (let [counter (atom 0)]
      (reify
        ThreadFactory
-       (newThread [this runnable]
+       (newThread [_this runnable]
          (let [body (if init-fn
                       (fn [] (init-fn) (.run ^Runnable runnable))
                       runnable)

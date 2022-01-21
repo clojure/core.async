@@ -24,12 +24,12 @@
 
 (deftype TimeoutQueueEntry [channel ^long timestamp]
   Delayed
-  (getDelay [this time-unit]
+  (getDelay [_this time-unit]
     (.convert time-unit
               (- timestamp (System/currentTimeMillis))
               TimeUnit/MILLISECONDS))
   (compareTo
-   [this other]
+   [_this other]
    (let [ostamp (.timestamp ^TimeoutQueueEntry other)]
      (if (< timestamp ostamp)
        -1
@@ -37,7 +37,7 @@
          0
          1))))
   impl/Channel
-  (close! [this]
+  (close! [_this]
     (impl/close! channel)))
 
 (defn- timeout-worker

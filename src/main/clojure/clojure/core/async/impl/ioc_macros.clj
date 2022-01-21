@@ -13,7 +13,6 @@
   clojure.core.async.impl.ioc-macros
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
-            [clojure.tools.analyzer :as an]
             [clojure.tools.analyzer.ast :as ast]
             [clojure.tools.analyzer.env :as env]
             [clojure.tools.analyzer.passes :refer [schedule]]
@@ -21,8 +20,7 @@
             [clojure.tools.analyzer.passes.jvm.warn-on-reflection :refer [warn-on-reflection]]
             [clojure.tools.analyzer.jvm :as an-jvm]
             [clojure.core.async.impl.protocols :as impl]
-            [clojure.core.async.impl.dispatch :as dispatch]
-            [clojure.set :refer (intersection union difference)])
+            [clojure.set :as set])
   (:import [java.util.concurrent.locks Lock]
            [java.util.concurrent.atomic AtomicReferenceArray]))
 
@@ -213,9 +211,9 @@
 
 (defrecord Const [value]
   IInstruction
-  (reads-from [this] [value])
+  (reads-from [_this] [value])
   (writes-to [this] [(:id this)])
-  (block-references [this] [])
+  (block-references [_this] [])
   IEmittableInstruction
   (emit-instruction [this state-sym]
     (if (= value ::value)
@@ -224,14 +222,14 @@
 
 (defrecord RawCode [ast locals]
   IInstruction
-  (reads-from [this]
+  (reads-from [_this]
     (for [local (map :name (-> ast :env :locals vals))
           :when (contains? locals local)]
       (get locals local)))
   (writes-to [this] [(:id this)])
-  (block-references [this] [])
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [this _state-sym]
     (if (not-empty (reads-from this))
       `[~@(into []
             (comp
@@ -248,11 +246,11 @@
 
 (defrecord CustomTerminator [f blk values meta]
   IInstruction
-  (reads-from [this] values)
-  (writes-to [this] [])
-  (block-references [this] [])
+  (reads-from [_this] values)
+  (writes-to [_this] [])
+  (block-references [_this] [])
   ITerminator
-  (terminate-block [this state-sym _]
+  (terminate-block [_this state-sym _]
     (with-meta `(~f ~state-sym ~blk ~@values)
       meta)))
 
@@ -273,50 +271,50 @@
 
 (defrecord Recur [recur-nodes ids]
   IInstruction
-  (reads-from [this] ids)
-  (writes-to [this] recur-nodes)
-  (block-references [this] [])
+  (reads-from [_this] ids)
+  (writes-to [_this] recur-nodes)
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
-    (if-let [overlap (seq (intersection (set recur-nodes) (set ids)))]
+  (emit-instruction [_this _state-sym]
+    (if-let [overlap (seq (set/intersection (set recur-nodes) (set ids)))]
       (emit-clashing-binds recur-nodes ids overlap)
       (mapcat (fn [r i]
                 `[~r ~i]) recur-nodes ids))))
 
 (defrecord Call [refs]
   IInstruction
-  (reads-from [this] refs)
+  (reads-from [_this] refs)
   (writes-to [this] [(:id this)])
-  (block-references [this] [])
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [this _state-sym]
     `[~(:id this) ~(seq refs)]))
 
 (defrecord StaticCall [class method refs]
   IInstruction
-  (reads-from [this] refs)
+  (reads-from [_this] refs)
   (writes-to [this] [(:id this)])
-  (block-references [this] [])
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [this _state-sym]
     `[~(:id this) (. ~class ~method ~@(seq refs))]))
 
 (defrecord InstanceInterop [instance-id op refs]
   IInstruction
-  (reads-from [this] (cons instance-id refs))
+  (reads-from [_this] (cons instance-id refs))
   (writes-to [this] [(:id this)])
-  (block-references [this] [])
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [this _state-sym]
     `[~(:id this) (. ~instance-id ~op ~@(seq refs))]))
 
 (defrecord Case [val-id test-vals jmp-blocks default-block]
   IInstruction
-  (reads-from [this] [val-id])
-  (writes-to [this] [])
-  (block-references [this] [])
+  (reads-from [_this] [val-id])
+  (writes-to [_this] [])
+  (block-references [_this] [])
   ITerminator
-  (terminate-block [this state-sym _]
+  (terminate-block [_this state-sym _]
     `(do (case ~val-id
            ~@(concat (mapcat (fn [test blk]
                                `[~test (aset-all! ~state-sym
@@ -329,41 +327,41 @@
 
 (defrecord Fn [fn-expr local-names local-refs]
   IInstruction
-  (reads-from [this] local-refs)
+  (reads-from [_this] local-refs)
   (writes-to [this] [(:id this)])
-  (block-references [this] [])
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [this _state-sym]
     `[~(:id this)
       (let [~@(interleave local-names local-refs)]
         ~@fn-expr)]))
 
 (defrecord Dot [cls-or-instance method args]
   IInstruction
-  (reads-from [this] `[~cls-or-instance ~method ~@args])
+  (reads-from [_this] `[~cls-or-instance ~method ~@args])
   (writes-to [this] [(:id this)])
-  (block-references [this] [])
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [this _state-sym]
     `[~(:id this) (. ~cls-or-instance ~method ~@args)]))
 
 (defrecord Jmp [value block]
   IInstruction
-  (reads-from [this] [value])
-  (writes-to [this] [])
-  (block-references [this] [block])
+  (reads-from [_this] [value])
+  (writes-to [_this] [])
+  (block-references [_this] [block])
   ITerminator
-  (terminate-block [this state-sym _]
+  (terminate-block [_this state-sym _]
     `(do (aset-all! ~state-sym ~VALUE-IDX ~value ~STATE-IDX ~block)
          :recur)))
 
 (defrecord Return [value]
   IInstruction
-  (reads-from [this] [value])
-  (writes-to [this] [])
-  (block-references [this] [])
+  (reads-from [_this] [value])
+  (writes-to [_this] [])
+  (block-references [_this] [])
   ITerminator
-  (terminator-code [this] :Return)
+  (terminator-code [_this] :Return)
   (terminate-block [this state-sym custom-terminators]
     (if-let [f (get custom-terminators (terminator-code this))]
       `(~f ~state-sym ~value)
@@ -374,11 +372,11 @@
 
 (defrecord CondBr [test then-block else-block]
   IInstruction
-  (reads-from [this] [test])
-  (writes-to [this] [])
-  (block-references [this] [then-block else-block])
+  (reads-from [_this] [test])
+  (writes-to [_this] [])
+  (block-references [_this] [then-block else-block])
   ITerminator
-  (terminate-block [this state-sym _]
+  (terminate-block [_this state-sym _]
     `(do (if ~test
            (aset-all! ~state-sym
                       ~STATE-IDX ~then-block)
@@ -388,29 +386,29 @@
 
 (defrecord PushTry [catch-block]
   IInstruction
-  (reads-from [this] [])
-  (writes-to [this] [])
-  (block-references [this] [catch-block])
+  (reads-from [_this] [])
+  (writes-to [_this] [])
+  (block-references [_this] [catch-block])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [_this state-sym]
     `[~'_ (aset-all! ~state-sym ~EXCEPTION-FRAMES (cons ~catch-block (aget-object ~state-sym ~EXCEPTION-FRAMES)))]))
 
 (defrecord PopTry []
   IInstruction
-  (reads-from [this] [])
-  (writes-to [this] [])
-  (block-references [this] [])
+  (reads-from [_this] [])
+  (writes-to [_this] [])
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [_this state-sym]
     `[~'_ (aset-all! ~state-sym ~EXCEPTION-FRAMES (rest (aget-object ~state-sym ~EXCEPTION-FRAMES)))]))
 
 (defrecord CatchHandler [catches]
   IInstruction
-  (reads-from [this] [])
-  (writes-to [this] [])
-  (block-references [this] (map first catches))
+  (reads-from [_this] [])
+  (writes-to [_this] [])
+  (block-references [_this] (map first catches))
   ITerminator
-  (terminate-block [this state-sym _]
+  (terminate-block [_this state-sym _]
     (let [ex (gensym 'ex)]
       `(let [~ex (aget-object ~state-sym ~VALUE-IDX)]
          (cond
@@ -422,11 +420,11 @@
 
 (defrecord EndFinally [exception-local]
   IInstruction
-  (reads-from [this] [exception-local])
-  (writes-to [this] [])
-  (block-references [this] [])
+  (reads-from [_this] [exception-local])
+  (writes-to [_this] [])
+  (block-references [_this] [])
   IEmittableInstruction
-  (emit-instruction [this state-sym]
+  (emit-instruction [_this _state-sym]
     `[~'_ (throw ~exception-local)]))
 
 ;; Dispatch clojure forms based on :op
@@ -591,14 +589,14 @@
    ret-id))
 
 (defmethod -item-to-ssa :do
-  [{:keys [statements ret] :as ast}]
+  [{:keys [statements ret] :as _ast}]
   (gen-plan
    [_ (all (map item-to-ssa statements))
     ret-id (item-to-ssa ret)]
    ret-id))
 
 (defmethod -item-to-ssa :case
-  [{:keys [test tests thens default] :as ast}]
+  [{:keys [test tests thens default] :as _ast}]
   (gen-plan
    [end-blk (add-block)
     start-blk (get-block)
@@ -639,7 +637,7 @@
    ret-id))
 
 (defmethod -item-to-ssa :try
-  [{:keys [catches body finally] :as ast}]
+  [{:keys [catches body finally] :as _ast}]
   (let [make-finally (fn [exit-block rethrow?]
                        (if finally
                          (gen-plan

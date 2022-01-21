@@ -1,6 +1,6 @@
 (ns clojure.core.pipeline-test
   (:require [clojure.test :refer (deftest is are)]
-            [clojure.core.async :as a :refer [<! >! <!! >!! go go-loop thread chan close! to-chan!
+            [clojure.core.async :refer [<! <!! >!! go-loop thread chan close! to-chan!
 			                                  pipeline pipeline-blocking pipeline-async]]))
 
 ;; in Clojure 1.7, use (map f) instead of this
@@ -62,7 +62,7 @@
     (let [cout (chan 1)
           chex (chan 1)
           ex-mapping (mapping (fn [x] (if (= x 3) (throw (ex-info "err" {:data x})) x)))
-          ex-handler (fn [e] (do (>!! chex e) :err))]
+          ex-handler (fn [e] (>!! chex e) :err)]
       (pf 5 cout ex-mapping (to-chan! [1 2 3 4]) true ex-handler)
       (is (= 1 (<!! cout)))
       (is (= 2 (<!! cout)))

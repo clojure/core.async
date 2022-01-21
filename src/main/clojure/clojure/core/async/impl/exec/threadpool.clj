@@ -9,7 +9,7 @@
 (ns clojure.core.async.impl.exec.threadpool
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.concurrent :as conc])
-  (:import [java.util.concurrent Executors Executor]))
+  (:import [java.util.concurrent Executors]))
 
 (set! *warn-on-reflection* true)
 
@@ -28,5 +28,5 @@
                         (conc/counted-thread-factory "async-dispatch-%d" true
                           {:init-fn init-fn}))]
      (reify impl/Executor
-       (impl/exec [this r]
+       (impl/exec [_ r]
          (.execute executor-svc ^Runnable r))))))

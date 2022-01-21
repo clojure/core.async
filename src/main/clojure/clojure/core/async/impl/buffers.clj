@@ -9,22 +9,23 @@
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.buffers
   (:require [clojure.core.async.impl.protocols :as impl])
-  (:import [java.util LinkedList Queue]))
+  (:import [java.util LinkedList]
+           [clojure.lang Counted]))
 
 (set! *warn-on-reflection* true)
 
 (deftype FixedBuffer [^LinkedList buf ^long n]
   impl/Buffer
-  (full? [this]
+  (full? [_this]
     (>= (.size buf) n))
-  (remove! [this]
+  (remove! [_this]
     (.removeLast buf))
   (add!* [this itm]
     (.addFirst buf itm)
     this)
-  (close-buf! [this])
-  clojure.lang.Counted
-  (count [this]
+  (close-buf! [_this])
+  Counted
+  (count [_this]
     (.size buf)))
 
 (defn fixed-buffer [^long n]
@@ -34,17 +35,17 @@
 (deftype DroppingBuffer [^LinkedList buf ^long n]
   impl/UnblockingBuffer
   impl/Buffer
-  (full? [this]
+  (full? [_this]
     false)
-  (remove! [this]
+  (remove! [_this]
     (.removeLast buf))
   (add!* [this itm]
     (when-not (>= (.size buf) n)
       (.addFirst buf itm))
     this)
-  (close-buf! [this])
-  clojure.lang.Counted
-  (count [this]
+  (close-buf! [_this])
+  Counted
+  (count [_this]
     (.size buf)))
 
 (defn dropping-buffer [n]
@@ -53,18 +54,18 @@
 (deftype SlidingBuffer [^LinkedList buf ^long n]
   impl/UnblockingBuffer
   impl/Buffer
-  (full? [this]
+  (full? [_this]
     false)
-  (remove! [this]
+  (remove! [_this]
     (.removeLast buf))
   (add!* [this itm]
     (when (= (.size buf) n)
       (impl/remove! this))
     (.addFirst buf itm)
     this)
-  (close-buf! [this])
-  clojure.lang.Counted
-  (count [this]
+  (close-buf! [_this])
+  Counted
+  (count [_this]
     (.size buf)))
 
 (defn sliding-buffer [n]
@@ -88,7 +89,7 @@
   (close-buf! [_]
     (when (undelivered? val)
       (set! val nil)))
-  clojure.lang.Counted
+  Counted
   (count [_]
     (if (undelivered? val) 0 1)))
 

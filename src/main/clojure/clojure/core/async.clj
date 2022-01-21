@@ -30,9 +30,11 @@ to catch and handle."
             [clojure.core.async.impl.mutex :as mutex]
             [clojure.core.async.impl.concurrent :as conc]
             )
-  (:import [java.util.concurrent.locks Lock]
+  (:import [java.util.concurrent.atomic AtomicLong]
+           [java.util.concurrent.locks Lock]
            [java.util.concurrent Executors Executor ThreadLocalRandom]
-           [java.util ArrayList]))
+           [java.util Arrays ArrayList]
+           [clojure.lang Var]))
 
 (alias 'core 'clojure.core)
 
@@ -222,7 +224,7 @@ to catch and handle."
   [chan]
   (impl/close! chan))
 
-(defonce ^:private ^java.util.concurrent.atomic.AtomicLong id-gen (java.util.concurrent.atomic.AtomicLong.))
+(defonce ^:private ^AtomicLong id-gen (AtomicLong.))
 
 (defn- random-array
   [n]
@@ -231,11 +233,10 @@ to catch and handle."
     (loop [i 1]
       (if (= i n)
         a
-        (do
-          (let [j (.nextInt rand (inc i))]
-            (aset a i (aget a j))
-            (aset a j i)
-            (recur (inc i))))))))
+        (let [j (.nextInt rand (inc i))]
+          (aset a i (aget a j))
+          (aset a j i)
+          (recur (inc i)))))))
 
 (defn- alt-flag []
   (let [^Lock m (mutex/mutex)
@@ -456,7 +457,7 @@ to catch and handle."
   [& body]
   (let [crossing-env (zipmap (keys &env) (repeatedly gensym))]
     `(let [c# (chan 1)
-           captured-bindings# (clojure.lang.Var/getThreadBindingFrame)]
+           captured-bindings# (Var/getThreadBindingFrame)]
        (dispatch/run
          (^:once fn* []
           (let [~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~(vary-meta l dissoc :tag))]) crossing-env)
@@ -476,10 +477,10 @@ to catch and handle."
   f when completed, then close."
   [f]
   (let [c (chan 1)]
-    (let [binds (clojure.lang.Var/getThreadBindingFrame)]
+    (let [binds (Var/getThreadBindingFrame)]
       (.execute thread-macro-executor
                 (fn []
-                  (clojure.lang.Var/resetThreadBindingFrame binds)
+                  (Var/resetThreadBindingFrame binds)
                   (try
                     (let [ret (f)]
                       (when-not (nil? ret)
@@ -852,7 +853,7 @@ to catch and handle."
                        {:solos solos
                         :mutes (pick :mute chs)
                         :reads (conj
-                                (if (and (= mode :pause) (not (empty? solos)))
+                                (if (and (= mode :pause) (seq solos))
                                   (vec solos)
                                   (vec (remove pauses (keys chs))))
                                 change)}))
@@ -952,10 +953,10 @@ to catch and handle."
               (muxch* [_] ch)
 
               Pub
-              (sub* [p topic ch close?]
+              (sub* [_p topic ch close?]
                     (let [m (ensure-mult topic)]
                       (tap m ch close?)))
-              (unsub* [p topic ch]
+              (unsub* [_p topic ch]
                       (when-let [m (get @mults topic)]
                         (untap m ch)))
               (unsub-all* [_] (reset! mults {}))
@@ -1013,7 +1014,7 @@ to catch and handle."
                          (fn [ret]
                            (aset rets i ret)
                            (when (zero? (swap! dctr dec))
-                             (put! dchan (java.util.Arrays/copyOf rets cnt)))))
+                             (put! dchan (Arrays/copyOf rets cnt)))))
                        (range cnt))]
        (if (zero? cnt)
          (close! out)
@@ -1022,7 +1023,7 @@ to catch and handle."
            (dotimes [i cnt]
              (try
                (take! (chs i) (done i))
-               (catch Exception e
+               (catch Exception _
                  (swap! dctr dec))))
            (let [rets (<! dchan)]
              (if (some nil? rets)

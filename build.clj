@@ -16,7 +16,6 @@
                                 clojure.core.async.impl.concurrent
                                 clojure.core.async.impl.dispatch
                                 clojure.core.async.impl.ioc-macros
-                                clojure.core.async.impl.ioc-alt
                                 clojure.core.async.impl.buffers
                                 clojure.core.async.impl.channels
                                 clojure.core.async.impl.timers

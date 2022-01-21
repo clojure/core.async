@@ -5,7 +5,7 @@
             [clojure.core.async :refer :all :as async]
             [clojure.set :as set]
             [clojure.test :refer :all])
-  (:import [java.io FileInputStream ByteArrayOutputStream File]))
+  (:import [clojure.lang ExceptionInfo]))
 
 (defn pause [x]
   x)
@@ -38,14 +38,14 @@
                   (loop []
                     (try
                       (pause (throw (Exception. "Ex")))
-                      (catch clojure.lang.ExceptionInfo ei
+                      (catch ExceptionInfo _
                         :retry))))))
     (is (thrown? Throwable
                  (runner
                   (loop []
                     (try
                       (pause (throw (Throwable. "Ex")))
-                      (catch clojure.lang.ExceptionInfo ei
+                      (catch ExceptionInfo _
                         :retry))))))
     ;; (is (try ((fn [] (println "Hello") (pause 5))) (catch Exception e)))
     (is (= :Throwable
@@ -53,9 +53,9 @@
             (try
               (pause 5)
               (throw (new Throwable))
-              (catch Exception re
+              (catch Exception _e
                 :Exception)
-              (catch Throwable t
+              (catch Throwable _t
                 :Throwable))))))
   (testing "finally shouldn't change the return value"
     (is (= 1 (runner (try 1 (finally (pause 2)))))))
@@ -78,16 +78,16 @@
       (try
         (pause 10)
         (throw (RuntimeException.))
-        (catch RuntimeException r
+        (catch RuntimeException _r
           (pause true))
-        (catch Exception e
+        (catch Exception _e
           (pause false)))))
     (is
      (runner
       (try
         (pause 10)
         (throw (RuntimeException.))
-        (catch Exception e
+        (catch Exception _e
           (pause true))))))
   (testing "don't explode trying to compile this"
     (is
@@ -274,7 +274,7 @@
           v (runner
              (try
                true
-               (catch Throwable ex false)
+               (catch Throwable _ex false)
                (finally (pause (reset! a true)))))]
       (is (and @a v)))
 
@@ -282,7 +282,7 @@
           v (runner
              (try
                (assert false)
-               (catch Throwable ex true)
+               (catch Throwable _ex true)
                (finally (reset! a true))))]
       (is (and @a v)))
 
@@ -453,7 +453,7 @@
       (try
         ;; don't spam stderr
         (Thread/setDefaultUncaughtExceptionHandler
-          (reify java.lang.Thread$UncaughtExceptionHandler
+          (reify Thread$UncaughtExceptionHandler
             (uncaughtException [_ _thread _throwable])))
         (testing "threads"
           (is (nil? (<!! (thread (assert false msg)))))
@@ -523,8 +523,8 @@
                               [:outer-ok])
                             (finally))]
                   (throw (ex-info "Throwing outer exception" {:type :outer})))
-                (catch clojure.lang.ExceptionInfo ex
-                  (is (= (:outer  (:type (ex-data ex)))))
+                (catch ExceptionInfo ex
+                  (is (= :outer (:type (ex-data ex))))
                   :ok)
                 (catch UnsupportedOperationException ex
                   :unsupported)))]
@@ -571,6 +571,7 @@
         exception (atom nil)]
     ;; run the machine on another thread without any existing binding frames.
     (doto (Thread.
+           ^Runnable
            (fn []
              (try
                (let [[state result] (park-runner (binding [*1 2] (park 10) 100))]

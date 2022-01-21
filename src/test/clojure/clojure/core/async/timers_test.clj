@@ -18,9 +18,9 @@
                           (timeout 700)
                           (timeout 500)]
         threads (doall (for [i (range 4)]
-                         (doto (Thread. #(do (async/<!! (timeout-channels i))
-                                             (swap! test-atom conj i)))
-                           (.start))))]
+                         (let [f #(do (async/<!! (timeout-channels i))
+                                      (swap! test-atom conj i))]
+                           (doto (Thread. ^Runnable f) (.start)))))]
     (doseq [thread threads]
       (.join ^Thread thread))
     (is (= @test-atom [3 1 2 0])

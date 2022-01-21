@@ -1,7 +1,8 @@
 (ns clojure.core.async.lab-test
-  (:use clojure.test
-        clojure.core.async.lab)
-  (:require [clojure.core.async :as async]))
+  (:require
+    [clojure.test :refer [deftest is]]
+    [clojure.core.async.lab :refer [broadcast multiplex]]
+    [clojure.core.async :as async]))
 
 (deftest multiplex-test
   (is (apply = (let [even-chan (async/chan)
@@ -9,12 +10,12 @@
                      muxer (multiplex even-chan odd-chan)
                      odds (filter odd? (range 10))
                      evens (filter even? (range 10))
-                     odd-pusher (doto (Thread. #(doseq [odd odds]
-                                                  (async/>!! odd-chan odd)))
-                                  (.start))
-                     even-pusher (doto (Thread. #(doseq [even evens]
-                                                   (async/>!! even-chan even)))
-                                   (.start))
+                     odd-fn #(doseq [odd odds]
+                               (async/>!! odd-chan odd))
+                     _odd-pusher (doto (Thread. ^Runnable odd-fn) (.start))
+                     even-fn #(doseq [even evens]
+                                (async/>!! even-chan even))
+                     _even-pusher (doto (Thread. ^Runnable even-fn) (.start))
                      expected (set (range 10))
                      observed (set (for [_ (range 10)] (async/<!! muxer)))]
                  [expected observed]))
@@ -23,15 +24,14 @@
   (is (let [short-chan (async/chan)
             long-chan (async/chan)
             muxer (multiplex short-chan long-chan)
-            semaphore (promise)
-            long-pusher (doto (Thread. #(do (dotimes [i 10000]
-                                              (async/>!! long-chan i))
-                                            (async/close! short-chan)))
-                          (.start))
-            short-pusher (doto (Thread. #(do (dotimes [i 10]
-                                               (async/>!! short-chan i))
-                                             (async/close! short-chan)))
-                           (.start))
+            long-fn #(do (dotimes [i 10000]
+                           (async/>!! long-chan i))
+                         (async/close! short-chan))
+            _long-pusher (doto (Thread. ^Runnable long-fn) (.start))
+            short-fn #(do (dotimes [i 10]
+                            (async/>!! short-chan i))
+                          (async/close! short-chan))
+            _short-pusher (doto (Thread. ^Runnable short-fn) (.start))
             observed (for [_ (range 10010)] (async/<!! muxer))]
         (every? identity observed))
       "A closed channel will deliver nil, but the multiplexed channel
@@ -47,7 +47,7 @@
 (deftest broadcast-test
   (is (apply = (let [broadcast-receivers (repeatedly 5 #(async/chan 1))
                      broadcaster (apply broadcast broadcast-receivers)
-                     broadcast-result (async/>!! broadcaster :foo)
+                     _ (async/>!! broadcaster :foo)
                      expected (repeat 5 :foo)
                      observed (doall (map async/<!! broadcast-receivers))]
                  [expected observed]))
@@ -56,8 +56,8 @@
   (is (apply = (let [broadcast-receivers (repeatedly 5 async/chan)
                      broadcaster (apply broadcast broadcast-receivers)
                      read-channels (take 4 broadcast-receivers)
-                     broadcast-future (future (async/>!! broadcaster :foo)
-                                              (async/>!! broadcaster :bar))
+                     _ (future (async/>!! broadcaster :foo)
+                               (async/>!! broadcaster :bar))
                      first-reads (doall (map async/<!! read-channels))
                      timeout-channel (async/timeout 500)
                      alt-read (async/alts!! (conj read-channels timeout-channel))
@@ -71,9 +71,9 @@
       complete its write.")
   (is (apply = (let [broadcast-receivers (repeatedly 5 #(async/chan 100))
                      broadcaster (apply broadcast broadcast-receivers)
-                     broadcast-future (future (dotimes [i 100]
-                                                (async/>!! broadcaster i)))
-                     observed (for [i (range 100)]
-                                            (async/<!! (first broadcast-receivers)))
+                     _ (future (dotimes [i 100]
+                         (async/>!! broadcaster i)))
+                     observed (for [_ (range 100)]
+                                (async/<!! (first broadcast-receivers)))
                      expected (range 100)]
                  [expected observed])) "When all channels are sufficiently buffered, reads on one channel are not throttled by reads from other channels."))

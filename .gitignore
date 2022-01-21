@@ -20,3 +20,4 @@ tests.js
 tests.js.map
 pom.xml.versionsBackup
 .cpcache/
+.clj-kondo/.cache

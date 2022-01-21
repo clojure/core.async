@@ -1,0 +1,6 @@
+{:skip-comments true
+ :linters
+ {:unused-binding {:level :off}
+  :cond-else {:level :off}
+  :refer-all {:level :off}
+  :deprecated-var {:level :off}}}

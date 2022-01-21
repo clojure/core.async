@@ -8,7 +8,6 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.mutex
-  (:require [clojure.core.async.impl.protocols :as impl])
   (:import [java.util.concurrent.locks Lock ReentrantLock]))
 
 (defn mutex []

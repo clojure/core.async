@@ -10,4 +10,9 @@
   :build
   {:deps {io.github.clojure/tools.build {:tag "v0.6.6" :sha "4d41c26"}}
    :ns-default build}
+
+  ;; Lint the source
+  ;; clj -M:lint
+  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2022.01.13"}}
+         :main-opts ["-m" "clj-kondo.main" "--lint" "src"]}
   }}

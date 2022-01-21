@@ -11,8 +11,9 @@
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.mutex :as mutex])
-  (:import [java.util LinkedList Queue Iterator]
-           [java.util.concurrent.locks Lock]))
+  (:import [java.util LinkedList Queue]
+           [java.util.concurrent.locks Lock]
+           [clojure.lang IDeref]))
 
 (set! *warn-on-reflection* true)
 
@@ -22,7 +23,7 @@
      (throw (new AssertionError (str "Assert failed: " ~msg "\n" (pr-str '~test))))))
 
 (defn box [val]
-  (reify clojure.lang.IDeref
+  (reify IDeref
          (deref [_] val)))
 
 (defprotocol MMC
@@ -174,31 +175,30 @@
                             (.unlock handler)
                             take-cb))]
      (if (and buf (pos? (count buf)))
-       (do
-         (if-let [take-cb (commit-handler)]
-           (let [val (impl/remove! buf)
-                 iter (.iterator puts)
-                 [done? cbs]
-                 (when (and (not (impl/full? buf)) (.hasNext iter))
-                   (loop [cbs []
-                          [^Lock putter val] (.next iter)]
-                     (.lock putter)
-                     (let [cb (and (impl/active? putter) (impl/commit putter))]
-                       (.unlock putter)
-                       (.remove iter)
-                       (let [cbs (if cb (conj cbs cb) cbs)
-                             done? (when cb (reduced? (add! buf val)))]
-                         (if (and (not done?) (not (impl/full? buf)) (.hasNext iter))
-                           (recur cbs (.next iter))
-                           [done? cbs])))))]
-             (when done?
-               (abort this))
-             (.unlock mutex)
-             (doseq [cb cbs]
-               (dispatch/run #(cb true)))
-             (box val))
-           (do (.unlock mutex)
-               nil)))
+       (if-let [take-cb (commit-handler)]
+         (let [val (impl/remove! buf)
+               iter (.iterator puts)
+               [done? cbs]
+               (when (and (not (impl/full? buf)) (.hasNext iter))
+                 (loop [cbs []
+                        [^Lock putter val] (.next iter)]
+                   (.lock putter)
+                   (let [cb (and (impl/active? putter) (impl/commit putter))]
+                     (.unlock putter)
+                     (.remove iter)
+                     (let [cbs (if cb (conj cbs cb) cbs)
+                           done? (when cb (reduced? (add! buf val)))]
+                       (if (and (not done?) (not (impl/full? buf)) (.hasNext iter))
+                         (recur cbs (.next iter))
+                         [done? cbs])))))]
+           (when done?
+             (abort this))
+           (.unlock mutex)
+           (doseq [cb cbs]
+             (dispatch/run #(cb true)))
+           (box val))
+         (do (.unlock mutex)
+             nil))
        (let [iter (.iterator puts)
              [take-cb put-cb val]
              (when (.hasNext iter)
