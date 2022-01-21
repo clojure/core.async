@@ -7,12 +7,9 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns cljs.core.async.buffer-tests
-  (:require-macros [cljs.core.async.macros :as m :refer [go]])
   (:require [cljs.core.async
-             :refer [unblocking-buffer? buffer dropping-buffer sliding-buffer
-                     put! take! chan close!]]
-            [cljs.core.async.impl.dispatch :as dispatch]
-            [cljs.core.async.impl.buffers :as buff :refer [promise-buffer]]
+             :refer [unblocking-buffer? buffer dropping-buffer sliding-buffer]]
+            [cljs.core.async.impl.buffers :refer [promise-buffer]]
             [cljs.core.async.impl.protocols
              :refer [full? add! remove! close-buf!]]
             [cljs.core.async.test-helpers :refer-macros [throws?]]

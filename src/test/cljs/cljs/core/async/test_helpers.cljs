@@ -11,7 +11,7 @@
 (defn latch [m f]
   (let [r (atom 0)]
     (add-watch r :latch
-      (fn [_ _ o n]
+      (fn [_ _ _o n]
         (when (== n m) (f))))
     r))
 

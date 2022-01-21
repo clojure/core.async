@@ -8,17 +8,14 @@
 
 (ns cljs.core.async.tests
   (:require-macros
-   [cljs.core.async.macros :as m :refer [go alt!]])
+   [cljs.core.async.macros :refer [go alt!]])
   (:require
    [cljs.core.async :refer
-    [buffer dropping-buffer sliding-buffer put! take! chan promise-chan
-     close! take partition-by offer! poll! <! >! alts!] :as async]
-   [cljs.core.async.impl.dispatch :as dispatch]
-   [cljs.core.async.impl.buffers :as buff]
-   [cljs.core.async.impl.timers :as timers :refer [timeout]]
-   [cljs.core.async.impl.protocols :refer [full? add! remove!]]
+    [put! take! chan promise-chan
+     close! offer! poll! <! >! alts!] :as async]
+   [cljs.core.async.impl.timers :refer [timeout]]
    [cljs.core.async.test-helpers :refer [latch inc!]]
-   [cljs.test :as test :refer-macros [deftest is run-tests async testing]]
+   [cljs.test :as test :refer-macros [deftest is async testing]]
    [goog.object :as gobj]))
 
 (enable-console-print!)

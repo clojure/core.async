@@ -7,9 +7,9 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns cljs.core.async.pipeline-test
-  (:require-macros [cljs.core.async.macros :as m :refer [go go-loop]])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [cljs.core.async.test-helpers :refer [latch inc!]]
-            [cljs.core.async :as a
+            [cljs.core.async
              :refer [<! >! chan close! to-chan! pipeline-async pipeline put!]]
             [cljs.test :refer-macros [deftest is testing async]]))
 
@@ -79,7 +79,7 @@
       (let [cout (chan 1)
             chex (chan 1)
             ex-mapping (map (fn [x] (if (= x 3) (throw (ex-info "err" {:data x})) x)))
-            ex-handler (fn [e] (do (put! chex e) :err))]
+            ex-handler (fn [e] (put! chex e) :err)]
         (pipeline 5 cout ex-mapping (to-chan! [1 2 3 4]) true ex-handler)
         (is (= 1 (<! cout)))
         (is (= 2 (<! cout)))

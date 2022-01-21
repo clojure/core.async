@@ -548,7 +548,7 @@
                        {:solos solos
                         :mutes (pick :mute chs)
                         :reads (conj
-                                (if (and (= mode :pause) (not (empty? solos)))
+                                (if (and (= mode :pause) (seq solos))
                                   (vec solos)
                                   (vec (remove pauses (keys chs))))
                                 change)}))

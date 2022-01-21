@@ -7,13 +7,10 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns cljs.core.async.runner-tests
-  (:require [cljs.core.async :refer [buffer dropping-buffer sliding-buffer put! take! chan close!]]
-            [cljs.core.async.impl.dispatch :as dispatch]
-            [cljs.core.async.impl.buffers :as buff]
-            [cljs.core.async.impl.protocols :refer [full? add! remove!]]
+  (:require [cljs.core.async.impl.protocols :refer [full? add! remove!]]
             [cljs.core.async.impl.ioc-helpers :as ioch])
-  (:require-macros [cljs.core.async.test-helpers :as h :refer [is= is deftest testing runner locals-test]]
-                   [cljs.core.async.macros :as m :refer [go]]
+  (:require-macros [cljs.core.async.test-helpers :refer [is= is deftest testing runner locals-test]]
+                   [cljs.core.async.macros :refer [go]]
                    [cljs.core.async.impl.ioc-macros :as ioc]))
 
 (defn pause [state blk val]

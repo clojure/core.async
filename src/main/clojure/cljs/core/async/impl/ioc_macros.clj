@@ -13,8 +13,6 @@
   (:refer-clojure :exclude [all])
   (:require [clojure.pprint :refer [pprint]]
             [clojure.set :refer (intersection)]
-            [clojure.core.async.impl.protocols :as impl]
-            [clojure.core.async.impl.dispatch :as dispatch]
             [cljs.analyzer :as cljs])
   (:import [cljs.tagged_literals JSValue]))
 

@@ -98,25 +98,24 @@
     (if (not ^boolean (impl/active? handler))
       nil
       (if (and (not (nil? buf)) (pos? (count buf)))
-        (do
-          (if-let [take-cb (impl/commit handler)]
-            (let [val (impl/remove! buf)
-                  [done? cbs] (when (and (not (impl/full? buf)) (pos? (.-length puts)))
-                                (loop [cbs []]
-                                  (let [putter (.pop puts)
-                                        ^not-native put-handler (.-handler putter)
-                                        val (.-val putter)
-                                        cb (and ^boolean (impl/active? put-handler) (impl/commit put-handler))
-                                        cbs (if cb (conj cbs cb) cbs)
-                                        done? (when cb (reduced? (add! buf val)))]
-                                    (if (and (not done?) (not (impl/full? buf)) (pos? (.-length puts)))
-                                      (recur cbs)
-                                      [done? cbs]))))]
-              (when done?
-                (abort this))
-              (doseq [cb cbs]
-                (dispatch/run #(cb true)))
-              (box val))))
+        (if-let [take-cb (impl/commit handler)]
+          (let [val (impl/remove! buf)
+                [done? cbs] (when (and (not (impl/full? buf)) (pos? (.-length puts)))
+                              (loop [cbs []]
+                                (let [putter (.pop puts)
+                                      ^not-native put-handler (.-handler putter)
+                                      val (.-val putter)
+                                      cb (and ^boolean (impl/active? put-handler) (impl/commit put-handler))
+                                      cbs (if cb (conj cbs cb) cbs)
+                                      done? (when cb (reduced? (add! buf val)))]
+                                  (if (and (not done?) (not (impl/full? buf)) (pos? (.-length puts)))
+                                    (recur cbs)
+                                    [done? cbs]))))]
+            (when done?
+              (abort this))
+            (doseq [cb cbs]
+              (dispatch/run #(cb true)))
+            (box val)))
         (let [putter (loop []
                        (let [putter (.pop puts)]
                          (when putter
@@ -132,9 +131,9 @@
               (do
                 (when buf (add! buf))
                 (if (and (impl/active? handler) (impl/commit handler))
-                  (let [has-val (and buf (pos? (count buf)))]
-                    (let [val (when has-val (impl/remove! buf))]
-                      (box val)))
+                  (let [has-val (and buf (pos? (count buf)))
+                        val (when has-val (impl/remove! buf))]
+                    (box val))
                   nil))
               (do
                 (if (> dirty-takes MAX_DIRTY)
