@@ -177,6 +177,7 @@
   [fret ports opts]
   (assert (pos? (count ports)) "alts must have at least one channel operation")
   (let [flag (alt-flag)
+        ports (vec ports) ;; ensure vector for indexed nth
         n (count ports)
         idxs (random-array n)
         priority (:priority opts)
