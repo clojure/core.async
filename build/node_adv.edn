@@ -1,0 +1,5 @@
+{:main          cljs.core.async.test-runner
+ :output-dir    "out-adv-node"
+ :output-to     "out-adv-node/tests.js"
+ :optimizations :advanced
+ :target        :nodejs}

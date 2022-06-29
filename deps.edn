@@ -3,7 +3,9 @@
  {org.clojure/tools.analyzer.jvm {:mvn/version "1.2.2"}}
  :aliases
  {:cljs-test {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.597"}}
-              :extra-paths ["src/test/cljs"]}
+              :extra-paths ["src/main/clojure/cljs" "src/test/cljs"]}
+  :adv       {:main-opts ["-m" "cljs.main" "-v" "-co" "build/node_adv.edn" "-c"]}
+  :simp      {:main-opts ["-m" "cljs.main" "-v" "-co" "build/node_simple.edn" "-c"]}
 
   ;; For compile test purposes
   ;; clj -T:build compile
