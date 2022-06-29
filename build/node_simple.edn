@@ -1,0 +1,7 @@
+{:main          cljs.core.async.test-runner
+ :output-dir    "out-simp-node"
+ :output-to     "out-simp-node/tests.js"
+ :optimizations :simple
+ :static-fns    true
+ :pretty-print  true
+ :target        :nodejs}

@@ -1,0 +1,1 @@
+process.on = function(){};
