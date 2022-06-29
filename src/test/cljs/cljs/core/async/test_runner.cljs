@@ -13,7 +13,14 @@
             [cljs.core.async.timers-test]
             [cljs.core.async.interop-tests]
             [cljs.core.async.tests]
-            [cljs.core.async.runner-tests]))
+            [cljs.core.async.runner-tests]
+            [clojure.string :as string]))
+
+(when (exists? js/process)
+  (.on js/process "uncaughtException"
+    (fn [e]
+      (when-not (= "Assert failed: This exception is expected\nfalse" (.-message e))
+        (println "TESTS FAILED TO COMPLETE:" (.-message e))))))
 
 (run-tests
   'cljs.core.async.runner-tests

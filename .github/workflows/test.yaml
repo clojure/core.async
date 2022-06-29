@@ -1,0 +1,22 @@
+name: Tests
+on: [push]
+
+jobs:
+  # Runtime Tests
+  runtime-test:
+    name: Runtime Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: DeLaGuardo/setup-clojure@3.1
+        with:
+          tools-deps: '1.10.1.763'
+
+      - name: Build tests
+        run: clojure -M:cljs-test:adv
+
+      - name: Run tests
+        run: |
+          node out-adv-node/tests.js | tee test-out.txt
+          grep -qxF '0 failures, 0 errors.' test-out.txt
