@@ -49,6 +49,8 @@ Latest release: 1.5.648
 
 [Contributing to Clojure projects](https://clojure.org/community/contributing) requires a signed Contributor Agreement. Pull requests and GitHub issues are not accepted; please use the [core.async JIRA project](https://clojure.atlassian.net/browse/ASYNC) to report problems or enhancements.
 
+[![CLJS Tests](https://github.com/clojure/core.async/actions/workflows/test.yml/badge.svg)](https://github.com/clojure/core.async/actions/workflows/test.yml)
+
 To run the ClojureScript tests:
 
 * lein cljsbuild once
@@ -57,7 +59,7 @@ To run the ClojureScript tests:
 
 ## License
 
-Copyright © 2017-2021 Rich Hickey and contributors
+Copyright © 2017-2022 Rich Hickey and contributors
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
