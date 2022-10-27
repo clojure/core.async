@@ -17,4 +17,9 @@
   ;; clj -M:lint
   :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2022.01.13"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src"]}
+
+  ;; Find outdated deps
+  ;; clj -M:outdated
+  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}
+             :main-opts ["-m" "antq.core"]}
   }}
