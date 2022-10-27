@@ -2,7 +2,7 @@
  :deps
  {org.clojure/tools.analyzer.jvm {:mvn/version "1.2.2"}}
  :aliases
- {:cljs-test {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.597"}}
+ {:cljs-test {:extra-deps {org.clojure/clojurescript {:mvn/version "1.11.60"}}
               :extra-paths ["src/main/clojure/cljs" "src/test/cljs"]}
   :adv       {:main-opts ["-m" "cljs.main" "-v" "-co" "build/node_adv.edn" "-c"]}
   :simp      {:main-opts ["-m" "cljs.main" "-v" "-co" "build/node_simple.edn" "-c"]}
@@ -10,12 +10,12 @@
   ;; For compile test purposes
   ;; clj -T:build compile
   :build
-  {:deps {io.github.clojure/tools.build {:tag "v0.6.6" :sha "4d41c26"}}
+  {:deps {io.github.clojure/tools.build {:tag "v0.8.3" :sha "0d20256"}}
    :ns-default build}
 
   ;; Lint the source
   ;; clj -M:lint
-  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2022.01.13"}}
+  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2022.10.14"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src"]}
 
   ;; Find outdated deps

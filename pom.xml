@@ -38,7 +38,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojurescript</artifactId>
-      <version>1.10.597</version>
+      <version>1.11.60</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
