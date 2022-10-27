@@ -7,11 +7,11 @@ jobs:
     name: Runtime Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.1.0
 
-      - uses: DeLaGuardo/setup-clojure@3.1
+      - uses: DeLaGuardo/setup-clojure@9.5
         with:
-          tools-deps: '1.10.1.763'
+          tools-deps: '1.11.1.1182'
 
       - name: Build tests
         run: clojure -M:cljs-test:adv
