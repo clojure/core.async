@@ -66,7 +66,9 @@ Distributed under the Eclipse Public License, the same as Clojure.
 ## Changelog
 
 * next
+  * [ASYNC-248](https://clojure.atlassian.net/browse/ASYNC-248) (CLJ) Dynamically load ioc analyzer only when needed
   * Perf improvements in go macro compilation
+  * Note: as of this version, core.async requires Clojure 1.10
 * Release 1.5.648 on 2021.12.14
   * Update dep for tools.analyzer.jvm to 1.2.2
 * Release 1.5.644 on 2021.12.06
