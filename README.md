@@ -65,7 +65,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* next
+* Release 1.6.673 on 2022.10.27
   * [ASYNC-248](https://clojure.atlassian.net/browse/ASYNC-248) (CLJ) Dynamically load ioc analyzer only when needed
   * Perf improvements in go macro compilation
   * Note: as of this version, core.async requires Clojure 1.10
