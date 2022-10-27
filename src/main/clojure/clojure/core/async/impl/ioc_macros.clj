@@ -19,7 +19,6 @@
             [clojure.tools.analyzer.passes.jvm.annotate-loops :refer [annotate-loops]]
             [clojure.tools.analyzer.passes.jvm.warn-on-reflection :refer [warn-on-reflection]]
             [clojure.tools.analyzer.jvm :as an-jvm]
-            [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.runtime :as rt]
             [clojure.set :as set])
   (:import [java.util.concurrent.atomic AtomicReferenceArray]))
