@@ -7,20 +7,20 @@ A Clojure library providing facilities for async programming and communication.
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
-Latest release: 1.5.648
+Latest release: 1.6.673
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "1.5.648"}
+  org.clojure/core.async {:mvn/version "1.6.673"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "1.5.648"]
+ [org.clojure/core.async "1.6.673"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -29,7 +29,7 @@ Latest release: 1.5.648
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>1.5.648</version>
+  <version>1.6.673</version>
 </dependency>
 ```
 
