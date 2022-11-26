@@ -1,6 +1,6 @@
 {:paths ["src/main/clojure"]
  :deps
- {org.clojure/tools.analyzer.jvm {:mvn/version "1.2.2"}}
+ {org.clojure/tools.analyzer.jvm {:mvn/version "1.2.3"}}
  :aliases
  {:cljs-test {:extra-deps {org.clojure/clojurescript {:mvn/version "1.11.60"}}
               :extra-paths ["src/main/clojure/cljs" "src/test/cljs"]}
