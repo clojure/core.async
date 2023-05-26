@@ -59,7 +59,7 @@ To run the ClojureScript tests:
 
 ## License
 
-Copyright © 2017-2022 Rich Hickey and contributors
+Copyright © 2017-2023 Rich Hickey and contributors
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
