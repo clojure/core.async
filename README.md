@@ -65,7 +65,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
-* next
+* Release 1.6.681 on 2023.08.09
   * Revert [ASYNC-248](https://clojure.atlassian.net/browse/ASYNC-248) (CLJ) due to the issues in [ASYNC-249](https://clojure.atlassian.net/browse/ASYNC-249)
   * Update to tools.analyzer.jvm 1.2.3
 * Release 1.6.673 on 2022.10.27
