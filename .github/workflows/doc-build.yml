@@ -1,0 +1,10 @@
+name: Build API Docs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-doc-build-workflow:
+    uses: clojure/build.ci/.github/workflows/doc-build.yml@master
+    with:
+      project: clojure/core.async
