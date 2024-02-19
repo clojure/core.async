@@ -3,9 +3,9 @@
   :url "https://github.com/clojure/core.async"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :parent [org.clojure/pom.contrib "1.0.0"]
-  :dependencies [[org.clojure/clojure "1.10.0"]
-                 [org.clojure/tools.analyzer.jvm "1.2.3"]
+  :parent [org.clojure/pom.contrib "1.2.0"]
+  :dependencies [[org.clojure/clojure "1.10.3"]
+                 [org.clojure/tools.analyzer.jvm "1.3.0"]
                  [org.clojure/clojurescript "1.11.60" :scope "provided"]]
   :global-vars {*warn-on-reflection* true}
   :source-paths ["src/main/clojure"]
