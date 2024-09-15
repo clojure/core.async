@@ -59,12 +59,17 @@
   "returns a channel that will close after msecs"
   [^long msecs]
   @timeout-daemon
-  (let [timeout (+ (System/currentTimeMillis) msecs)
+  (let [current-time (System/currentTimeMillis)
+        max-timeout (-> 24 (* 60) (* 60) (* 1000) (long))
+        timeout (if (>= msecs max-timeout)
+                  (+ current-time max-timeout)
+                  (+ current-time msecs))
         me (.ceilingEntry timeouts-map timeout)]
     (or (when (and me (< (.getKey me) (+ timeout TIMEOUT_RESOLUTION_MS)))
           (.channel ^TimeoutQueueEntry (.getValue me)))
         (let [timeout-channel (channels/chan nil)
-              timeout-entry (TimeoutQueueEntry. timeout-channel timeout)]
+              timeout-entry (TimeoutQueueEntry. timeout timeout)]
           (.put timeouts-map timeout timeout-entry)
           (.put timeouts-queue timeout-entry)
           timeout-channel))))
+
