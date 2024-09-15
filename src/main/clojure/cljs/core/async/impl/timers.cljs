@@ -166,7 +166,11 @@
 (defn timeout
   "returns a channel that will close after msecs"
   [msecs]
-  (let [timeout (+ (.valueOf (js/Date.)) msecs)
+  (let [current-time (.valueOf (js/Date.))
+        max-timeout (-> 24 (* 60) (* 60) (* 1000))
+        timeout (if (>= msecs max-timeout)
+                  (+ current-time max-timeout)
+                  (+ current-time msecs))
         me (.ceilingEntry timeouts-map timeout)]
     (or (when (and me (< (.-key me) (+ timeout TIMEOUT_RESOLUTION_MS)))
           (.-val me))
@@ -176,5 +180,5 @@
             (fn []
               (.remove timeouts-map timeout)
               (impl/close! timeout-channel))
-            msecs)
+            (min msecs max-timeout))
           timeout-channel))))
