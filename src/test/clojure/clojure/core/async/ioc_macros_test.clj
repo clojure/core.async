@@ -1,7 +1,7 @@
 (ns clojure.core.async.ioc-macros-test
   (:refer-clojure :exclude [map into reduce transduce merge take partition
                             partition-by])
-  (:require [clojure.core.async.impl.ioc-macros :as ioc]
+  (:require [clojure.core.async.impl.runtime :as ioc]
             [clojure.core.async :refer :all :as async]
             [clojure.set :as set]
             [clojure.test :refer :all])
@@ -24,7 +24,7 @@
         crossing-env (zipmap (keys &env) (repeatedly gensym))]
     `(let [captured-bindings# (clojure.lang.Var/getThreadBindingFrame)
            ~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~l)]) crossing-env)
-           state# (~(ioc/state-machine `(do ~@body) 0 [crossing-env &env] terminators))]
+           state# (~(clojure.core.async.impl.ioc-macros/state-machine `(do ~@body) 0 [crossing-env &env] terminators))]
        (ioc/aset-all! state# ~ioc/BINDINGS-IDX captured-bindings#)
        (ioc/run-state-machine state#)
        (ioc/aget-object state# ioc/VALUE-IDX))))
@@ -553,7 +553,7 @@
         crossing-env (zipmap (keys &env) (repeatedly gensym))]
     `(let [captured-bindings# (clojure.lang.Var/getThreadBindingFrame)
            ~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~(vary-meta l dissoc :tag))]) crossing-env)
-           state# (~(ioc/state-machine
+           state# (~(clojure.core.async.impl.ioc-macros/state-machine
                      `(do ~@body)
                      0
                      [crossing-env &env]
