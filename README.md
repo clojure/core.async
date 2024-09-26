@@ -65,6 +65,8 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Changelog
 
+* next
+  * [ASYNC-252](https://clojure.atlassian.net/browse/ASYNC-252) (CLJ) Move all go runtime code to runtime namespace
 * Release 1.6.681 on 2023.08.09
   * Revert [ASYNC-248](https://clojure.atlassian.net/browse/ASYNC-248) (CLJ) due to the issues in [ASYNC-249](https://clojure.atlassian.net/browse/ASYNC-249)
   * Update to tools.analyzer.jvm 1.2.3
