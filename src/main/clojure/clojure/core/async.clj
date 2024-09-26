@@ -26,8 +26,7 @@ to catch and handle."
             [clojure.core.async.impl.buffers :as buffers]
             [clojure.core.async.impl.timers :as timers]
             [clojure.core.async.impl.dispatch :as dispatch]
-            [clojure.core.async.impl.ioc-macros :as ioc-macros] ;; only for go analyzer
-            [clojure.core.async.impl.runtime :as ioc]
+            [clojure.core.async.impl.ioc-macros :as ioc]
             [clojure.core.async.impl.mutex :as mutex]
             [clojure.core.async.impl.concurrent :as conc]
             )
@@ -418,7 +417,7 @@ to catch and handle."
 
 (defn ioc-alts! [state cont-block ports & {:as opts}]
   (ioc/aset-all! state ioc/STATE-IDX cont-block)
-  (when-let [cb (do-alts
+  (when-let [cb (clojure.core.async/do-alts
                   (fn [val]
                     (ioc/aset-all! state ioc/VALUE-IDX val)
                     (ioc/run-state-machine-wrapped state))
@@ -457,7 +456,18 @@ to catch and handle."
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (#'clojure.core.async.impl.ioc-macros/go-impl &env body))
+  (let [crossing-env (zipmap (keys &env) (repeatedly gensym))]
+    `(let [c# (chan 1)
+           captured-bindings# (Var/getThreadBindingFrame)]
+       (dispatch/run
+         (^:once fn* []
+          (let [~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~(vary-meta l dissoc :tag))]) crossing-env)
+                f# ~(ioc/state-machine `(do ~@body) 1 [crossing-env &env] ioc/async-custom-terminators)
+                state# (-> (f#)
+                           (ioc/aset-all! ioc/USER-START-IDX c#
+                                          ioc/BINDINGS-IDX captured-bindings#))]
+            (ioc/run-state-machine-wrapped state#))))
+       c#)))
 
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
