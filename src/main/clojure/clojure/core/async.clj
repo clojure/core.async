@@ -459,7 +459,7 @@ to catch and handle."
 
 ;; task
 
-(def ^:private task-factory
+(def task-factory
   (-> (Thread/ofVirtual)
       (Thread$Builder/.name "task-" 0)
       .factory))
