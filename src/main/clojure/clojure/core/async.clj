@@ -27,6 +27,7 @@ to catch and handle."
             [clojure.core.async.impl.timers :as timers]
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.ioc-macros :as ioc]
+            clojure.core.async.impl.go ;; TODO: make conditional
             [clojure.core.async.impl.mutex :as mutex]
             [clojure.core.async.impl.concurrent :as conc]
             )
@@ -456,18 +457,7 @@ to catch and handle."
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (let [crossing-env (zipmap (keys &env) (repeatedly gensym))]
-    `(let [c# (chan 1)
-           captured-bindings# (Var/getThreadBindingFrame)]
-       (dispatch/run
-         (^:once fn* []
-          (let [~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~(vary-meta l dissoc :tag))]) crossing-env)
-                f# ~(ioc/state-machine `(do ~@body) 1 [crossing-env &env] ioc/async-custom-terminators)
-                state# (-> (f#)
-                           (ioc/aset-all! ioc/USER-START-IDX c#
-                                          ioc/BINDINGS-IDX captured-bindings#))]
-            (ioc/run-state-machine-wrapped state#))))
-       c#)))
+  (#'clojure.core.async.impl.go/go-impl &env body))
 
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
