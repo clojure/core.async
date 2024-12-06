@@ -1,4 +1,4 @@
-name: Tests
+name: CLJS Tests
 on: [push]
 
 jobs:
