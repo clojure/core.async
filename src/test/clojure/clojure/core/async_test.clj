@@ -292,7 +292,7 @@
              (<!! (a/into [] b)))))
 
     ;; ASYNC-127
-    (let [ch (to-chan! [1 2 3])
+    (let [ch (chan)
           m (mult ch)
           t-1 (chan)
           t-2 (chan)
@@ -301,6 +301,7 @@
       (tap m t-2)
       (tap m t-3)
       (close! t-3)
+      (onto-chan! ch [1 2 3])
       (is (= 1 (<!! t-1)))
       (is (= nil (a/poll! t-1))) ;; t-2 hasn't taken yet
       (is (= 1 (<!! t-2)))
