@@ -29,7 +29,17 @@
   (when (.get ^ThreadLocal in-dispatch)
     (throw (IllegalStateException. "Invalid blocking call in dispatch thread"))))
 
+(defn ex-handler
+  "conveys given Exception to current thread's default uncaught handler. returns nil"
+  [ex]
+  (-> (Thread/currentThread)
+      .getUncaughtExceptionHandler
+      (.uncaughtException (Thread/currentThread) ex))
+  nil)
+
 (defn run
-  "Runs Runnable r in a thread pool thread"
+  "Runs Runnable r on current thread when :on-caller? meta true, else in a thread pool thread."
   [^Runnable r]
-  (impl/exec @executor r))
+  (if (-> r meta :on-caller?)
+    (try (.run r) (catch Throwable t (ex-handler t)))
+    (impl/exec @executor r)))

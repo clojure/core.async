@@ -30,6 +30,11 @@
   (cleanup [_])
   (abort [_]))
 
+(defn appm
+  "returns closure that applies f to arg and has the metadata of f"
+  [f arg] 
+  (with-meta #(f arg) (meta f)))
+
 (deftype ManyToManyChannel [^LinkedList takes ^LinkedList puts ^Queue buf closed ^Lock mutex add!]
   MMC
   (cleanup
@@ -58,7 +63,7 @@
          (let [put-cb (and (impl/active? putter) (impl/commit putter))]
            (.unlock putter)
            (when put-cb
-             (dispatch/run (fn [] (put-cb true))))
+             (dispatch/run (appm put-cb true)))
            (when (.hasNext iter)
              (recur (.next iter)))))))
    (.clear puts)
@@ -97,7 +102,7 @@
                                           (if ret
                                             (let [val (impl/remove! buf)]
                                               (.remove iter)
-                                              (recur (conj takers (fn [] (ret val)))))
+                                              (recur (conj takers (appm ret val))))
                                             (recur takers))))
                                       takers))]
                      (if (seq take-cbs)
@@ -137,7 +142,7 @@
            (if (and put-cb take-cb)
              (do
                (.unlock mutex)
-               (dispatch/run (fn [] (take-cb val)))
+               (dispatch/run (appm take-cb val))
                (box true))
              (if (and buf (not (impl/full? buf)))
                (do
@@ -195,7 +200,7 @@
              (abort this))
            (.unlock mutex)
            (doseq [cb cbs]
-             (dispatch/run #(cb true)))
+             (dispatch/run (appm cb true)))
            (box val))
          (do (.unlock mutex)
              nil))
@@ -221,7 +226,7 @@
          (if (and put-cb take-cb)
            (do
              (.unlock mutex)
-             (dispatch/run #(put-cb true))
+             (dispatch/run (appm put-cb true))
              (box val))
            (if @closed
              (do
@@ -266,7 +271,7 @@
                (.unlock taker)
                (when take-cb
                  (let [val (when (and buf (pos? (count buf))) (impl/remove! buf))]
-                   (dispatch/run (fn [] (take-cb val)))))
+                   (dispatch/run (appm take-cb val))))
                (.remove iter)
                (when (.hasNext iter)
                  (recur (.next iter)))))))
@@ -274,14 +279,8 @@
        (.unlock mutex)
        nil))))
 
-(defn- ex-handler [ex]
-  (-> (Thread/currentThread)
-      .getUncaughtExceptionHandler
-      (.uncaughtException (Thread/currentThread) ex))
-  nil)
-
 (defn- handle [buf exh t]
-  (let [else ((or exh ex-handler) t)]
+  (let [else ((or exh dispatch/ex-handler) t)]
     (if (nil? else)
       buf
       (impl/add! buf else))))

@@ -59,14 +59,14 @@
       "The written value is the value provided to the read callback."))
 
 (deftest take!-on-caller?
-  (is (apply not= (let [starting-thread (Thread/currentThread)
+  (is (apply = (let [starting-thread (Thread/currentThread)
                         test-channel (chan nil)
                         read-promise (promise)]
                     (take! test-channel (fn [_] (deliver read-promise (Thread/currentThread))) true)
                     (>!! test-channel :foo)
                     [starting-thread @read-promise]))
       "When on-caller? requested, but no value is immediately
-      available, take!'s callback executes on another thread.")
+      available, take!'s callback executes putter's thread.")
   (is (apply = (let [starting-thread (Thread/currentThread)
                      test-channel (chan nil)
                      read-promise (promise)]
@@ -101,14 +101,14 @@
                     [starting-thread @write-promise]))
       "When on-caller? is false, but a reader can consume the value,
       put!'s callback executes on a different thread.")
-  (is (apply not= (let [starting-thread (Thread/currentThread)
+  (is (apply = (let [starting-thread (Thread/currentThread)
                         test-channel (chan nil)
                         write-promise (promise)]
                     (put! test-channel :foo (fn [_] (deliver write-promise (Thread/currentThread))) true)
                     (take! test-channel (fn [_] nil))
                     [starting-thread @write-promise]))
       "When on-caller? requested, but no reader can consume the value,
-      put!'s callback executes on a different thread."))
+      put!'s callback executes on a taker's thread."))
 
 
 (deftest limit-async-take!-put!

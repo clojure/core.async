@@ -56,6 +56,9 @@ to catch and handle."
      (lock-id [_] 0)
      (commit [_] f))))
 
+(defn- on-caller [f]
+  (with-meta f {:on-caller? true}))
+
 (defn buffer
   "Returns a fixed buffer of size n. When full, puts will block/park."
   [n]
@@ -133,7 +136,7 @@ to catch and handle."
   namespace docs)."
   [port]
   (let [p (promise)
-        ret (impl/take! port (fn-handler (fn [v] (deliver p v))))]
+        ret (impl/take! port (fn-handler (on-caller #(deliver p %))))]
     (if ret
       @ret
       (deref p))))
@@ -156,7 +159,7 @@ to catch and handle."
    Returns nil."
   ([port fn1] (take! port fn1 true))
   ([port fn1 on-caller?]
-     (let [ret (impl/take! port (fn-handler fn1))]
+     (let [ret (impl/take! port (fn-handler (if on-caller? (on-caller fn1) fn1)))]
        (when ret
          (let [val @ret]
            (if on-caller?
@@ -172,7 +175,7 @@ to catch and handle."
   namespace docs)."
   [port val]
   (let [p (promise)
-        ret (impl/put! port val (fn-handler (fn [open?] (deliver p open?))))]
+        ret (impl/put! port val (fn-handler (on-caller #(deliver p %))))]
     (if ret
       @ret
       (deref p))))
@@ -204,7 +207,7 @@ to catch and handle."
        true))
   ([port val fn1] (put! port val fn1 true))
   ([port val fn1 on-caller?]
-     (if-let [retb (impl/put! port val (fn-handler fn1))]
+     (if-let [retb (impl/put! port val (fn-handler (if on-caller? (on-caller fn1) fn1)))]
        (let [ret @retb]
          (if on-caller?
            (fn1 ret)
@@ -309,7 +312,7 @@ to catch and handle."
   namespace docs)."
   [ports & opts]
   (let [p (promise)
-        ret (do-alts (partial deliver p) ports (apply hash-map opts))]
+        ret (do-alts (on-caller #(deliver p %)) ports (apply hash-map opts))]
     (if ret
       @ret
       (deref p))))
@@ -512,11 +515,7 @@ to catch and handle."
 (defn- pipeline*
   ([n to xf from close? ex-handler type]
      (assert (pos? n))
-     (let [ex-handler (or ex-handler (fn [ex]
-                                       (-> (Thread/currentThread)
-                                           .getUncaughtExceptionHandler
-                                           (.uncaughtException (Thread/currentThread) ex))
-                                       nil))
+     (let [ex-handler (or ex-handler dispatch/ex-handler)
            jobs (chan n)
            results (chan n)
            process (fn [[v p :as job]]
