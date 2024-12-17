@@ -59,14 +59,16 @@ To run the ClojureScript tests:
 
 ## License
 
-Copyright © 2017-2023 Rich Hickey and contributors
-
 Distributed under the Eclipse Public License, the same as Clojure.
+
+Copyright © Rich Hickey and contributors
 
 ## Changelog
 
 * next
-  * [ASYNC-246](https://clojure.atlassian.net/browse/ASYNC-246] (CLJ) Fix non-deterministic test
+  * [ASYNC-254](https://clojure.atlassian.net/browse/ASYNC-254) (CLJ) Completions for blocking ops can be directly delivered without enqueuing for dispatch
+  * [ASYNC-252](https://clojure.atlassian.net/browse/ASYNC-252) (CLJ) Move go expander from ioc-macros to impl.go namespace
+  * [ASYNC-246](https://clojure.atlassian.net/browse/ASYNC-246) (CLJ) Fix non-deterministic test
 * Release 1.6.681 on 2023.08.09
   * Revert [ASYNC-248](https://clojure.atlassian.net/browse/ASYNC-248) (CLJ) due to the issues in [ASYNC-249](https://clojure.atlassian.net/browse/ASYNC-249)
   * Update to tools.analyzer.jvm 1.2.3
