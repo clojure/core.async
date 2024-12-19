@@ -13,11 +13,11 @@ go blocks are dispatched over an internal thread pool, which
 defaults to 8 threads. The size of this pool can be modified using
 the Java system property `clojure.core.async.pool-size`.
 
-Set Java system property `clojure.core.async.go-checking` to true
-to validate go blocks do not invoke core.async blocking operations.
-Property is read once, at namespace load time. Recommended for use
-primarily during development. Invalid blocking calls will throw in
-go block threads - use Thread.setDefaultUncaughtExceptionHandler()
+Set Java system property `clojure.core.async.vthread-checking` to true
+to validate that core.async parking operations are not called outside of
+task blocks. Property is read once, at namespace load time. Recommended
+for use primarily during development. Invalid parking calls will throw in
+virtual threads - use Thread.setDefaultUncaughtExceptionHandler()
 to catch and handle."
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
@@ -117,6 +117,23 @@ to catch and handle."
   [^long msecs]
   (timers/timeout msecs))
 
+;; task
+
+(defn- check-not-in-vthread [op]
+  (when (not (Thread/.isVirtual (Thread/currentThread)))
+    (assert nil (str op " used not in virtual thread"))))
+
+(defmacro defvthreadcheckingop
+  [op doc arglist & body]
+  (let [as (mapv #(list 'quote %) arglist)]
+    `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
+       (if (Boolean/getBoolean "clojure.core.async.vthread-checking")
+         (fn ~arglist
+           (check-not-in-vthread ~op)
+           ~@body)
+         (fn ~arglist
+           ~@body)))))
+
 (defmacro defblockingop
   [op doc arglist & body]
   (let [as (mapv #(list 'quote %) arglist)]
@@ -130,10 +147,7 @@ to catch and handle."
 
 (defblockingop <!!
   "takes a val from port. Will return nil if closed. Will block
-  if nothing is available.
-  Not intended for use in direct or transitive calls from (go ...) blocks.
-  Use the clojure.core.async.go-checking flag to detect invalid use (see
-  namespace docs)."
+  if nothing is available."
   [port]
   (let [p (promise)
         ret (impl/take! port (fn-handler (on-caller #(deliver p %))))]
@@ -141,11 +155,13 @@ to catch and handle."
       @ret
       (deref p))))
 
-(defn <!
-  "takes a val from port. Must be called inside a (go ...) block. Will
-  return nil if closed. Will park if nothing is available."
+(defvthreadcheckingop <!
+  "takes a val from port. Must be called inside a (task ...) block. Will
+  return nil if closed. Will park if nothing is available. Should be used
+  inside of a (task ...) block. Use the clojure.core.async.vthread-checking
+  flag to detect invalid use (see namespace docs)."
   [port]
-  (assert nil "<! used not in (go ...) block"))
+  (<!! port))
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
@@ -169,10 +185,7 @@ to catch and handle."
 
 (defblockingop >!!
   "puts a val into port. nil values are not allowed. Will block if no
-  buffer space is available. Returns true unless port is already closed.
-  Not intended for use in direct or transitive calls from (go ...) blocks.
-  Use the clojure.core.async.go-checking flag to detect invalid use (see
-  namespace docs)."
+  buffer space is available. Returns true unless port is already closed."
   [port val]
   (let [p (promise)
         ret (impl/put! port val (fn-handler (on-caller #(deliver p %))))]
@@ -180,12 +193,14 @@ to catch and handle."
       @ret
       (deref p))))
 
-(defn >!
+(defvthreadcheckingop >!
   "puts a val into port. nil values are not allowed. Must be called
-  inside a (go ...) block. Will park if no buffer space is available.
-  Returns true unless port is already closed."
+  inside a (task ...) block. Will park if no buffer space is available.
+  Returns true unless port is already closed. Should be used
+  inside of a (task ...) block. Use the clojure.core.async.vthread-checking
+  flag to detect invalid use (see namespace docs)."
   [port val]
-  (assert nil ">! used not in (go ...) block"))
+  (>!! port val))
 
 (defn- nop [_])
 (def ^:private fhnop (fn-handler nop))
@@ -306,10 +321,7 @@ to catch and handle."
 
 (defblockingop alts!!
   "Like alts!, except takes will be made as if by <!!, and puts will
-  be made as if by >!!, will block until completed.
-  Not intended for use in direct or transitive calls from (go ...) blocks.
-  Use the clojure.core.async.go-checking flag to detect invalid use (see
-  namespace docs)."
+  be made as if by >!!, will block until completed."
   [ports & opts]
   (let [p (promise)
         ret (do-alts (on-caller #(deliver p %)) ports (apply hash-map opts))]
@@ -317,9 +329,9 @@ to catch and handle."
       @ret
       (deref p))))
 
-(defn alts!
-  "Completes at most one of several channel operations. Must be called
-  inside a (go ...) block. ports is a vector of channel endpoints,
+(defvthreadcheckingop alts!
+  "Completes at most one of several channel operations. Should be called
+  inside a (task ...) block. ports is a vector of channel endpoints,
   which can be either a channel to take from or a vector of
   [channel-to-put-to val-to-put], in any combination. Takes will be
   made as if by <!, and puts will be made as if by >!. Unless
@@ -341,7 +353,7 @@ to catch and handle."
   depended upon for side effects."
 
   [ports & {:as opts}]
-  (assert nil "alts! used not in (go ...) block"))
+  (alts!! ports opts))
 
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
@@ -382,8 +394,7 @@ to catch and handle."
         (= ~gch :default) val#))))
 
 (defmacro alt!!
-  "Like alt!, except as if by alts!!, will block until completed, and
-  not intended for use in (go ...) blocks."
+  "Like alt!, except as if by alts!!, will block until completed."
 
   [& clauses]
   (do-alt `alts!! clauses))
@@ -391,7 +402,9 @@ to catch and handle."
 (defmacro alt!
   "Makes a single choice between one of several channel operations,
   as if by alts!, returning the value of the result expr corresponding
-  to the operation completed. Must be called inside a (go ...) block.
+  to the operation completed. Should be used inside of a (task ...)
+  block. Use the clojure.core.async.vthread-checking flag to detect
+  invalid use (see namespace docs).
 
   Each clause takes the form of:
 
@@ -444,23 +457,41 @@ to catch and handle."
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
-(defmacro go
-  "Asynchronously executes the body, returning immediately to the
-  calling thread. Additionally, any visible calls to <!, >! and alt!/alts!
-  channel operations within the body will block (if necessary) by
-  'parking' the calling thread rather than tying up an OS thread (or
-  the only JS thread when in ClojureScript). Upon completion of the
-  operation, the body will be resumed.
+;; task
 
-  go blocks should not (either directly or indirectly) perform operations
-  that may block indefinitely. Doing so risks depleting the fixed pool of
-  go block threads, causing all go block processing to stop. This includes
-  core.async blocking ops (those ending in !!) and other blocking IO.
+(def task-factory
+  (-> (Thread/ofVirtual)
+      (Thread$Builder/.name "task-" 0)
+      .factory))
+
+(defmacro task
+  "Asynchronously executes the body in a virtual thread, returning immediately
+  to the calling thread.
+
+  task blocks should not (either directly or indirectly) perform operations
+  that may block indefinitely. Doing so risks pinning the virtual thread
+  to its carrier thread.
 
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (#'clojure.core.async.impl.go/go-impl &env body))
+  `(let [c# (chan 1)
+         captured-bindings# (Var/getThreadBindingFrame)]
+     (.execute
+      (Executors/newThreadPerTaskExecutor task-factory)
+      (^:once fn* []
+       (Var/resetThreadBindingFrame captured-bindings#)
+       (try
+         (let [result# (do ~@body)]
+           (>!! c# result#))
+         (finally
+           (close! c#)))))
+     c#))
+
+(defmacro go
+  "Dispatches to task macro."
+  [& body]
+  `(task ~body))
 
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
