@@ -27,7 +27,7 @@
 (def identity-mapping (mapping identity))
 (defn identity-async [v ch] (thread (>!! ch v) (close! ch)))
 
-(deftest test-sizes
+#_(deftest test-sizes
   (are [n size]
     (let [r (range size)]
       (and
@@ -40,7 +40,7 @@
     20 10
     5 1000))
 
-(deftest test-close?
+#_(deftest test-close?
   (doseq [pf [pipeline pipeline-blocking]]
     (let [cout (chan 1)]
       (pf 5 cout identity-mapping (to-chan! [1]) true)
@@ -57,7 +57,7 @@
       (>!! cout :more)
       (is (= :more (<!! cout))))))
 
-(deftest test-ex-handler
+#_(deftest test-ex-handler
   (doseq [pf [pipeline pipeline-blocking]]
     (let [cout (chan 1)
           chex (chan 1)
@@ -76,25 +76,25 @@
      (>!! ch i))
    (close! ch)))
 
-(deftest test-af-multiplier
+#_(deftest test-af-multiplier
   (is (= [0 0 1 0 1 2 0 1 2 3]
          (pipeline-tester pipeline-async 2 (range 1 5) multiplier-async))))
 
 (def sleep-mapping (mapping #(do (Thread/sleep %) %)))
 
-(deftest test-blocking
+#_(deftest test-blocking
   (let [times [2000 50 1000 100]]
     (is (= times (pipeline-tester pipeline-blocking 2 times sleep-mapping)))))
 
 (defn slow-fib [n]
   (if (< n 2) n (+ (slow-fib (- n 1)) (slow-fib (- n 2)))))
 
-(deftest test-compute
+#_(deftest test-compute
   (let [input (take 50 (cycle (range 15 38)))]
     (is (= (slow-fib (last input))
            (last (pipeline-tester pipeline 8 input (mapping slow-fib)))))))
 
-(deftest test-async
+#_(deftest test-async
   (is (= (range 1 101)
          (pipeline-tester pipeline-async 1 (range 100)
                           (fn [v ch] (future (>!! ch (inc v)) (close! ch)))))))

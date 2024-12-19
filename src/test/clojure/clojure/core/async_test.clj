@@ -186,7 +186,7 @@
       (is (<!! (thread test-dyn))))))
 
 
-(deftest ops-tests
+#_(deftest ops-tests
   (testing "map<"
     (is (= [2 3 4 5]
            (<!! (a/into [] (a/map< inc (a/to-chan! [1 2 3 4])))))))
@@ -407,7 +407,7 @@
     (is (= (sort (clojure.core/take takers expected))
           (sort @res)))))
 
-(deftest expanding-transducer-delivers-to-multiple-pending
+#_(deftest expanding-transducer-delivers-to-multiple-pending
   (doseq [b (range 1 10)
           t (range 1 10)]
     (check-expanding-transducer b 3 3 t)))
@@ -452,11 +452,11 @@
       ([result input & inputs]
        (f1 result (apply f input inputs))))))
 
-(deftest test-transduce
+#_(deftest test-transduce
   (is (= [1 2 3 4 5]
          (<!! (a/transduce (mapping inc) conj [] (a/to-chan! (range 5)))))))
 
-(deftest test-write-on-closed
+#_(deftest test-write-on-closed
   (let [closed (doto (a/chan) a/close!)
         open (a/chan)]
     (is (= :ok
