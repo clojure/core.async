@@ -35,7 +35,8 @@ to catch and handle."
            [java.util.concurrent.locks Lock]
            [java.util.concurrent Executors Executor ThreadLocalRandom]
            [java.util Arrays ArrayList]
-           [clojure.lang Var]))
+           [clojure.lang Var]
+           [java.lang Thread$Builder]))
 
 (alias 'core 'clojure.core)
 
@@ -491,7 +492,7 @@ to catch and handle."
 (defmacro go
   "Dispatches to task macro."
   [& body]
-  `(task ~body))
+  `(task ~@body))
 
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
