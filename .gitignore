@@ -24,3 +24,7 @@ pom.xml.versionsBackup
 .calva/
 .lsp/
 .vscode/
+.project
+.classpath
+ccw.repl.cmdhistory.prefs
+nbactions.xml
