@@ -49,6 +49,8 @@
    [clojure.core.async.flow.impl :as impl]
    [clojure.core.async.flow.impl.graph :as g]))
 
+(set! *warn-on-reflection* true)
+
 (defn create-flow
   "Creates a flow from the supplied definition: a map containing the
   keys :procs and :conns, and optionally :mixed-exec/:io-exec/:compute-exec

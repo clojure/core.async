@@ -21,6 +21,17 @@
 (defonce io-exec clojure.lang.Agent/soloExecutor)
 (defonce compute-exec clojure.lang.Agent/pooledExecutor)
 
+(defn chan->data
+  [^clojure.core.async.impl.channels.ManyToManyChannel c]
+    (let [b (.buf c)]
+      {:buffer-type (if b
+                      (-> b class .getSimpleName symbol)
+                      :none)
+       :buffer-count (count b)
+       :put-count (count (.puts c))
+       :take-count (count (.takes c))
+       :closed? (clojure.core.async.impl.protocols/closed? c)}))
+
 (defn futurize ^Future [f {:keys [exec]}]
   (fn [& args]
     (^[Callable] ExecutorService/.submit
@@ -231,9 +242,14 @@
             read-chans (into [control] (-> ins (dissoc ::flow/control) vals))
             run
             #(loop [status :paused, state (when init (init args)), count 0]
-               (let [pong (fn [] (async/>!! (outs ::flow/report)
-                                            #::flow{:report :ping, :pid pid, :status status
-                                                     :state state, :count count}))
+               (let [pong (fn []
+                            (let [pins (dissoc ins ::flow/control)
+                                  pouts (dissoc outs ::flow/error ::flow/report)]
+                              (async/>!! (outs ::flow/report)
+                                         #::flow{:report :ping, :pid pid, :status status
+                                                 :state state, :count count
+                                                 :ins (zipmap (keys pins) (map chan->data (vals pins)))
+                                                 :outs (zipmap (keys pouts) (map chan->data (vals pouts)))})))
                      handle-command (partial handle-command pid pong)
                      [nstatus nstate count]
                      (try
@@ -262,7 +278,7 @@
                                (catch Throwable ex
                                  (async/>!! (outs ::flow/error)
                                             #::flow{:pid pid, :status status, :state state,
-                                                     :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
+                                                    :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
                                  [status state count])))))
                        (catch Throwable ex
                          (async/>!! (outs ::flow/error)
