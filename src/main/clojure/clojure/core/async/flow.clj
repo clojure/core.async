@@ -38,7 +38,7 @@
   supply ids for processes, inputs, outputs etc. These should be
   keywords. When a namespaced keyword is required it is explicitly
   stated. This documentation refers to various keywords utilized by
-  the library itself as ::flow/xyz, weere ::flow is an alias for
+  the library itself as ::flow/xyz, where ::flow is an alias for
   clojure.core.async.flow
 
   A process is represented in the flow definition by an implementation
@@ -79,9 +79,17 @@
 
 (defn start
   "starts the entire flow from init values. The processes start paused.
-  Call resume or resume-proc to start flow.
-  returns {::flow/report-chan - a core.async chan for reading
-           ::flow/error-chan - a core.async chan for reading}"
+  Call 'resume' or 'resume-proc' to start flow.  returns a map with keys:
+  
+  ::flow/report-chan - a core.async chan for reading.'ping' reponses
+  will show up here, as will any explicit ::flow/report outputs
+  from :transform/:inject
+  
+  ::flow/error-chan - a core.async chan for reading. Any (and only)
+  exceptions thrown anywhere on any thread inside a flow will appear
+  in maps sent here. There will at least be a ::flow/ex entry with the
+  exception, and may be additional keys for pid, state, status etc
+  depending on the context of the error."
   [g] (g/start g))
 
 (defn stop
@@ -99,7 +107,7 @@
 
 (defn ping
   "pings all processes, which will put their status and state on the
-  report channel"
+  report channel returned from start"
   [g] (g/ping g))
 
 (defn pause-proc
@@ -112,7 +120,7 @@
 
 (defn ping-proc
   "pings the process, which will put its status and state on the report
-  channel"
+  channel returned from start"
   [g pid] (g/ping-proc g pid))
 
 (defn command-proc
