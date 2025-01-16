@@ -33,9 +33,10 @@ to catch and handle."
             )
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
-           [java.util.concurrent Executors Executor ThreadLocalRandom]
+           [java.util.concurrent Executors Executor ThreadLocalRandom ExecutorService]
            [java.util Arrays ArrayList]
-           [clojure.lang Var]))
+           [clojure.lang Var]
+           [java.lang Thread$Builder]))
 
 (alias 'core 'clojure.core)
 
@@ -464,6 +465,37 @@ to catch and handle."
 
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
+
+(def ^ExecutorService io-thread-exec
+  (if (= "21" (System/getProperty "java.vm.specification.version"))
+    (eval '(Executors/newThreadPerTaskExecutor (-> (Thread/ofVirtual)
+                                                   (Thread$Builder/.name "io-thread-" 0)
+                                                   .factory)))
+    thread-macro-executor))
+
+(defmacro io-thread
+  "Asynchronously executes the body in a virtual thread, returning immediately
+  to the calling thread.
+
+  io-thread blocks should not (either directly or indirectly) perform operations
+  that may block indefinitely. Doing so risks pinning the virtual thread
+  to its carrier thread.
+
+  Returns a channel which will receive the result of the body when
+  completed"
+  [& body]
+  `(let [c# (chan 1)
+         captured-bindings# (Var/getThreadBindingFrame)]
+     (.execute
+      io-thread-exec
+      (^:once fn* []
+       (Var/resetThreadBindingFrame captured-bindings#)
+       (try
+         (let [result# (do ~@body)]
+           (>!! c# result#))
+         (finally
+           (close! c#)))))
+     c#))
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
