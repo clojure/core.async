@@ -491,7 +491,8 @@ to catch and handle."
        (Var/resetThreadBindingFrame captured-bindings#)
        (try
          (let [result# (do ~@body)]
-           (>!! c# result#))
+           (when-not (nil? result#)
+             (>!! c# result#)))
          (finally
            (close! c#)))))
      c#))
