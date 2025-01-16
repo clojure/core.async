@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>clojure.core.async - core.async 1.6.682-SNAPSHOT API documentation</title>
+    <title>clojure.core.async - core.async 1.7.702-SNAPSHOT API documentation</title>
     <link rel="icon" href="static/favicon.png" />
     <link rel="shortcut icon" href="static/favicon.png" />
     <link rel="stylesheet" href="static/clojure.css" type="text/css" media="all" />
@@ -25,7 +25,7 @@ namespace.
       <div id="leftcolumn"><div style="text-align: center;"></div>
 <div class="menu">
   <div class="WikiCustomNav WikiElement wiki">
-    <span class="toc-header"><span id="project-name">core.async</span> <span id="version">1.6.682-SNAPSHOT</span> API</span><br />
+    <span class="toc-header"><span id="project-name">core.async</span> <span id="version">1.7.702-SNAPSHOT</span> API</span><br />
     <ul>
       <li><a href="index.html" class="wiki_link">Overview</a></li>
       <li><a href="api-index.html" class="wiki_link">API Index</a></li>
@@ -225,11 +225,57 @@ namespace.
   </div><div class="toc-section" style="margin-left: 1em;">
     <a style="margin-top: 3px;" href="#"></a>
     
+  </div><div class="toc-section" style="margin-left: 1em;">
+    <a style="margin-top: 3px;" href="#clojure.core.async.flow">clojure.core.async.flow</a>
+    
+  </div><div class="toc-section" style="margin-left: 1em;">
+    <a style="margin-top: 3px;" href="#clojure.core.async.flow.impl.graph">clojure.core.async.flow.impl.graph</a>
+    <div class="toc-entry" style="margin-left: 1em;">
+      <a href="#clojure.core.async.flow.impl.graph/Graph" class="toc-entry-anchor">Graph</a>
+      <div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/command-proc" class="toc-subentry-anchor">command-proc</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/inject" class="toc-subentry-anchor">inject</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/pause" class="toc-subentry-anchor">pause</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/pause-proc" class="toc-subentry-anchor">pause-proc</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/ping" class="toc-subentry-anchor">ping</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/ping-proc" class="toc-subentry-anchor">ping-proc</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/resume" class="toc-subentry-anchor">resume</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/resume-proc" class="toc-subentry-anchor">resume-proc</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/start" class="toc-subentry-anchor">start</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.impl.graph/stop" class="toc-subentry-anchor">stop</a>
+      </div>
+    </div>
+  </div><div class="toc-section" style="margin-left: 1em;">
+    <a style="margin-top: 3px;" href="#clojure.core.async.flow.spi">clojure.core.async.flow.spi</a>
+    <div class="toc-entry" style="margin-left: 1em;">
+      <a href="#clojure.core.async.flow.spi/ProcLauncher" class="toc-entry-anchor">ProcLauncher</a>
+      <div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.spi/describe" class="toc-subentry-anchor">describe</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.spi/start" class="toc-subentry-anchor">start</a>
+      </div>
+    </div><div class="toc-entry" style="margin-left: 1em;">
+      <a href="#clojure.core.async.flow.spi/Resolver" class="toc-entry-anchor">Resolver</a>
+      <div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.spi/get-exec" class="toc-subentry-anchor">get-exec</a>
+      </div><div class="toc-subentry" style="margin-left: 1em;">
+        <a href="#clojure.core.async.flow.spi/get-write-chan" class="toc-subentry-anchor">get-write-chan</a>
+      </div>
+    </div>
   </div>
 </div>
 </div>
                 <div id="content-tag"><h1 id="overview">API for <span id="clojure.core.async">clojure.core.async</span>
-  - <span id="header-project">core.async</span> <span id="header-version">1.6.682-SNAPSHOT</span><span id="header-status-block"> (<span id="header-status">in development</span>)</span>
+  - <span id="header-project">core.async</span> <span id="header-version">1.7.702-SNAPSHOT</span><span id="header-status-block"> (<span id="header-status">in development</span>)</span>
   </h1>
 
 <br />Full namespace name: <span id="long-name">clojure.core.async</span>
@@ -269,7 +315,7 @@ return nil if closed. Will park if nothing is available.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L140">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L144">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -285,7 +331,7 @@ namespace docs).</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L127">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L131">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -299,7 +345,7 @@ Returns true unless port is already closed.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L179">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L183">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -315,7 +361,7 @@ namespace docs).</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L166">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L170">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -327,7 +373,7 @@ namespace docs).</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L886">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L875">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -364,7 +410,7 @@ characteristics are those of alts!.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L387">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L391">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -377,7 +423,7 @@ not intended for use in (go ...) blocks.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L380">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L384">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -409,7 +455,7 @@ depended upon for side effects.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L316">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L320">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -425,7 +471,7 @@ namespace docs).</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L303">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L307">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -437,7 +483,7 @@ namespace docs).</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L58">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L62">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -459,7 +505,7 @@ placed in the channel.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L83">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L87">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -478,7 +524,7 @@ blocked or parked puts will remain blocked/parked until a taker releases them.</
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L214">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L218">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -490,7 +536,7 @@ blocked or parked puts will remain blocked/parked until a taker releases them.</
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L272">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L276">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -503,7 +549,7 @@ val will be dropped (no transfer).</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L64">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L68">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -528,7 +574,7 @@ completed</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L443">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L447">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -540,7 +586,7 @@ completed</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L502">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L495">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -554,7 +600,7 @@ collection. ch must close before into produces a result.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L1054">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L1043">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -573,7 +619,7 @@ buf-or-n can be supplied</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L998">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L987">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -589,7 +635,7 @@ will close after all the source channels have closed.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L1036">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L1025">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -617,7 +663,7 @@ Each channel can have zero or more boolean modes set via 'toggle':
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L816">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L805">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -639,7 +685,7 @@ If a tap puts to a closed channel, it will be removed from the mult.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L750">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L739">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -652,7 +698,7 @@ nil values are not allowed. Never blocks. Returns true if offer succeeds.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L429">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L433">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -665,7 +711,7 @@ nil values are not allowed. Never blocks. Returns true if offer succeeds.</pre>
     <pre id="var-specs"></pre>
     
     <span class="var-deprecated"><span id="content">Deprecated since core.async version 1.2</span><br /></span>
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L705">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L694">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -685,7 +731,7 @@ If accessing coll might block, use onto-chan!! instead</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L673">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L662">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -699,7 +745,7 @@ e.g. a lazy seq of blocking operations</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L717">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L706">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -715,7 +761,7 @@ stop consuming the from channel if the to channel closes</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L507">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L500">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -740,7 +786,7 @@ pipeline-async instead. See chan for semantics of ex-handler.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L577">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L566">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -763,7 +809,7 @@ closes. See also pipeline, pipeline-blocking.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L600">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L589">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -777,7 +823,7 @@ closes. See also pipeline, pipeline-blocking.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L594">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L583">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -790,7 +836,7 @@ Never blocks. Returns value if successful, nil otherwise.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L436">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L440">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -809,7 +855,7 @@ semantics of xform and ex-handler.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L99">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L103">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -841,7 +887,7 @@ the source.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L923">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L912">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -864,7 +910,7 @@ Returns true unless port is already closed.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L189">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L193">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -880,7 +926,7 @@ called. ch must close before reduce produces a result.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L636">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L625">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -894,7 +940,7 @@ transferred).</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L70">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L74">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -906,7 +952,7 @@ transferred).</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L913">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L902">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -926,7 +972,7 @@ closed.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L615">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L604">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -942,7 +988,7 @@ but can be determined by the close? parameter.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L978">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L967">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -958,7 +1004,7 @@ The output channel is unbuffered by default, unless buf-or-n is given.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L1062">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L1051">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -979,7 +1025,7 @@ Returns nil.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L146">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L150">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -995,7 +1041,7 @@ but can be determined by the close? parameter.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L792">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L781">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1009,7 +1055,7 @@ the body when completed, then close.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L493">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L486">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1023,7 +1069,7 @@ f when completed, then close.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L475">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L468">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1035,7 +1081,7 @@ f when completed, then close.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L111">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L115">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1047,7 +1093,7 @@ f when completed, then close.</pre>
     <pre id="var-specs"></pre>
     
     <span class="var-deprecated"><span id="content">Deprecated since core.async version 1.2</span><br /></span>
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L711">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L700">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1062,7 +1108,7 @@ If accessing coll might block, use to-chan!! instead</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L690">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L679">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1075,7 +1121,7 @@ e.g. a lazy seq of blocking operations</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L729">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L718">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1094,7 +1140,7 @@ used to add channels in a particular (e.g. paused) state.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L901">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L890">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1108,7 +1154,7 @@ transduce produces a result.</pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L652">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L641">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1121,7 +1167,7 @@ puts into this buffer will never cause the buffer to be full. </pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L77">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L81">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1133,7 +1179,7 @@ puts into this buffer will never cause the buffer to be full. </pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L891">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L880">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1145,7 +1191,7 @@ puts into this buffer will never cause the buffer to be full. </pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L896">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L885">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1157,7 +1203,7 @@ puts into this buffer will never cause the buffer to be full. </pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L986">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L975">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1170,7 +1216,7 @@ puts into this buffer will never cause the buffer to be full. </pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L991">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L980">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1182,7 +1228,7 @@ puts into this buffer will never cause the buffer to be full. </pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L800">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L789">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1194,9 +1240,345 @@ puts into this buffer will never cause the buffer to be full. </pre>
     <pre id="var-specs"></pre>
     
     
-    <a id="var-source" href="https://github.com/clojure/core.async/blob/28c5d09bcbb78c6715675f20b9d28eb9998d32f5/src/main/clojure/clojure/core/async.clj#L805">Source</a>
+    <a id="var-source" href="https://github.com/clojure/core.async/blob/70183b1603c70888c01cc75781f1070bb93b4f4c/src/main/clojure/clojure/core/async.clj#L794">Source</a>
   </div>
 </div>
+
+<br />
+<h2 id="clojure.core.async.flow">clojure.core.async.flow</h2>
+<pre id="namespace-docstr">A library for building concurrent, event driven data processing
+flows out of communication-free functions, while centralizing
+control, reporting, execution and error handling. Built on core.async.
+
+The top-level construct is the flow, comprising:
+a set of processes (generally, threads) - concurrent activities
+a set of channels flowing data into and out of the processes
+a set of channels for centralized control, reporting, error-handling,
+  and execution of the processes
+
+A flow is constructed from flow definition data which defines a
+directed graph of processes and the connections between
+them. Processes describe their I/O requirements and the
+flow (library) itself creates channels and passes them to the
+processes that requested them. See 'create-flow' for the
+details. The flow definition provides a centralized place for policy
+decisions regarding configuration, threading, buffering etc. 
+
+It is expected that applications will rarely define processes but
+instead use the API functions here, 'process' and 'step-process',
+that implement the process protocol in terms of calls to ordinary
+functions that include no communication or core.async code. In this
+way the library helps you achieve a strict separation of your
+application logic from its execution, communication, lifecycle and
+monitoring.
+
+Note that at several points the library calls upon the user to
+supply ids for processes, inputs, outputs etc. These should be
+keywords. When a namespaced keyword is required it is explicitly
+stated. This documentation refers to various keywords utilized by
+the library itself as ::flow/xyz, where ::flow is an alias for
+clojure.core.async.flow
+
+A process is represented in the flow definition by an implementation
+of spi/ProcLauncher that starts it. See the spi docs for
+details.</pre>
+
+
+<br />
+
+
+
+
+<br />
+<h2 id="clojure.core.async.flow.impl.graph">clojure.core.async.flow.impl.graph</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+<div id="proto-section">
+  <p></p>
+  <h2>Protocols</h2>
+  <div id="proto-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.flow.impl.graph/Graph">Graph</h2>
+    <span id="proto-type">Protocol</span><br />
+    <pre id="proto-docstr"></pre>
+    Known implementations: <span id="proto-impls"></span>
+    <div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/command-proc">command-proc</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (command-proc g pid cmd-id more-kvs)
+</pre>
+      <pre id="var-docstr">synchronously sends a process-specific command with the given id 
+and additional kvs to the process</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/inject">inject</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (inject g [pid io-id] msgs)
+</pre>
+      <pre id="var-docstr">synchronously puts the messages on the channel 
+corresponding to the input or output of the process</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/pause">pause</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (pause g)
+</pre>
+      <pre id="var-docstr">pauses a running graph</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/pause-proc">pause-proc</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (pause-proc g pid)
+</pre>
+      <pre id="var-docstr">pauses a process</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/ping">ping</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (ping g)
+</pre>
+      <pre id="var-docstr">pings all processes, which will put their status and state on the report channel</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/ping-proc">ping-proc</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (ping-proc g pid)
+</pre>
+      <pre id="var-docstr">pings the process, which will put its status and state on the report channel</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/resume">resume</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (resume g)
+</pre>
+      <pre id="var-docstr">resumes a paused graph</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/resume-proc">resume-proc</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (resume-proc g pid)
+</pre>
+      <pre id="var-docstr">resumes a process</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/start">start</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (start g)
+</pre>
+      <pre id="var-docstr">starts the entire graph from init values. The processes start paused. 
+Call resume-all or resume-proc to start flow.
+returns {:report-chan -  a core.async chan for reading 
+         :error-chan - a core.async chan for reading}</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.impl.graph/stop">stop</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (stop g)
+</pre>
+      <pre id="var-docstr">shuts down the graph, stopping all procs, can be started again</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div>
+    
+    
+    <a id="proto-source" href="https://github.com/clojure/core.async/blob/03b97e0b3e0ec329629bcbf76106658dce4a5d61/src/main/clojure/clojure/core/async/flow/impl/graph.clj#L11">Source</a>
+  </div>
+</div>
+
+
+
+<br />
+<h2 id="clojure.core.async.flow.spi">clojure.core.async.flow.spi</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+<div id="proto-section">
+  <p></p>
+  <h2>Protocols</h2>
+  <div id="proto-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.flow.spi/ProcLauncher">ProcLauncher</h2>
+    <span id="proto-type">Protocol</span><br />
+    <pre id="proto-docstr">Note - definine a ProcLauncher is an advanced feature and should not
+be needed for ordinary use of the library. This protocol is for
+creating new types of Processes that are not possible to create
+with ::flow/process.
+
+A ProcLauncher is a constructor for a process, a thread of activity.
+It has two functions - to describe the parameters and input/output
+requirements of the process and to start it. The launcher should
+acquire no resources, nor retain any connection to the started
+process. A launcher may be called upon to start a process more than
+once, and should start a new process each time start is called.
+
+The process launched process must obey the following:
+
+It must have 2 logical statuses, :paused and :running. In
+the :paused status operation is suspended and no output is
+produced.
+
+When the process starts it must be :paused
+
+Whenever it is reading or writing to any channel a process must use
+alts!! and include a read of the ::flow/control channel, giving it
+priority.
+
+Command messages sent over the ::flow/control channel have the keys:
+::flow/to - either ::flow/all or a process id
+::flow/command - ::flow/stop|pause|resume|ping or process-specific
+
+It must act upon any, and only, control messages whose ::flow/to key is its pid or ::flow/all
+It must act upon the following values of ::flow/command:
+
+::flow/stop - all resources should be cleaned up and any thread(s)
+   should exit ordinarily - there will be no more subsequent use
+   of the process.
+::flow/pause - enter the :paused status
+::flow/resume - enter the :running status and resume processing
+::flow/ping - emit a ping message (format TBD) to
+   the ::flow/report channel containing at least its pid and status
+
+A process can define and respond to other commands in its own namespace.
+
+A process should not transmit channel objects (use [pid io-id] data
+coordinates instead) A process should not close channels
+
+Finally, if a process encounters an error it must report it on the
+::flow/error channel (format TBD) and attempt to continue, though it
+may subsequently get a ::flow/stop command it must respect</pre>
+    Known implementations: <span id="proto-impls"></span>
+    <div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.spi/describe">describe</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (describe p)
+</pre>
+      <pre id="var-docstr">returns a map with keys - :params, :ins and :outs,
+each of which in turn is a map of keyword to docstring
+
+:params describes the initial arguments to setup the state for the process
+:ins enumerates the input[s], for which the graph will create channels
+:outs enumerates the output[s], for which the graph may create channels.
+
+describe may be called by users to understand how to use the
+proc. It will also be called by the impl in order to discover what
+channels are needed.</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.spi/start">start</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (start p {:keys [pid args ins outs resolver]})
+</pre>
+      <pre id="var-docstr">return ignored, called for the
+effect of starting the process (typically, starting its thread)
+
+where:
+
+:pid - the id of the process in the graph, so that e.g. it can refer to itself in control, reporting etc
+:args - a map of param-&gt;val,  as supplied in the graph def
+:ins - a map of in-id-&gt;readable-channel, plus the ::flow/control channel
+:outs - a map of out-id-&gt;writeable-channel, plus the ::flow/error and ::flow/report channels
+        N.B. outputs may be nil if not connected
+:resolver - an impl of spi/Resolver, which can be used to find
+            channels given their logical [pid cid] coordinates, as well as to
+            obtain ExecutorServices corresponding to the
+            logical :mixed/:io/:compute contexts</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div>
+    
+    
+    <a id="proto-source" href="https://github.com/clojure/core.async/blob/03b97e0b3e0ec329629bcbf76106658dce4a5d61/src/main/clojure/clojure/core/async/flow/spi.clj#L11">Source</a>
+  </div><div id="proto-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.core.async.flow.spi/Resolver">Resolver</h2>
+    <span id="proto-type">Protocol</span><br />
+    <pre id="proto-docstr"></pre>
+    Known implementations: <span id="proto-impls"></span>
+    <div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.spi/get-exec">get-exec</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (get-exec _ context)
+</pre>
+      <pre id="var-docstr">returns the ExecutorService for the given context, one
+of :mixed, :io, :compute</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div><div id="proto-var-entry">
+      <br />
+      <h3 id="clojure.core.async.flow.spi/get-write-chan">get-write-chan</h3>
+      <span id="var-type">function</span><br />
+      <pre id="var-usage">Usage: (get-write-chan _ coord)
+</pre>
+      <pre id="var-docstr">Given a tuple of [pid cid], returns a core.async chan to
+write to or nil (in which case the output should be dropped,
+e.g. nothing is connected).</pre>
+      <pre id="var-specs"></pre>
+      
+      
+      
+    </div>
+    
+    
+    <a id="proto-source" href="https://github.com/clojure/core.async/blob/03b97e0b3e0ec329629bcbf76106658dce4a5d61/src/main/clojure/clojure/core/async/flow/spi.clj#L88">Source</a>
+  </div>
+</div>
+
+
 
 
 </div>
