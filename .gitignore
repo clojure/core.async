@@ -28,3 +28,4 @@ pom.xml.versionsBackup
 .classpath
 ccw.repl.cmdhistory.prefs
 nbactions.xml
+.DS_Store

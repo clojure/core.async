@@ -202,8 +202,9 @@
                 (loop [nstatus nstatus, nstate nstate, msgs (seq msgs)]
                   (if (or (nil? msgs) (= nstatus :exit))
                     [nstatus nstate]
-                    (let [[v c] (async/alts!!
-                                 [control [outc (first msgs)]]
+                    (let [m (if-some [m (first msgs)] m (throw "messages must be non-nil"))
+                          [v c] (async/alts!!
+                                 [control [outc m]]
                                  :priority true)]
                       (if (= c control)
                         (let [nnstatus (handle-command nstatus v)
