@@ -35,8 +35,7 @@ to catch and handle."
            [java.util.concurrent.locks Lock]
            [java.util.concurrent Executors Executor ThreadLocalRandom ExecutorService]
            [java.util Arrays ArrayList]
-           [clojure.lang Var]
-           [java.lang Thread$Builder]))
+           [clojure.lang Var]))
 
 (alias 'core 'clojure.core)
 
@@ -469,7 +468,7 @@ to catch and handle."
 (def ^ExecutorService io-thread-exec
   (if (= "21" (System/getProperty "java.vm.specification.version"))
     (eval '(Executors/newThreadPerTaskExecutor (-> (Thread/ofVirtual)
-                                                   (Thread$Builder/.name "io-thread-" 0)
+                                                   (java.lang.Thread$Builder/.name "io-thread-" 0)
                                                    .factory)))
     thread-macro-executor))
 
