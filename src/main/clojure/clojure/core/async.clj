@@ -496,6 +496,11 @@ to catch and handle."
            (close! c#)))))
      c#))
 
+(defmacro io-thread-loop
+  "Like (io-thread (loop ...))"
+  [bindings & body]
+  `(io-thread (loop ~bindings ~@body)))
+
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
