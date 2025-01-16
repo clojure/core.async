@@ -83,7 +83,7 @@
   
   ::flow/report-chan - a core.async chan for reading.'ping' reponses
   will show up here, as will any explicit ::flow/report outputs
-  from :transform/:inject
+  from :transform/:introduce
   
   ::flow/error-chan - a core.async chan for reading. Any (and only)
   exceptions thrown anywhere on any thread inside a flow will appear
@@ -138,7 +138,7 @@
   "Given a map of functions (described below), returns a launcher that
   creates a process compliant with the process protocol (see the
   spi/ProcLauncher doc). The possible entries for process-impl-map
-  are :describe, :init, :transition, :transform and :inject. This is
+  are :describe, :init, :transition, :transform and :introduce. This is
   the core facility for defining the logic for processes via ordinary
   functions.
 
@@ -171,7 +171,7 @@
   process will no longer be used following that. See the SPI for
   details. state' will be the state supplied to subsequent calls.
 
-  Exactly one of either :transform or :inject are required.
+  Exactly one of either :transform or :introduce are required.
 
   :transform - (state in-name msg) -> [state' output]
   where output is a map of outid->[msgs*]
@@ -184,19 +184,19 @@
   may never be nil (per core.async channels). state' will be the state
   supplied to subsequent calls.
 
-  :inject - (state) -> [state' output]
+  :introduce - (state) -> [state' output]
   where output is a map of outid->[msgs*], per :transform
  
-  The inject fn is used for sources - proc-impls that inject new data
+  The introduce fn is used for sources - proc-impls that introduce new data
   into the flow by doing I/O with something external to the flow and
-  feeding that data to its outputs. A proc-impl specifying :inject may not
+  feeding that data to its outputs. A proc-impl specifying :introduce may not
   specify any :ins in its descriptor, as none but the ::flow/control channel
-  will be read. Instead, inject will be called every time through the
+  will be read. Instead, introduce will be called every time through the
   process loop, and will presumably do blocking or paced I/O to get
   new data to return via its outputs. If it does blocking I/O it
   should do so with a timeout so it can regularly return to the
   process loop which can then look for control messages - it's fine
-  for inject to return with no output. Do not spin poll in the inject
+  for introduce to return with no output. Do not spin poll in the introduce
   fn.
 
   proc accepts an option map with keys:
@@ -205,13 +205,13 @@
                 will be used when getting the return from the future - see below
 
   The :compute context is not allowed for proc impls that
-  provide :inject (as I/O is presumed).
+  provide :introduce (as I/O is presumed).
 
   In the :exec context of :mixed or :io, this dictates the type of
   thread in which the process loop will run, _including its calls to
-  transform/inject_. 
+  transform/introduce_. 
 
-  When :io is specified transform/inject should not do extensive computation.
+  When :io is specified transform/introduce should not do extensive computation.
 
   When :compute is specified (only allowed for :transform), each call
   to transform will be run in a separate thread. The process loop will

@@ -202,7 +202,7 @@
                 (loop [nstatus nstatus, nstate nstate, msgs (seq msgs)]
                   (if (or (nil? msgs) (= nstatus :exit))
                     [nstatus nstate]
-                    (let [m (if-some [m (first msgs)] m (throw "messages must be non-nil"))
+                    (let [m (if-some [m (first msgs)] m (throw (Exception.  "messages must be non-nil")))
                           [v c] (async/alts!!
                                  [control [outc m]]
                                  :priority true)]
@@ -216,10 +216,10 @@
 
 (defn proc
   "see lib ns for docs"
-  [{:keys [describe init transition transform inject] :as impl} {:keys [exec compute-timeout-ms]}]
+  [{:keys [describe init transition transform introduce] :as impl} {:keys [exec compute-timeout-ms]}]
   ;;validate the preconditions
-  (assert (= 1 (count (keep identity [transform inject]))) "must provide exactly one of :transform or :inject")
-  (assert (not (and inject (= exec :compute))) "can't specify :inject and :compute")
+  (assert (= 1 (count (keep identity [transform introduce]))) "must provide exactly one of :transform or :introduce")
+  (assert (not (and introduce (= exec :compute))) "can't specify :introduce and :compute")
   (reify
     clojure.core.protocols/Datafiable
     (datafy [_]
@@ -228,7 +228,7 @@
     spi/ProcLauncher
     (describe [_]
       (let [{:keys [params ins] :as desc} (describe)]
-        (assert (not (and ins inject)) "can't specify :ins when :inject")
+        (assert (not (and ins introduce)) "can't specify :ins when :introduce")
         (assert (or (not params) init) "must have :init if :params")
         desc))
     (start [_ {:keys [pid args ins outs resolver]}]
@@ -261,7 +261,7 @@
                          ;;:running
                          (let [[msg c] (if transform
                                          (async/alts!! read-chans :priority true)
-                                         ;;inject
+                                         ;;introduce
                                          (when-let [msg (async/poll! control)]
                                            [msg control]))
                                cid (io-id c)]
@@ -272,7 +272,7 @@
                              (try
                                (let [[nstate outputs] (if transform
                                                         (transform state cid msg)
-                                                        (inject state))
+                                                        (introduce state))
                                      [nstatus nstate]
                                      (send-outputs status nstate outputs outs resolver control handle-command transition)]
                                  [nstatus nstate (inc count)])
