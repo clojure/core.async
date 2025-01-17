@@ -214,13 +214,13 @@
 
 (defn proc
   "see lib ns for docs"
-  [{:keys [describe init transition transform introduce] :as impl} {:keys [workflow compute-timeout-ms]}]
+  [{:keys [describe init transition transform introduce] :as impl} {:keys [workload compute-timeout-ms]}]
   (assert (= 1 (count (keep identity [transform introduce]))) "must provide exactly one of :transform or :introduce") 
   (let [{:keys [params ins] :as desc} (describe)
-        workflow (or workflow (:workflow desc) :mixed)]
+        workload (or workload (:workload desc) :mixed)]
     (assert (not (and ins introduce)) "can't specify :ins when :introduce")
     (assert (or (not params) init) "must have :init if :params")
-    (assert (not (and introduce (= workflow :compute))) "can't specify :introduce and :compute")
+    (assert (not (and introduce (= workload :compute))) "can't specify :introduce and :compute")
     (reify
      clojure.core.protocols/Datafiable
      (datafy [_]
@@ -229,11 +229,11 @@
      spi/ProcLauncher
      (describe [_] desc)
      (start [_ {:keys [pid args ins outs resolver]}]
-            (let [comp? (= workflow :compute)
-                  transform (cond-> transform (= workflow :compute)
+            (let [comp? (= workload :compute)
+                  transform (cond-> transform (= workload :compute)
                                     #(.get (futurize transform {:exec (spi/get-exec resolver :compute)})
                                            compute-timeout-ms TimeUnit/MILLISECONDS))
-                  exs (spi/get-exec resolver (if (= workflow :mixed) :mixed :io))
+                  exs (spi/get-exec resolver (if (= workload :mixed) :mixed :io))
                   io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
                   control (::flow/control ins)
                   ;;TODO rotate/randomize after control per normal alts?

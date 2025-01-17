@@ -75,7 +75,7 @@
 
   :mixed-exec/:io-exec/:compute-exec -> ExecutorService
   These can be used to specify the ExecutorService to use for the
-  corresonding workflow, in lieu of the lib defaults.
+  corresonding workload, in lieu of the lib defaults.
 
   N.B. The flow is not started. See 'start'"
   [config] (impl/create-flow config))
@@ -210,18 +210,18 @@
   fn.
 
   process accepts an option map with keys:
-  :workflow - one of :mixed, :io or :compute
-  :compute-timeout-ms - if :workflow is :compute, this timeout (default 5000 msec)
+  :workload - one of :mixed, :io or :compute
+  :compute-timeout-ms - if :workload is :compute, this timeout (default 5000 msec)
                 will be used when getting the return from the future - see below
 
-  A :workflow supplied as an option to process will override
-  any :workflow returned by the :describe fn of the process. If neither
+  A :workload supplied as an option to process will override
+  any :workload returned by the :describe fn of the process. If neither
   are provded the default is :mixed.
 
   The :compute workload is not allowed for proc impls that
   provide :introduce (as I/O is presumed).
 
-  In the :workflow context of :mixed or :io, this dictates the type of
+  In the :workload context of :mixed or :io, this dictates the type of
   thread in which the process loop will run, _including its calls to
   transform/introduce_. 
 
@@ -237,7 +237,7 @@
 
   When :compute is specified transform must not block!"
   ([process-impl-map] (process process-impl-map nil))
-  ([process-impl-map {:keys [workflow timeout-ms]
+  ([process-impl-map {:keys [workload timeout-ms]
                       :or {timeout-ms 5000} :as opts}]
    (impl/proc process-impl-map opts)))
 
