@@ -9,7 +9,7 @@
 (ns clojure.core.async.flow.spi)
 
 (defprotocol ProcLauncher
-  "Note - definine a ProcLauncher is an advanced feature and should not
+  "Note - defining a ProcLauncher is an advanced feature and should not
   be needed for ordinary use of the library. This protocol is for
   creating new types of Processes that are not possible to create
   with ::flow/process.
