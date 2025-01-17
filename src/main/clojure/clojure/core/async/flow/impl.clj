@@ -34,13 +34,12 @@
 
 (defn futurize ^Future [f {:keys [exec]}]
   (fn [& args]
-    (^[Callable] ExecutorService/.submit
-     (case exec
-       :compute compute-exec
-       :io io-exec
-       :mixed mixed-exec
-       exec)
-     #(apply f args))))
+    (let [^ExecutorService exec (case exec
+                                  :compute compute-exec
+                                  :io io-exec
+                                  :mixed mixed-exec
+                                  exec)]
+      (.submit exec ^Callable #(apply f args)))))
 
 (defn prep-proc [ret pid {:keys [proc, args, chan-opts] :or {chan-opts {}}}]
   (let [{:keys [ins outs]} (spi/describe proc)
