@@ -277,8 +277,6 @@ to catch and handle."
   "returns derefable [val port] if immediate, nil if enqueued"
   [fret ports opts]
   (assert (pos? (count ports)) "alts must have at least one channel operation")
-  (doseq [port ports :when (vector? port)]
-    (assert (not (nil? (nth port 1))) "alts can't put nil on channel"))
   (let [flag (alt-flag)
         ports (vec ports) ;; ensure vector for indexed nth
         n (count ports)
