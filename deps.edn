@@ -30,5 +30,6 @@
          :exec-args {:source-paths ["src/main/clojure"]
                      :namespaces [clojure.core.async clojure.core.async.flow clojure.core.async.flow.spi]
                      :doc-files ["doc/flow.md"]
-                     :output-path "docs"}}
+                     :output-path "docs"
+                     :html {:namespace-list :flat}}}
   }}
