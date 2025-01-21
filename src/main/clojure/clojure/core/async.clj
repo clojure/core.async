@@ -280,6 +280,12 @@ to catch and handle."
   (let [flag (alt-flag)
         ports (vec ports) ;; ensure vector for indexed nth
         n (count ports)
+        _ (loop [i 0] ;; check for invalid write op
+            (when (< i n)
+              (let [port (nth ports i)]
+                (when (vector? port)
+                  (assert (some? (port 1)) "can't put nil on channel")))
+              (recur (unchecked-inc i))))
         ^ints idxs (random-array n)
         priority (:priority opts)
         ret

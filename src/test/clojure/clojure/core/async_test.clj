@@ -465,3 +465,10 @@
              :ok
              (catch AssertionError e
                :ko))))))
+
+(deftest test-alts-put-nil-invalid
+  (is
+    (thrown? AssertionError
+      (let [c1 (a/chan)
+            c2 (a/chan)]
+        (a/alts!! [c1 [c2 nil]])))))
