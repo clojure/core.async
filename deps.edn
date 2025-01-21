@@ -29,5 +29,5 @@
          :exec-fn codox.main/generate-docs
          :exec-args {:source-paths ["src/main/clojure"]
                      :namespaces [clojure.core.async clojure.core.async.flow clojure.core.async.flow.spi]
-                     :output-path "apidocs"}}
+                     :output-path "docs"}}
   }}
