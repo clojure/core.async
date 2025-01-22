@@ -1,5 +1,5 @@
-# core.async.flow #
-## Rationale ##
+# core.async.flow
+## Rationale
 
 The [rationale](https://clojure.org/news/2013/06/28/clojure-clore-async-channels) for **core.async** says "There comes a time in all good programs when components or subsystems must stop communicating directly with one another." And core.async provides fundamental tools (channels) for doing that. 
 
@@ -7,7 +7,7 @@ But using core.async well, e.g. keeping your I/O out of your computational logic
 
 The fundamental objective of __core.async.flow__ is to enable a strict separation of your application logic from its topology, execution, communication, lifecycle, monitoring and error handling, all of which are provided by and centralized in, c.a.flow, yielding more consistent, robust, testable, observable and operable systems.
 
-## Overview ##
+## Overview
 
 __core.async.flow__ provides *concrete* implementations of two more abstractions - the '__process__' - a thread of activity, and the '__flow__' - a directed graph of processes communicating via channels. A single data structure describes your flow topology, and has all of the settings for threads, channels etc. A process accepts data from and provides data to channels. The process implementation in c.a.flow handles all channel I/O, thread lifecycle and coordination with the flow graph.
 
