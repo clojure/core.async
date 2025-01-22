@@ -185,6 +185,15 @@
     (binding [test-dyn true]
       (is (<!! (thread test-dyn))))))
 
+(deftest io-thread-tests
+  (testing "io-thread"
+    (let [c1 (chan)
+          c2 (chan)
+          c3 (chan)]
+      (io-thread (>!! c2 (clojure.string/upper-case (<!! c1))))
+      (io-thread (>!! c3 (clojure.string/reverse (<!! c2))))
+      (>!! c1 "loop")
+      (is (= "POOL" (<!! c3))))))
 
 (deftest ops-tests
   (testing "map<"
