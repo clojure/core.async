@@ -22,4 +22,14 @@
   ;; clj -M:outdated
   :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.11.1250"}}
              :main-opts ["-m" "antq.core"]}
+
+  ;; Regenerate docs in docs/
+  ;; clj -X:docs
+  :docs {:extra-deps {codox/codox {:mvn/version "0.10.8"}}
+         :exec-fn codox.main/generate-docs
+         :exec-args {:source-paths ["src/main/clojure"]
+                     :namespaces [clojure.core.async clojure.core.async.flow clojure.core.async.flow.spi]
+                     :doc-files ["doc/flow.md"]
+                     :output-path "docs"
+                     :html {:namespace-list :flat}}}
   }}

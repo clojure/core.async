@@ -34,13 +34,12 @@
 
 (defn futurize ^Future [f {:keys [exec]}]
   (fn [& args]
-    (^[Callable] ExecutorService/.submit
-     (case exec
-       :compute compute-exec
-       :io io-exec
-       :mixed mixed-exec
-       exec)
-     #(apply f args))))
+    (let [^ExecutorService e (case exec
+                                   :compute compute-exec
+                                   :io io-exec
+                                   :mixed mixed-exec
+                                   exec)]
+      (.submit e ^Callable #(apply f args)))))
 
 (defn prep-proc [ret pid {:keys [proc, args, chan-opts] :or {chan-opts {}}}]
   (let [{:keys [ins outs]} (spi/describe proc)
@@ -57,8 +56,7 @@
 (defn create-flow
   "see lib ns for docs"
   [{:keys [procs conns mixed-exec io-exec compute-exec]
-    :or {mixed-exec mixed-exec, io-exec io-exec, compute-exec compute-exec}
-    :as desc}]
+    :or {mixed-exec mixed-exec, io-exec io-exec, compute-exec compute-exec}}]
   (let [lock (ReentrantLock.)
         chans (atom nil)
         execs {:mixed mixed-exec :io io-exec :compute compute-exec}
@@ -202,8 +200,9 @@
                 (loop [nstatus nstatus, nstate nstate, msgs (seq msgs)]
                   (if (or (nil? msgs) (= nstatus :exit))
                     [nstatus nstate]
-                    (let [[v c] (async/alts!!
-                                 [control [outc (first msgs)]]
+                    (let [m (if-some [m (first msgs)] m (throw (Exception.  "messages must be non-nil")))
+                          [v c] (async/alts!!
+                                 [control [outc m]]
                                  :priority true)]
                       (if (= c control)
                         (let [nnstatus (handle-command nstatus v)
@@ -215,75 +214,75 @@
 
 (defn proc
   "see lib ns for docs"
-  [{:keys [describe init transition transform inject] :as impl} {:keys [exec compute-timeout-ms]}]
-  ;;validate the preconditions
-  (assert (= 1 (count (keep identity [transform inject]))) "must provide exactly one of :transform or :inject")
-  (assert (not (and inject (= exec :compute))) "can't specify :inject and :compute")
-  (reify
-    clojure.core.protocols/Datafiable
-    (datafy [_]
-      (let [{:keys [params ins outs]} (describe)]
-        {:impl impl :params (-> params keys vec) :ins (-> ins keys vec) :outs (-> outs keys vec)}))
-    spi/ProcLauncher
-    (describe [_]
-      (let [{:keys [params ins] :as desc} (describe)]
-        (assert (not (and ins inject)) "can't specify :ins when :inject")
-        (assert (or (not params) init) "must have :init if :params")
-        desc))
-    (start [_ {:keys [pid args ins outs resolver]}]
-      (let [comp? (= exec :compute)
-            transform (cond-> transform (= exec :compute)
-                              #(.get (futurize transform {:exec (spi/get-exec resolver :compute)})
-                                     compute-timeout-ms TimeUnit/MILLISECONDS))
-            exs (spi/get-exec resolver (if (= exec :mixed) :mixed :io))
-            io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
-            control (::flow/control ins)
-            ;;TODO rotate/randomize after control per normal alts?
-            read-chans (into [control] (-> ins (dissoc ::flow/control) vals))
-            run
-            #(loop [status :paused, state (when init (init args)), count 0]
-               (let [pong (fn []
-                            (let [pins (dissoc ins ::flow/control)
-                                  pouts (dissoc outs ::flow/error ::flow/report)]
-                              (async/>!! (outs ::flow/report)
-                                         #::flow{:report :ping, :pid pid, :status status
-                                                 :state state, :count count
-                                                 :ins (zipmap (keys pins) (map chan->data (vals pins)))
-                                                 :outs (zipmap (keys pouts) (map chan->data (vals pouts)))})))
-                     handle-command (partial handle-command pid pong)
-                     [nstatus nstate count]
-                     (try
-                       (if (= status :paused)
-                         (let [nstatus (handle-command status (async/<!! control))
-                               nstate (handle-transition transition status nstatus state)]
-                           [nstatus nstate count])
-                         ;;:running
-                         (let [[msg c] (if transform
-                                         (async/alts!! read-chans :priority true)
-                                         ;;inject
-                                         (when-let [msg (async/poll! control)]
-                                           [msg control]))
-                               cid (io-id c)]
-                           (if (= c control)
-                             (let [nstatus (handle-command status msg)
-                                   nstate (handle-transition transition status nstatus state)]
-                               [nstatus nstate count])
-                             (try
-                               (let [[nstate outputs] (if transform
-                                                        (transform state cid msg)
-                                                        (inject state))
-                                     [nstatus nstate]
-                                     (send-outputs status nstate outputs outs resolver control handle-command transition)]
-                                 [nstatus nstate (inc count)])
-                               (catch Throwable ex
-                                 (async/>!! (outs ::flow/error)
-                                            #::flow{:pid pid, :status status, :state state,
-                                                    :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
-                                 [status state count])))))
-                       (catch Throwable ex
-                         (async/>!! (outs ::flow/error)
-                                    #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
-                         [status state count]))]
-                 (when-not (= nstatus :exit) ;;fall out
-                   (recur nstatus nstate (long count)))))]
-        ((futurize run {:exec exs}))))))
+  [{:keys [describe init transition transform introduce] :as impl} {:keys [workload compute-timeout-ms]}]
+  (assert (= 1 (count (keep identity [transform introduce]))) "must provide exactly one of :transform or :introduce") 
+  (let [{:keys [params ins] :as desc} (describe)
+        workload (or workload (:workload desc) :mixed)]
+    (assert (not (and ins introduce)) "can't specify :ins when :introduce")
+    (assert (or (not params) init) "must have :init if :params")
+    (assert (not (and introduce (= workload :compute))) "can't specify :introduce and :compute")
+    (reify
+     clojure.core.protocols/Datafiable
+     (datafy [_]
+             (let [{:keys [params ins outs]} desc]
+               {:impl impl :params (-> params keys vec) :ins (-> ins keys vec) :outs (-> outs keys vec)}))
+     spi/ProcLauncher
+     (describe [_] desc)
+     (start [_ {:keys [pid args ins outs resolver]}]
+            (let [comp? (= workload :compute)
+                  transform (cond-> transform (= workload :compute)
+                                    #(.get (futurize transform {:exec (spi/get-exec resolver :compute)})
+                                           compute-timeout-ms TimeUnit/MILLISECONDS))
+                  exs (spi/get-exec resolver (if (= workload :mixed) :mixed :io))
+                  io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
+                  control (::flow/control ins)
+                  ;;TODO rotate/randomize after control per normal alts?
+                  read-chans (into [control] (-> ins (dissoc ::flow/control) vals))
+                  run
+                  #(loop [status :paused, state (when init (init args)), count 0]
+                     (let [pong (fn []
+                                  (let [pins (dissoc ins ::flow/control)
+                                        pouts (dissoc outs ::flow/error ::flow/report)]
+                                    (async/>!! (outs ::flow/report)
+                                               #::flow{:report :ping, :pid pid, :status status
+                                                       :state state, :count count
+                                                       :ins (zipmap (keys pins) (map chan->data (vals pins)))
+                                                       :outs (zipmap (keys pouts) (map chan->data (vals pouts)))})))
+                           handle-command (partial handle-command pid pong)
+                           [nstatus nstate count]
+                           (try
+                             (if (= status :paused)
+                               (let [nstatus (handle-command status (async/<!! control))
+                                     nstate (handle-transition transition status nstatus state)]
+                                 [nstatus nstate count])
+                               ;;:running
+                               (let [[msg c] (if transform
+                                               (async/alts!! read-chans :priority true)
+                                               ;;introduce
+                                               (when-let [msg (async/poll! control)]
+                                                 [msg control]))
+                                     cid (io-id c)]
+                                 (if (= c control)
+                                   (let [nstatus (handle-command status msg)
+                                         nstate (handle-transition transition status nstatus state)]
+                                     [nstatus nstate count])
+                                   (try
+                                     (let [[nstate outputs] (if transform
+                                                              (transform state cid msg)
+                                                              (introduce state))
+                                           [nstatus nstate]
+                                           (send-outputs status nstate outputs outs
+                                                         resolver control handle-command transition)]
+                                       [nstatus nstate (inc count)])
+                                     (catch Throwable ex
+                                       (async/>!! (outs ::flow/error)
+                                                  #::flow{:pid pid, :status status, :state state,
+                                                          :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
+                                       [status state count])))))
+                             (catch Throwable ex
+                               (async/>!! (outs ::flow/error)
+                                          #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
+                               [status state count]))]
+                       (when-not (= nstatus :exit) ;;fall out
+                         (recur nstatus nstate (long count)))))]
+              ((futurize run {:exec exs})))))))

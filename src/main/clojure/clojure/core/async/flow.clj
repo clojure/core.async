@@ -8,7 +8,10 @@
 
 (ns ^{:author "Rich Hickey"}
   clojure.core.async.flow
-  "A library for building concurrent, event driven data processing
+  "
+  Note - Alpha, work-in-progress, names and other details are in flux 
+
+  A library for building concurrent, event driven data processing
   flows out of communication-free functions, while centralizing
   control, reporting, execution and error handling. Built on core.async.
 
@@ -18,21 +21,21 @@
   a set of channels for centralized control, reporting, error-handling,
     and execution of the processes
 
-  A flow is constructed from flow definition data which defines a
+  A flow is constructed from flow configuration data which defines a
   directed graph of processes and the connections between
   them. Processes describe their I/O requirements and the
   flow (library) itself creates channels and passes them to the
   processes that requested them. See 'create-flow' for the
-  details. The flow definition provides a centralized place for policy
-  decisions regarding configuration, threading, buffering etc. 
+  details. The flow configuration provides a centralized place for
+  policy decisions regarding process settings, threading, buffering etc.
 
-  It is expected that applications will rarely define processes but
-  instead use the API functions here, 'process' and 'step-process',
-  that implement the process protocol in terms of calls to ordinary
-  functions that include no communication or core.async code. In this
-  way the library helps you achieve a strict separation of your
-  application logic from its execution, communication, lifecycle and
-  monitoring.
+  It is expected that applications will rarely define instances of the
+  process protocol but instead use the API functions here, 'process'
+  and 'step-process', that implement the process protocol in terms of
+  calls to ordinary functions that might include no communication or
+  core.async code. In this way the library helps you achieve a strict
+  separation of your application logic from its execution,
+  communication, lifecycle, error handling and monitoring.
 
   Note that at several points the library calls upon the user to
   supply ids for processes, inputs, outputs etc. These should be
@@ -52,7 +55,7 @@
 (set! *warn-on-reflection* true)
 
 (defn create-flow
-  "Creates a flow from the supplied definition: a map containing the
+  "Creates a flow from the supplied configuration: a map containing the
   keys :procs and :conns, and optionally :mixed-exec/:io-exec/:compute-exec
 
   :procs - a map of pid->proc-def
@@ -66,26 +69,26 @@
   
   :conns - a collection of [[from-pid outid] [to-pid inid]] tuples.
 
-  Inputs and outputs support mutliple connections. When an output is
+  Inputs and outputs support multiple connections. When an output is
   connected multiple times every connection will get every message,
   as per a core.async/mult.
 
   :mixed-exec/:io-exec/:compute-exec -> ExecutorService
   These can be used to specify the ExecutorService to use for the
-  corresonding context, in lieu of the lib defaults
+  corresonding workload, in lieu of the lib defaults.
 
   N.B. The flow is not started. See 'start'"
-  [def] (impl/create-flow def))
+  [config] (impl/create-flow config))
 
 (defn start
   "starts the entire flow from init values. The processes start paused.
   Call 'resume' or 'resume-proc' to start flow.  returns a map with keys:
   
-  ::flow/report-chan - a core.async chan for reading.'ping' reponses
+  :report-chan - a core.async chan for reading.'ping' reponses
   will show up here, as will any explicit ::flow/report outputs
-  from :transform/:inject
+  from :transform/:introduce
   
-  ::flow/error-chan - a core.async chan for reading. Any (and only)
+  :error-chan - a core.async chan for reading. Any (and only)
   exceptions thrown anywhere on any thread inside a flow will appear
   in maps sent here. There will at least be a ::flow/ex entry with the
   exception, and may be additional keys for pid, state, status etc
@@ -138,22 +141,29 @@
   "Given a map of functions (described below), returns a launcher that
   creates a process compliant with the process protocol (see the
   spi/ProcLauncher doc). The possible entries for process-impl-map
-  are :describe, :init, :transition, :transform and :inject. This is
+  are :describe, :init, :transition, :transform and :introduce. This is
   the core facility for defining the logic for processes via ordinary
   functions.
 
   :describe - required, () -> desc
   where desc is a map with keys :params :ins and :outs, each of which
-  in turn is a map of keyword to doc string
+  in turn is a map of keyword to doc string, and :workload with
+  possible values of :mixed :io :compute. All entries in the describe
+  return map are optional.
   
   :params describes the initial arguments to setup the state for the function.
   :ins enumerates the input[s], for which the flow will create channels
   :outs enumerates the output[s], for which the flow may create channels.
+  :workload - describes the nature of the workload, one of :mixed :io or :compute
+          an :io workload should not do extended computation
+          a :compute workload should never block
   
-  No key may be present in both :ins and :outs The ins/outs/params of f
-  will be the ins/outs/params of the process. describe may be called
-  by users to understand how to use the proc. It will also be called
-  by the impl in order to discover what channels are needed.
+  No key may be present in both :ins and :outs, allowing for a uniform
+  channel coordinate system of [:process-id :channel-id]. The
+  ins/outs/params returned will be the ins/outs/params of the
+  process. describe may be called by users to understand how to use
+  the proc. It will also be called by the impl in order to discover
+  what channels are needed.
 
   :init - optional, (arg-map) -> initial-state
   
@@ -171,7 +181,7 @@
   process will no longer be used following that. See the SPI for
   details. state' will be the state supplied to subsequent calls.
 
-  Exactly one of either :transform or :inject are required.
+  Exactly one of either :transform or :introduce are required.
 
   :transform - (state in-name msg) -> [state' output]
   where output is a map of outid->[msgs*]
@@ -184,34 +194,38 @@
   may never be nil (per core.async channels). state' will be the state
   supplied to subsequent calls.
 
-  :inject - (state) -> [state' output]
+  :introduce - (state) -> [state' output]
   where output is a map of outid->[msgs*], per :transform
  
-  The inject fn is used for sources - proc-impls that inject new data
+  The introduce fn is used for sources - proc-impls that introduce new data
   into the flow by doing I/O with something external to the flow and
-  feeding that data to its outputs. A proc-impl specifying :inject may not
+  feeding that data to its outputs. A proc-impl specifying :introduce may not
   specify any :ins in its descriptor, as none but the ::flow/control channel
-  will be read. Instead, inject will be called every time through the
+  will be read. Instead, introduce will be called every time through the
   process loop, and will presumably do blocking or paced I/O to get
   new data to return via its outputs. If it does blocking I/O it
   should do so with a timeout so it can regularly return to the
   process loop which can then look for control messages - it's fine
-  for inject to return with no output. Do not spin poll in the inject
+  for introduce to return with no output. Do not spin poll in the introduce
   fn.
 
-  proc accepts an option map with keys:
-  :exec - one of :mixed, :io or :compute, default :mixed
-  :compute-timeout-ms - if :exec is :compute, this timeout (default 5000 msec)
+  process accepts an option map with keys:
+  :workload - one of :mixed, :io or :compute
+  :compute-timeout-ms - if :workload is :compute, this timeout (default 5000 msec)
                 will be used when getting the return from the future - see below
 
-  The :compute context is not allowed for proc impls that
-  provide :inject (as I/O is presumed).
+  A :workload supplied as an option to process will override
+  any :workload returned by the :describe fn of the process. If neither
+  are provded the default is :mixed.
 
-  In the :exec context of :mixed or :io, this dictates the type of
+  The :compute workload is not allowed for proc impls that
+  provide :introduce (as I/O is presumed).
+
+  In the :workload context of :mixed or :io, this dictates the type of
   thread in which the process loop will run, _including its calls to
-  transform/inject_. 
+  transform/introduce_. 
 
-  When :io is specified transform/inject should not do extensive computation.
+  When :io is specified transform/introduce should not do extensive computation.
 
   When :compute is specified (only allowed for :transform), each call
   to transform will be run in a separate thread. The process loop will
@@ -223,8 +237,8 @@
 
   When :compute is specified transform must not block!"
   ([process-impl-map] (process process-impl-map nil))
-  ([process-impl-map {:keys [exec timeout-ms]
-                      :or {exec :mixed, timeout-ms 5000} :as opts}]
+  ([process-impl-map {:keys [workload timeout-ms]
+                      :or {timeout-ms 5000} :as opts}]
    (impl/proc process-impl-map opts)))
 
 (defn step-process
@@ -248,13 +262,13 @@
    (process {:describe f, :init f, :transform f} opts)))
 
 (defn futurize
-  "Takes a fn f and returns a fn that takes the same arguments as f and
-  immediately returns a future, having starting a thread of the
-  indicated type, or via the supplied executor, that invokes f with
-  those args and completes that future with its return.
+  "Takes a fn f and returns a fn that takes the same arguments as f
+  and immediately returns a future, having started a thread for the
+  indicated workload, or via the supplied executor, that invokes f
+  with those args and completes that future with its return.
 
   futurize accepts kwarg options:
-  :exec - one of :mixed, :io, :compute
+  :exec - one of the workloads :mixed, :io, :compute
           or a j.u.c.ExecutorService object,
           default :mixed"
   [f & {:keys [exec]
