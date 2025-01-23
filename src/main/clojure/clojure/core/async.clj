@@ -468,49 +468,37 @@ to catch and handle."
 (defonce ^:private ^ExecutorService io-thread-exec
   (Executors/newCachedThreadPool (conc/counted-thread-factory "io-thread-macro-%d" true)))
 
-(defmacro io-thread
-  "Asynchronously executes the body in a thread compatible with I/O workload,
-  returning immediately to the calling thread. Only blocking operations should
-  be used in io-thread bodies.
+(defn thread-call
+  "Executes f in another thread, returning immediately to the calling
+  thread. Returns a channel which will receive the result of calling
+  f when completed, then close."
+  ([f] (thread-call f thread-macro-executor))
+  ([f ^ExecutorService exec]
+   (let [c (chan 1)]
+     (let [binds (Var/getThreadBindingFrame)]
+       (.execute exec
+                 (fn []
+                   (Var/resetThreadBindingFrame binds)
+                   (try
+                     (let [ret (f)]
+                       (when-not (nil? ret)
+                         (>!! c ret)))
+                     (finally
+                       (close! c))))))
+     c)))
 
-  io-thread bodies should not (either directly or indirectly) perform operations
-  that never block nor run pure compute operations. Parking ops
-  (i.e. <!, >! and alt!/alts!) used in io-thread bodies will throw at
+(defmacro io-thread
+  "Asynchronously executes the body in a thread intended for I/O
+  workloads, returning immediately to the calling thread.
+  io-thread bodies may (either directly or indirectly) perform
+  operations that may block indefinitely. Parking ops (i.e. <!,
+  >! and alt!/alts!) used in io-thread bodies will throw at
   runtime.
 
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  `(let [c# (chan 1)
-         captured-bindings# (Var/getThreadBindingFrame)]
-     (.execute ^ExecutorService @#'io-thread-exec
-      (^:once fn* []
-       (Var/resetThreadBindingFrame captured-bindings#)
-       (try
-         (let [result# (do ~@body)]
-           (when-not (nil? result#)
-             (>!! c# result#)))
-         (finally
-           (close! c#)))))
-     c#))
-
-(defn thread-call
-  "Executes f in another thread, returning immediately to the calling
-  thread. Returns a channel which will receive the result of calling
-  f when completed, then close."
-  [f]
-  (let [c (chan 1)]
-    (let [binds (Var/getThreadBindingFrame)]
-      (.execute thread-macro-executor
-                (fn []
-                  (Var/resetThreadBindingFrame binds)
-                  (try
-                    (let [ret (f)]
-                      (when-not (nil? ret)
-                        (>!! c ret)))
-                    (finally
-                      (close! c))))))
-    c))
+  `(thread-call (^:once fn* [] ~@body) @#'io-thread-exec))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
