@@ -1,0 +1,48 @@
+name: Build Codox Docs
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 8
+          distribution: 'temurin'
+
+      - name: Set up Clojure
+        uses: DeLaGuardo/setup-clojure@11.0
+        with:
+          cli: 'latest'
+
+      - name: Cache clojure dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+          key: cljdeps-${{ hashFiles('deps.edn') }}
+          restore-keys: cljdeps-
+
+      - name: Clone the repo
+        uses: actions/checkout@v4
+
+      - name: Install rlwrap
+        run: sudo apt-get install -y rlwrap
+
+      - name: Execute doc build
+        run:  |
+          clj -X:docs
+
+      - name: Commit and push
+        run: |
+          git config --global user.name clojure-build
+          git config --global user.email "clojure-build@users.noreply.github.com"
+          git add -u -v
+          git commit -m "Action doc commit"
+          git push origin master
