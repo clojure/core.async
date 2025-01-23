@@ -488,15 +488,10 @@ to catch and handle."
      c)))
 
 (defmacro io-thread
-  "Asynchronously executes the body in a thread intended for I/O
-  workloads, returning immediately to the calling thread.
-  io-thread bodies may (either directly or indirectly) perform
-  operations that may block indefinitely. Parking ops (i.e. <!,
-  >! and alt!/alts!) used in io-thread bodies will throw at
-  runtime.
-
-  Returns a channel which will receive the result of the body when
-  completed"
+  "Executes the body in a thread intended for blocking I/O workloads,
+  returning immediately to the calling thread. The body must not do
+  extended computation (if so, use 'thread' instead). Returns a channel
+  which will receive the result of the body when completed, then close."
   [& body]
   `(thread-call (^:once fn* [] ~@body) @#'io-thread-exec))
 
