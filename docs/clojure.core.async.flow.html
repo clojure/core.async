@@ -114,11 +114,17 @@ flow def. init must be provided if 'describe' returns :params.
 Optionally, a returned init state may contain the
 keys ::flow/in-ports and/or ::flow/out-ports. These should be maps
 of cid -&gt; a core.async.channel. The cids must not conflict with the
-in/out ids. These channels will become part of the read/write set of
-the process, but are not otherwise visible/resolvable within the
-flow. Ports are a way to have data enter or exit the flow from
-outside. Use :transition to coordinate the lifecycle of these
+in/out ids. These channels will become part of the input/output set
+of the process, but are not otherwise visible/resolvable within the
+flow. Ports are a way to allow data to enter or exit the flow from
+outside of it. Use :transition to coordinate the lifecycle of these
 external channels.
+
+Optionally, _any_ returned state, whether from :init, :transition
+or :transform, may contain the key ::flow/input-filter, a predicate
+of cid. Only inputs (including in-ports) satisfying the predicate
+will be part of the next channel read set. In the absence of this
+predicate all inputs are read.
 
 :transition - optional, (state transition) -&gt; state'
 
