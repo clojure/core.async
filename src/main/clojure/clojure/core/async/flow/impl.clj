@@ -241,10 +241,9 @@
                   outs (into (or outs {}) (::flow/out-ports state))
                   io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
                   control (::flow/control ins)
-                  ;;TODO rotate/randomize after control per normal alts?
-                  read-chans (vec (-> ins (dissoc ::flow/control) vals))
+                  read-ins (dissoc ins ::flow/control)
                   run
-                  #(loop [status :paused, state state, count 0, read-chans read-chans]
+                  #(loop [status :paused, state state, count 0, read-ins read-ins]
                      (let [pong (fn []
                                   (let [pins (dissoc ins ::flow/control)
                                         pouts (dissoc outs ::flow/error ::flow/report)]
@@ -254,36 +253,43 @@
                                                        :ins (zipmap (keys pins) (map chan->data (vals pins)))
                                                        :outs (zipmap (keys pouts) (map chan->data (vals pouts)))})))
                            handle-command (partial handle-command pid pong)
-                           [nstatus nstate count read-chans]
+                           [nstatus nstate count read-ins]
                            (try
                              (if (= status :paused)
                                (let [nstatus (handle-command status (async/<!! control))
                                      nstate (handle-transition transition status nstatus state)]
-                                 [nstatus nstate count read-chans])
+                                 [nstatus nstate count read-ins])
                                ;;:running
-                               (let [[msg c] (async/alts!! (into [control] read-chans) :priority true)
+                               (let [;;TODO rotate/randomize after control per normal alts?
+                                     read-chans (let [ipred (or (::flow/input-filter state) identity)]
+                                                  (reduce-kv (fn [ret cid chan]
+                                                               (if (ipred cid)
+                                                                 (conj ret chan)
+                                                                 ret))
+                                                             [control] read-ins))
+                                     [msg c] (async/alts!! read-chans :priority true)
                                      cid (io-id c)]
                                  (if (= c control)
                                    (let [nstatus (handle-command status msg)
                                          nstate (handle-transition transition status nstatus state)]
-                                     [nstatus nstate count read-chans])
+                                     [nstatus nstate count read-ins])
                                    (try
                                      (let [[nstate outputs] (transform state cid msg)
                                            [nstatus nstate]
                                            (send-outputs status nstate outputs outs
                                                          resolver control handle-command transition)]
                                        [nstatus nstate (inc count) (if (some? msg)
-                                                                     read-chans
-                                                                     (vec (remove #{c} read-chans)))])
+                                                                     read-ins
+                                                                     (dissoc read-ins cid))])
                                      (catch Throwable ex
                                        (async/>!! (outs ::flow/error)
                                                   #::flow{:pid pid, :status status, :state state,
                                                           :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
-                                       [status state count read-chans])))))
+                                       [status state count read-ins])))))
                              (catch Throwable ex
                                (async/>!! (outs ::flow/error)
                                    #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
-                               [status state count read-chans]))]
+                               [status state count read-ins]))]
                        (when-not (= nstatus :exit) ;;fall out
-                         (recur nstatus nstate (long count) read-chans))))]
+                         (recur nstatus nstate (long count) read-ins))))]
               ((futurize run {:exec exs})))))))
