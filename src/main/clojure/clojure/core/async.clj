@@ -465,15 +465,16 @@ to catch and handle."
 (defonce ^:private ^Executor thread-macro-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
 
-(defonce ^:private ^ExecutorService io-thread-exec thread-macro-executor)
+(defonce ^:private ^ExecutorService io-thread-exec
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "io-thread-macro-%d" true)))
 
 (defmacro io-thread
   "Asynchronously executes the body in a thread compatible with I/O workload,
   returning immediately to the calling thread. Only blocking operations should
   be used in io-thread bodies.
 
-  io-thread blocks should not (either directly or indirectly) perform operations
-  that never block and run pure compute operations. Parking ops
+  io-thread bodies should not (either directly or indirectly) perform operations
+  that never block nor run pure compute operations. Parking ops
   (i.e. <!, >! and alt!/alts!) used in io-thread bodies will throw at
   runtime.
 
