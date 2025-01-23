@@ -242,9 +242,9 @@
                   io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
                   control (::flow/control ins)
                   ;;TODO rotate/randomize after control per normal alts?
-                  read-chans (into [control] (-> ins (dissoc ::flow/control) vals))
+                  read-chans (vec (-> ins (dissoc ::flow/control) vals))
                   run
-                  #(loop [status :paused, state state, count 0]
+                  #(loop [status :paused, state state, count 0, read-chans read-chans]
                      (let [pong (fn []
                                   (let [pins (dissoc ins ::flow/control)
                                         pouts (dissoc outs ::flow/error ::flow/report)]
@@ -254,34 +254,36 @@
                                                        :ins (zipmap (keys pins) (map chan->data (vals pins)))
                                                        :outs (zipmap (keys pouts) (map chan->data (vals pouts)))})))
                            handle-command (partial handle-command pid pong)
-                           [nstatus nstate count]
+                           [nstatus nstate count read-chans]
                            (try
                              (if (= status :paused)
                                (let [nstatus (handle-command status (async/<!! control))
                                      nstate (handle-transition transition status nstatus state)]
-                                 [nstatus nstate count])
+                                 [nstatus nstate count read-chans])
                                ;;:running
-                               (let [[msg c] (async/alts!! read-chans :priority true)
+                               (let [[msg c] (async/alts!! (into [control] read-chans) :priority true)
                                      cid (io-id c)]
                                  (if (= c control)
                                    (let [nstatus (handle-command status msg)
                                          nstate (handle-transition transition status nstatus state)]
-                                     [nstatus nstate count])
+                                     [nstatus nstate count read-chans])
                                    (try
                                      (let [[nstate outputs] (transform state cid msg)
                                            [nstatus nstate]
                                            (send-outputs status nstate outputs outs
                                                          resolver control handle-command transition)]
-                                       [nstatus nstate (inc count)])
+                                       [nstatus nstate (inc count) (if (some? msg)
+                                                                     read-chans
+                                                                     (vec (remove #{c} read-chans)))])
                                      (catch Throwable ex
                                        (async/>!! (outs ::flow/error)
                                                   #::flow{:pid pid, :status status, :state state,
                                                           :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
-                                       [status state count])))))
+                                       [status state count read-chans])))))
                              (catch Throwable ex
                                (async/>!! (outs ::flow/error)
-                                          #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
-                               [status state count]))]
+                                   #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
+                               [status state count read-chans]))]
                        (when-not (= nstatus :exit) ;;fall out
-                         (recur nstatus nstate (long count)))))]
+                         (recur nstatus nstate (long count) read-chans))))]
               ((futurize run {:exec exs})))))))
