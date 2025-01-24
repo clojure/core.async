@@ -86,7 +86,7 @@
   
   :report-chan - a core.async chan for reading.'ping' reponses
   will show up here, as will any explicit ::flow/report outputs
-  from :transform/:introduce
+  from :transform
   
   :error-chan - a core.async chan for reading. Any (and only)
   exceptions thrown anywhere on any thread inside a flow will appear
@@ -141,7 +141,7 @@
   "Given a map of functions (described below), returns a launcher that
   creates a process compliant with the process protocol (see the
   spi/ProcLauncher doc). The possible entries for process-impl-map
-  are :describe, :init, :transition, :transform and :introduce. This is
+  are :describe, :init, :transition and :transform. This is
   the core facility for defining the logic for processes via ordinary
   functions.
 
@@ -167,9 +167,24 @@
 
   :init - optional, (arg-map) -> initial-state
   
-  init will be called once by the process to establish any
-  initial state. The arg-map will be a map of param->val, as supplied
-  in the flow def. init must be provided if 'describe' returns :params.
+  init will be called once by the process to establish any initial
+  state. The arg-map will be a map of param->val, as supplied in the
+  flow def. init must be provided if 'describe' returns :params.
+
+  Optionally, a returned init state may contain the
+  keys ::flow/in-ports and/or ::flow/out-ports. These should be maps
+  of cid -> a core.async.channel. The cids must not conflict with the
+  in/out ids. These channels will become part of the input/output set
+  of the process, but are not otherwise visible/resolvable within the
+  flow. Ports are a way to allow data to enter or exit the flow from
+  outside of it. Use :transition to coordinate the lifecycle of these
+  external channels.
+
+  Optionally, _any_ returned state, whether from :init, :transition
+  or :transform, may contain the key ::flow/input-filter, a predicate
+  of cid. Only inputs (including in-ports) satisfying the predicate
+  will be part of the next channel read set. In the absence of this
+  predicate all inputs are read.
 
   :transition - optional, (state transition) -> state'
 
@@ -181,9 +196,7 @@
   process will no longer be used following that. See the SPI for
   details. state' will be the state supplied to subsequent calls.
 
-  Exactly one of either :transform or :introduce are required.
-
-  :transform - (state in-name msg) -> [state' output]
+  :transform - required, (state in-name msg) -> [state' output]
   where output is a map of outid->[msgs*]
 
   The transform fn will be called every time a message arrives at any
@@ -194,21 +207,6 @@
   may never be nil (per core.async channels). state' will be the state
   supplied to subsequent calls.
 
-  :introduce - (state) -> [state' output]
-  where output is a map of outid->[msgs*], per :transform
- 
-  The introduce fn is used for sources - proc-impls that introduce new data
-  into the flow by doing I/O with something external to the flow and
-  feeding that data to its outputs. A proc-impl specifying :introduce may not
-  specify any :ins in its descriptor, as none but the ::flow/control channel
-  will be read. Instead, introduce will be called every time through the
-  process loop, and will presumably do blocking or paced I/O to get
-  new data to return via its outputs. If it does blocking I/O it
-  should do so with a timeout so it can regularly return to the
-  process loop which can then look for control messages - it's fine
-  for introduce to return with no output. Do not spin poll in the introduce
-  fn.
-
   process accepts an option map with keys:
   :workload - one of :mixed, :io or :compute
   :compute-timeout-ms - if :workload is :compute, this timeout (default 5000 msec)
@@ -218,14 +216,11 @@
   any :workload returned by the :describe fn of the process. If neither
   are provded the default is :mixed.
 
-  The :compute workload is not allowed for proc impls that
-  provide :introduce (as I/O is presumed).
-
   In the :workload context of :mixed or :io, this dictates the type of
   thread in which the process loop will run, _including its calls to
-  transform/introduce_. 
+  transform_. 
 
-  When :io is specified transform/introduce should not do extensive computation.
+  When :io is specified, transform should not do extensive computation.
 
   When :compute is specified (only allowed for :transform), each call
   to transform will be run in a separate thread. The process loop will
@@ -281,8 +276,7 @@
   and one output (named :in and :out), and no state."
   [f]
   (fn
-    ([] {:params {}
-         :ins {:in (str "the argument to " f)}
+    ([] {:ins {:in (str "the argument to " f)}
          :outs {:out (str "the return of " f)}})
     ([_] nil)
     ([_ _ msg] [nil {:out (f msg)}])))

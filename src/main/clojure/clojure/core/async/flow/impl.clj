@@ -187,7 +187,10 @@
   "when transition, returns maybe new state"
   [transition status nstatus state]
   (if (and transition (not= status nstatus))
-    (transition state nstatus)
+    (transition state (case nstatus
+                            :exit ::flow/stop
+                            :running ::flow/resume
+                            :paused ::flow/pause))
     state))
 
 (defn send-outputs [status state outputs outs resolver control handle-command transition]
@@ -214,13 +217,11 @@
 
 (defn proc
   "see lib ns for docs"
-  [{:keys [describe init transition transform introduce] :as impl} {:keys [workload compute-timeout-ms]}]
-  (assert (= 1 (count (keep identity [transform introduce]))) "must provide exactly one of :transform or :introduce") 
+  [{:keys [describe init transition transform] :as impl} {:keys [workload compute-timeout-ms]}]
+  (assert transform "must provide :transform") 
   (let [{:keys [params ins] :as desc} (describe)
         workload (or workload (:workload desc) :mixed)]
-    (assert (not (and ins introduce)) "can't specify :ins when :introduce")
     (assert (or (not params) init) "must have :init if :params")
-    (assert (not (and introduce (= workload :compute))) "can't specify :introduce and :compute")
     (reify
      clojure.core.protocols/Datafiable
      (datafy [_]
@@ -229,17 +230,20 @@
      spi/ProcLauncher
      (describe [_] desc)
      (start [_ {:keys [pid args ins outs resolver]}]
+            (assert (or (not params) args) "must provide :args if :params")
             (let [comp? (= workload :compute)
                   transform (cond-> transform (= workload :compute)
                                     #(.get (futurize transform {:exec (spi/get-exec resolver :compute)})
                                            compute-timeout-ms TimeUnit/MILLISECONDS))
                   exs (spi/get-exec resolver (if (= workload :mixed) :mixed :io))
+                  state (when init (init args))
+                  ins (into (or ins {}) (::flow/in-ports state))
+                  outs (into (or outs {}) (::flow/out-ports state))
                   io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
                   control (::flow/control ins)
-                  ;;TODO rotate/randomize after control per normal alts?
-                  read-chans (into [control] (-> ins (dissoc ::flow/control) vals))
+                  read-ins (dissoc ins ::flow/control)
                   run
-                  #(loop [status :paused, state (when init (init args)), count 0]
+                  #(loop [status :paused, state state, count 0, read-ins read-ins]
                      (let [pong (fn []
                                   (let [pins (dissoc ins ::flow/control)
                                         pouts (dissoc outs ::flow/error ::flow/report)]
@@ -249,40 +253,43 @@
                                                        :ins (zipmap (keys pins) (map chan->data (vals pins)))
                                                        :outs (zipmap (keys pouts) (map chan->data (vals pouts)))})))
                            handle-command (partial handle-command pid pong)
-                           [nstatus nstate count]
+                           [nstatus nstate count read-ins]
                            (try
                              (if (= status :paused)
                                (let [nstatus (handle-command status (async/<!! control))
                                      nstate (handle-transition transition status nstatus state)]
-                                 [nstatus nstate count])
+                                 [nstatus nstate count read-ins])
                                ;;:running
-                               (let [[msg c] (if transform
-                                               (async/alts!! read-chans :priority true)
-                                               ;;introduce
-                                               (when-let [msg (async/poll! control)]
-                                                 [msg control]))
+                               (let [;;TODO rotate/randomize after control per normal alts?
+                                     read-chans (let [ipred (or (::flow/input-filter state) identity)]
+                                                  (reduce-kv (fn [ret cid chan]
+                                                               (if (ipred cid)
+                                                                 (conj ret chan)
+                                                                 ret))
+                                                             [control] read-ins))
+                                     [msg c] (async/alts!! read-chans :priority true)
                                      cid (io-id c)]
                                  (if (= c control)
                                    (let [nstatus (handle-command status msg)
                                          nstate (handle-transition transition status nstatus state)]
-                                     [nstatus nstate count])
+                                     [nstatus nstate count read-ins])
                                    (try
-                                     (let [[nstate outputs] (if transform
-                                                              (transform state cid msg)
-                                                              (introduce state))
+                                     (let [[nstate outputs] (transform state cid msg)
                                            [nstatus nstate]
                                            (send-outputs status nstate outputs outs
                                                          resolver control handle-command transition)]
-                                       [nstatus nstate (inc count)])
+                                       [nstatus nstate (inc count) (if (some? msg)
+                                                                     read-ins
+                                                                     (dissoc read-ins cid))])
                                      (catch Throwable ex
                                        (async/>!! (outs ::flow/error)
                                                   #::flow{:pid pid, :status status, :state state,
                                                           :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
-                                       [status state count])))))
+                                       [status state count read-ins])))))
                              (catch Throwable ex
                                (async/>!! (outs ::flow/error)
-                                          #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
-                               [status state count]))]
+                                   #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
+                               [status state count read-ins]))]
                        (when-not (= nstatus :exit) ;;fall out
-                         (recur nstatus nstate (long count)))))]
+                         (recur nstatus nstate (long count) read-ins))))]
               ((futurize run {:exec exs})))))))
