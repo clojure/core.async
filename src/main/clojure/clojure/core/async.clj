@@ -463,10 +463,10 @@ to catch and handle."
   (#'clojure.core.async.impl.go/go-impl &env body))
 
 (defonce ^:private ^Executor thread-macro-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-%d" true)))
 
 (defonce ^:private ^ExecutorService io-thread-exec
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "io-thread-macro-%d" true)))
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-io-thread-%d" true)))
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling

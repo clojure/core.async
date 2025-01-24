@@ -186,14 +186,22 @@
       (is (<!! (thread test-dyn))))))
 
 (deftest io-thread-tests
-  (testing "io-thread"
+  (testing "io-thread blocking ops"
     (let [c1 (chan)
           c2 (chan)
           c3 (chan)]
       (io-thread (>!! c2 (clojure.string/upper-case (<!! c1))))
       (io-thread (>!! c3 (clojure.string/reverse (<!! c2))))
       (>!! c1 "loop")
-      (is (= "POOL" (<!! c3))))))
+      (is (= "POOL" (<!! c3)))))
+  (testing "io-thread parking op should fail"
+    (let [c1 (chan)]
+      (io-thread
+       (try
+         (>! c1 :no)
+         (catch AssertionError _
+           (>!! c1 :yes))))
+      (is (= :yes (<!! c1))))))
 
 (deftest ops-tests
   (testing "map<"
