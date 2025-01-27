@@ -7,8 +7,9 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns ^{:skip-wiki true}
-  clojure.core.async.impl.concurrent
-  (:import [java.util.concurrent ThreadFactory]))
+    clojure.core.async.impl.concurrent
+  (:import [java.util.concurrent ThreadFactory Executors ExecutorService]
+           [clojure.lang Var]))
 
 (set! *warn-on-reflection* true)
 
