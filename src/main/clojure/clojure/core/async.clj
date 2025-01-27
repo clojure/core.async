@@ -475,11 +475,15 @@ to catch and handle."
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
   f when completed, then close."
-  ([f] (thread-call f mixed-executor))
-  ([f ^ExecutorService exec]
-   (let [c (chan 1)]
+  ([f] (thread-call f :mixed))
+  ([f exec]
+   (let [c (chan 1)
+         ^ExecutorService e (case exec
+                              :compute compute-executor
+                              :io io-executor
+                              mixed-executor)]
      (let [binds (Var/getThreadBindingFrame)]
-       (.execute exec
+       (.execute e
                  (fn []
                    (Var/resetThreadBindingFrame binds)
                    (try
@@ -496,7 +500,7 @@ to catch and handle."
   extended computation (if so, use 'thread' instead). Returns a channel
   which will receive the result of the body when completed, then close."
   [& body]
-  `(thread-call (^:once fn* [] ~@body) io-executor))
+  `(thread-call (^:once fn* [] ~@body) :io))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
