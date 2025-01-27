@@ -466,9 +466,7 @@ to catch and handle."
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
-  f when completed, then close. exec is a keyword that describes the
-  nature of f's workload, one of :mixed (default) :io or :compute
-  whereby core.async may be able to choose a best fit thread type."
+  f when completed, then close."
   [f]
   (exec-services/best-fit-thread-call f :mixed))
 
