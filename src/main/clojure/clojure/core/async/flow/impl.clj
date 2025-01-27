@@ -79,7 +79,7 @@
                        (let [{:keys [control]} (running-chans)]
                          (async/>!! control #::flow{:command command :to to})))]
     (reify
-     clojure.core.async.flow.impl.graph.Graph
+      clojure.core.async.flow.impl.graph.Graph
       (start [_]
         (.lock lock)
         (try
@@ -170,8 +170,9 @@
       (inject [_ coord msgs]
         (let [{:keys [resolver]} (running-chans)
               chan (spi/get-write-chan resolver coord)]
-          (doseq [m msgs]
-            (async/>!! chan m)))))))
+          ((futurize #(doseq [m msgs]
+                        (async/>!! chan m))
+                     {:exec :io})))))))
 
 (defn handle-command
   [pid pong status cmd]

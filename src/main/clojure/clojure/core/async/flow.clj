@@ -133,8 +133,9 @@
   [g pid cmd-id more-kvs] (g/command-proc g pid cmd-id more-kvs))
   
 (defn inject
-  "synchronously puts the messages on the channel corresponding to the
-  input or output of the process"
+  "asynchronously puts the messages on the channel corresponding to the
+  input or output of the process, returning a future that will
+  complete when done."
   [g [pid io-id :as coord] msgs] (g/inject g coord msgs))
 
 (defn process
