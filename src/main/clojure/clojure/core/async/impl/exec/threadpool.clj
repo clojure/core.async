@@ -9,7 +9,7 @@
 (ns clojure.core.async.impl.exec.threadpool
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.concurrent :as conc])
-  (:import [java.util.concurrent Executors ExecutorService]))
+  (:import [java.util.concurrent Executors]))
 
 (set! *warn-on-reflection* true)
 
