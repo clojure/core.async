@@ -109,9 +109,10 @@
   [g] (g/resume g))
 
 (defn ping
-  "pings all processes, which will put their status and state on the
-  report channel returned from start"
-  [g] (g/ping g))
+  "pings all processes, returning a map of pid -> proc status and
+  state, for those procs that reply within timeout-ms (default 1000)"
+  [g & {:keys [timeout-ms] :or {timeout-ms 1000}}]
+  (g/ping g timeout-ms))
 
 (defn pause-proc
   "pauses a process"
@@ -122,9 +123,9 @@
   [g pid] (g/resume-proc g pid))
 
 (defn ping-proc
-  "pings the process, which will put its status and state on the report
-  channel returned from start"
-  [g pid] (g/ping-proc g pid))
+  "like ping, but just pings the specified process"
+  [g pid & {:keys [timeout-ms] :or {timeout-ms 1000}}]
+  (g/ping-proc g pid timeout-ms))
 
 (defn command-proc
   "synchronously sends a process-specific command with the given id and

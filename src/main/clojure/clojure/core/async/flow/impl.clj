@@ -75,9 +75,22 @@
                              (throw (ex-info "invalid connection" {:conn conn}))))
                          {} conns)
         running-chans #(or (deref chans) (throw (Exception. "flow not running")))
-        send-command (fn [command to]
-                       (let [{:keys [control]} (running-chans)]
-                         (async/>!! control #::flow{:command command :to to})))]
+        send-command (fn sc
+                       ([cmap]
+                        (let [{:keys [control]} (running-chans)]
+                          (async/>!! control cmap)))
+                       ([command to] (sc #::flow{:command command :to to})))
+        handle-ping (fn [to timeout-ms]
+                      (let [reply-chan (async/chan (count procs))
+                            ret-chan (async/take (if (= to ::flow/all) (count procs) 1) reply-chan)
+                            timeout (async/timeout timeout-ms)
+                            _ (send-command #::flow{:command ::flow/ping, :to to, :reply-chan reply-chan})
+                            ret (loop [ret nil]
+                                  (let [[{::flow/keys [pid] :as m} c] (async/alts!! [ret-chan timeout])]
+                                    (if (some? m)
+                                      (recur (assoc ret pid m))
+                                      ret)))]
+                        (if (= to ::flow/all) ret (-> ret vals first))))]
     (reify
       clojure.core.async.flow.impl.graph.Graph
       (start [_]
@@ -156,11 +169,11 @@
           (finally (.unlock lock))))
       (pause [_] (send-command ::flow/pause ::flow/all))
       (resume [_] (send-command ::flow/resume ::flow/all))
-      (ping [_] (send-command ::flow/ping ::flow/all))
+      (ping [_ timeout-ms] (handle-ping ::flow/all timeout-ms))
 
       (pause-proc [_ pid] (send-command ::flow/pause pid))
       (resume-proc [_ pid] (send-command ::flow/resume pid))
-      (ping-proc [_ pid] (send-command ::flow/ping pid))
+      (ping-proc [_ pid timeout-ms] (handle-ping pid timeout-ms))
       (command-proc [_ pid command kvs]
         (assert (and (namespace command) (not= (namespace ::flow/command) (namespace command)))
                 "extension commands must be in your own namespace")
@@ -177,10 +190,10 @@
 (defn handle-command
   [pid pong status cmd]
   (let [transition #::flow{:stop :exit, :resume :running, :pause :paused}
-        {::flow/keys [to command]} cmd]
+        {::flow/keys [to command reply-chan]} cmd]
     (if (#{::flow/all pid} to)
       (do
-        (when (= command ::flow/ping) (pong))
+        (when (= command ::flow/ping) (pong reply-chan))
         (or (transition command) status))
       status)))
 
@@ -245,10 +258,10 @@
                   read-ins (dissoc ins ::flow/control)
                   run
                   #(loop [status :paused, state state, count 0, read-ins read-ins]
-                     (let [pong (fn []
+                     (let [pong (fn [c]
                                   (let [pins (dissoc ins ::flow/control)
                                         pouts (dissoc outs ::flow/error ::flow/report)]
-                                    (async/>!! (outs ::flow/report)
+                                    (async/>!! c ;;(outs ::flow/report)
                                                #::flow{:report :ping, :pid pid, :status status
                                                        :state state, :count count
                                                        :ins (zipmap (keys pins) (map chan->data (vals pins)))
