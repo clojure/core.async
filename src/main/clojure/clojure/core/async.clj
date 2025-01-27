@@ -462,17 +462,20 @@ to catch and handle."
   [& body]
   (#'clojure.core.async.impl.go/go-impl &env body))
 
-(defonce ^:private ^Executor thread-macro-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-%d" true)))
+(defonce ^ExecutorService mixed-executor
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-mixed-thread-%d" true)))
 
-(defonce ^:private ^ExecutorService io-thread-exec
+(defonce ^ExecutorService io-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-io-thread-%d" true)))
+
+(defonce ^ExecutorService compute-executor
+  (Executors/newFixedThreadPool 8 (conc/counted-thread-factory "async-compute-thread-%d" true)))
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
   f when completed, then close."
-  ([f] (thread-call f thread-macro-executor))
+  ([f] (thread-call f mixed-executor))
   ([f ^ExecutorService exec]
    (let [c (chan 1)]
      (let [binds (Var/getThreadBindingFrame)]
@@ -493,7 +496,7 @@ to catch and handle."
   extended computation (if so, use 'thread' instead). Returns a channel
   which will receive the result of the body when completed, then close."
   [& body]
-  `(thread-call (^:once fn* [] ~@body) @#'io-thread-exec))
+  `(thread-call (^:once fn* [] ~@body) io-executor))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
