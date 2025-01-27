@@ -33,7 +33,7 @@ to catch and handle."
             )
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
-           [java.util.concurrent Executors Executor ThreadLocalRandom ExecutorService]
+           [java.util.concurrent Executors Executor ThreadLocalRandom]
            [java.util Arrays ArrayList]))
 
 (alias 'core 'clojure.core)
