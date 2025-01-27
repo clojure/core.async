@@ -463,13 +463,13 @@ to catch and handle."
   (#'clojure.core.async.impl.go/go-impl &env body))
 
 (defonce ^ExecutorService mixed-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-mixed-thread-%d" true)))
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-mixed-%d" true)))
 
 (defonce ^ExecutorService io-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-io-thread-%d" true)))
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-io-%d" true)))
 
 (defonce ^ExecutorService compute-executor
-  (Executors/newFixedThreadPool 8 (conc/counted-thread-factory "async-compute-thread-%d" true)))
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-compute-%d" true)))
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
