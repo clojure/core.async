@@ -70,8 +70,9 @@ with those args and completes that future with its return.
 futurize accepts kwarg options:
 :exec - one of the workloads :mixed, :io, :compute
         or a j.u.c.ExecutorService object,
-        default :mixed</pre></div></div><div class="public anchor" id="var-inject"><h3>inject</h3><div class="usage"><code>(inject g [pid io-id :as coord] msgs)</code></div><div class="doc"><pre class="plaintext">synchronously puts the messages on the channel corresponding to the
-input or output of the process</pre></div></div><div class="public anchor" id="var-lift*-.3Estep"><h3>lift*-&gt;step</h3><div class="usage"><code>(lift*-&gt;step f)</code></div><div class="doc"><pre class="plaintext">given a fn f taking one arg and returning a collection of non-nil
+        default :mixed</pre></div></div><div class="public anchor" id="var-inject"><h3>inject</h3><div class="usage"><code>(inject g [pid io-id :as coord] msgs)</code></div><div class="doc"><pre class="plaintext">asynchronously puts the messages on the channel corresponding to the
+input or output of the process, returning a future that will
+complete when done.</pre></div></div><div class="public anchor" id="var-lift*-.3Estep"><h3>lift*-&gt;step</h3><div class="usage"><code>(lift*-&gt;step f)</code></div><div class="doc"><pre class="plaintext">given a fn f taking one arg and returning a collection of non-nil
 values, create a 'step' fn as needed by step-process, with one input
 and one output (named :in and :out), and no state.</pre></div></div><div class="public anchor" id="var-lift1-.3Estep"><h3>lift1-&gt;step</h3><div class="usage"><code>(lift1-&gt;step f)</code></div><div class="doc"><pre class="plaintext">like lift*-&gt;step except taking a fn returning one value, which, when
 nil, will yield no output.</pre></div></div><div class="public anchor" id="var-pause"><h3>pause</h3><div class="usage"><code>(pause g)</code></div><div class="doc"><pre class="plaintext">pauses a running flow
