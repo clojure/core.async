@@ -303,3 +303,15 @@
                (add! buf val)
                (catch Throwable t
                  (handle buf exh t)))))))))
+
+(extend-protocol clojure.core.protocols/Datafiable
+  ManyToManyChannel
+  (datafy [c]
+    (let [b (.buf c)]
+      {:buffer-type (if b
+                      (-> b class .getSimpleName symbol)
+                      :none)
+       :buffer-count (count b)
+       :put-count (count (.puts c))
+       :take-count (count (.takes c))
+       :closed? (impl/closed? c)})))

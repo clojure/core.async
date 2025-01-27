@@ -92,7 +92,8 @@ to catch and handle."
   buffer must be specified. ex-handler must be a fn of one argument -
   if an exception occurs during transformation it will be called with
   the Throwable as an argument, and any non-nil return value will be
-  placed in the channel."
+  placed in the channel. Channels implement Datafiable; use datafy
+  to obtain the state of the channel and its buffer."
   ([] (chan nil))
   ([buf-or-n] (chan buf-or-n nil))
   ([buf-or-n xform] (chan buf-or-n xform nil))
