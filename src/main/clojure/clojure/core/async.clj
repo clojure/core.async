@@ -30,12 +30,11 @@ to catch and handle."
             clojure.core.async.impl.go ;; TODO: make conditional
             [clojure.core.async.impl.mutex :as mutex]
             [clojure.core.async.impl.concurrent :as conc]
-            [clojure.core.async.impl.exec.threadpool :as threadp])
+            )
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
            [java.util.concurrent Executors Executor ThreadLocalRandom ExecutorService]
-           [java.util Arrays ArrayList]
-           [clojure.lang Var]))
+           [java.util Arrays ArrayList]))
 
 (alias 'core 'clojure.core)
 
@@ -462,24 +461,7 @@ to catch and handle."
   [& body]
   (#'clojure.core.async.impl.go/go-impl &env body))
 
-(defn- best-fit-thread-call
-  [f exec]
-  (let [c (chan 1)
-        ^ExecutorService e (case exec
-                             :compute threadp/compute-executor
-                             :io threadp/io-executor
-                             threadp/mixed-executor)]
-    (let [binds (Var/getThreadBindingFrame)]
-      (.execute e
-                (fn []
-                  (Var/resetThreadBindingFrame binds)
-                  (try
-                    (let [ret (f)]
-                      (when-not (nil? ret)
-                        (>!! c ret)))
-                    (finally
-                      (close! c))))))
-    c))
+(require '[clojure.core.async.impl.exec.services :as exec-services])
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
@@ -488,7 +470,7 @@ to catch and handle."
   nature of f's workload, one of :mixed (default) :io or :compute
   whereby core.async may be able to choose a best fit thread type."
   [f]
-  (best-fit-thread-call f :mixed))
+  (exec-services/best-fit-thread-call f :mixed))
 
 (defmacro io-thread
   "Executes the body in a thread intended for blocking I/O workloads,
@@ -496,7 +478,7 @@ to catch and handle."
   extended computation (if so, use 'thread' instead). Returns a channel
   which will receive the result of the body when completed, then close."
   [& body]
-  `(#'best-fit-thread-call (^:once fn* [] ~@body) :io))
+  `(exec-services/best-fit-thread-call (^:once fn* [] ~@body) :io))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the

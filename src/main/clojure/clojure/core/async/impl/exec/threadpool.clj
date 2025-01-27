@@ -30,12 +30,3 @@
      (reify impl/Executor
        (impl/exec [_ r]
          (.execute executor-svc ^Runnable r))))))
-
-(defonce ^ExecutorService mixed-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-mixed-%d" true)))
-
-(defonce ^ExecutorService io-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-io-%d" true)))
-
-(defonce ^ExecutorService compute-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-compute-%d" true)))
