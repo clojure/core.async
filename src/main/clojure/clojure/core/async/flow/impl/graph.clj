@@ -16,11 +16,11 @@
   (stop [g] "shuts down the graph, stopping all procs, can be started again")
   (pause [g] "pauses a running graph")
   (resume [g] "resumes a paused graph")
-  (ping [g] "pings all processes, which will put their status and state on the report channel")
+  (ping [g timeout-ms] "pings all processes, which will put their status and state on the report channel")
 
   (pause-proc [g pid] "pauses a process")
   (resume-proc [g pid] "resumes a process")
-  (ping-proc [g pid] "pings the process, which will put its status and state on the report channel")
+  (ping-proc [g pid timeout-ms] "pings the process, which will put its status and state on the report channel")
   (command-proc [g pid cmd-id more-kvs] "synchronously sends a process-specific command with the given id 
                                          and additional kvs to the process")
   
