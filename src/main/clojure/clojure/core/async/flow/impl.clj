@@ -10,7 +10,9 @@
   (:require [clojure.core.async :as async]
             [clojure.core.async.flow :as-alias flow]
             [clojure.core.async.flow.spi :as spi]
-            [clojure.core.async.flow.impl.graph :as graph])
+            [clojure.core.async.flow.impl.graph :as graph]
+            [clojure.walk :as walk]
+            [clojure.datafy :as datafy])
   (:import [java.util.concurrent Future Executors ExecutorService TimeUnit]
            [java.util.concurrent.locks ReentrantLock]))
 
@@ -21,16 +23,34 @@
 (defonce io-exec clojure.lang.Agent/soloExecutor)
 (defonce compute-exec clojure.lang.Agent/pooledExecutor)
 
+(defn oid [x]
+  (symbol (str (-> x class .getSimpleName) "@" (-> x System/identityHashCode Integer/toHexString))))
+
 (defn chan->data
   [^clojure.core.async.impl.channels.ManyToManyChannel c]
-    (let [b (.buf c)]
-      {:buffer-type (if b
-                      (-> b class .getSimpleName symbol)
-                      :none)
-       :buffer-count (count b)
-       :put-count (count (.puts c))
-       :take-count (count (.takes c))
-       :closed? (clojure.core.async.impl.protocols/closed? c)}))
+  (let [b (.buf c)]
+    {:buffer (if (some? b) (oid b) :none)
+     :buffer-count (count b)
+     :put-count (count (.puts c))
+     :take-count (count (.takes c))
+     :closed? (clojure.core.async.impl.protocols/closed? c)}))
+
+(defn exec->data [exec]
+  (let [ess (as-> (str exec) ^String es
+              (.substring es (inc (.lastIndexOf es "[")) (.lastIndexOf es "]"))
+              (.split es ","))]
+    (merge {:id (oid exec)
+            :status (first ess)} ;;TODO less fragile
+           (zipmap [:pool-size :active-threads :queued-tasks :completed-tasks]
+                   (map #(-> ^String % (.substring (inc (.lastIndexOf ^String % " "))) Long.) (rest ess))))))
+
+(defn datafy [x]
+  (condp instance? x
+    clojure.lang.Fn (-> x str symbol)
+    ExecutorService (exec->data x)
+    clojure.lang.Var (symbol x)
+    clojure.core.async.impl.channels.ManyToManyChannel (chan->data x)
+    (datafy/datafy x)))
 
 (defn futurize ^Future [f {:keys [exec]}]
   (fn [& args]
@@ -92,6 +112,11 @@
                                       ret)))]
                         (if (= to ::flow/all) ret (-> ret vals first))))]
     (reify
+      clojure.core.protocols/Datafiable
+      (datafy [_]
+        (walk/postwalk datafy {:procs procs, :conns conns, :execs execs
+                               :chans (select-keys @chans [:ins :outs :error :report])}))
+
       clojure.core.async.flow.impl.graph.Graph
       (start [_]
         (.lock lock)
@@ -237,73 +262,73 @@
         workload (or workload (:workload desc) :mixed)]
     (assert (or (not params) init) "must have :init if :params")
     (reify
-     clojure.core.protocols/Datafiable
-     (datafy [_]
-             (let [{:keys [params ins outs]} desc]
-               {:impl impl :params (-> params keys vec) :ins (-> ins keys vec) :outs (-> outs keys vec)}))
-     spi/ProcLauncher
-     (describe [_] desc)
-     (start [_ {:keys [pid args ins outs resolver]}]
-            (assert (or (not params) args) "must provide :args if :params")
-            (let [comp? (= workload :compute)
-                  transform (cond-> transform (= workload :compute)
-                                    #(.get (futurize transform {:exec (spi/get-exec resolver :compute)})
-                                           compute-timeout-ms TimeUnit/MILLISECONDS))
-                  exs (spi/get-exec resolver (if (= workload :mixed) :mixed :io))
-                  state (when init (init args))
-                  ins (into (or ins {}) (::flow/in-ports state))
-                  outs (into (or outs {}) (::flow/out-ports state))
-                  io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
-                  control (::flow/control ins)
-                  read-ins (dissoc ins ::flow/control)
-                  run
-                  #(loop [status :paused, state state, count 0, read-ins read-ins]
-                     (let [pong (fn [c]
-                                  (let [pins (dissoc ins ::flow/control)
-                                        pouts (dissoc outs ::flow/error ::flow/report)]
-                                    (async/>!! c ;;(outs ::flow/report)
-                                               #::flow{:report :ping, :pid pid, :status status
-                                                       :state state, :count count
-                                                       :ins (zipmap (keys pins) (map chan->data (vals pins)))
-                                                       :outs (zipmap (keys pouts) (map chan->data (vals pouts)))})))
-                           handle-command (partial handle-command pid pong)
-                           [nstatus nstate count read-ins]
-                           (try
-                             (if (= status :paused)
-                               (let [nstatus (handle-command status (async/<!! control))
+      clojure.core.protocols/Datafiable
+      (datafy [_]
+        (let [{:keys [params ins outs]} desc]
+          (walk/postwalk datafy {:impl impl :params (-> params keys vec)
+                                 :ins (-> ins keys vec) :outs (-> outs keys vec)})))
+      spi/ProcLauncher
+      (describe [_] desc)
+      (start [_ {:keys [pid args ins outs resolver]}]
+        (assert (or (not params) args) "must provide :args if :params")
+        (let [comp? (= workload :compute)
+              transform (cond-> transform (= workload :compute)
+                                #(.get (futurize transform {:exec (spi/get-exec resolver :compute)})
+                                       compute-timeout-ms TimeUnit/MILLISECONDS))
+              exs (spi/get-exec resolver (if (= workload :mixed) :mixed :io))
+              state (when init (init args))
+              ins (into (or ins {}) (::flow/in-ports state))
+              outs (into (or outs {}) (::flow/out-ports state))
+              io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
+              control (::flow/control ins)
+              read-ins (dissoc ins ::flow/control)
+              run
+              #(loop [status :paused, state state, count 0, read-ins read-ins]
+                 (let [pong (fn [c]
+                              (let [pins (dissoc ins ::flow/control)
+                                    pouts (dissoc outs ::flow/error ::flow/report)]
+                                (async/>!! c (walk/postwalk datafy
+                                                #::flow{:pid pid, :status status
+                                                        :state state, :count count
+                                                        :ins pins :outs pouts}))))
+                       handle-command (partial handle-command pid pong)
+                       [nstatus nstate count read-ins]
+                       (try
+                         (if (= status :paused)
+                           (let [nstatus (handle-command status (async/<!! control))
+                                 nstate (handle-transition transition status nstatus state)]
+                             [nstatus nstate count read-ins])
+                           ;;:running
+                           (let [ ;;TODO rotate/randomize after control per normal alts?
+                                 read-chans (let [ipred (or (::flow/input-filter state) identity)]
+                                              (reduce-kv (fn [ret cid chan]
+                                                           (if (ipred cid)
+                                                             (conj ret chan)
+                                                             ret))
+                                                         [control] read-ins))
+                                 [msg c] (async/alts!! read-chans :priority true)
+                                 cid (io-id c)]
+                             (if (= c control)
+                               (let [nstatus (handle-command status msg)
                                      nstate (handle-transition transition status nstatus state)]
                                  [nstatus nstate count read-ins])
-                               ;;:running
-                               (let [;;TODO rotate/randomize after control per normal alts?
-                                     read-chans (let [ipred (or (::flow/input-filter state) identity)]
-                                                  (reduce-kv (fn [ret cid chan]
-                                                               (if (ipred cid)
-                                                                 (conj ret chan)
-                                                                 ret))
-                                                             [control] read-ins))
-                                     [msg c] (async/alts!! read-chans :priority true)
-                                     cid (io-id c)]
-                                 (if (= c control)
-                                   (let [nstatus (handle-command status msg)
-                                         nstate (handle-transition transition status nstatus state)]
-                                     [nstatus nstate count read-ins])
-                                   (try
-                                     (let [[nstate outputs] (transform state cid msg)
-                                           [nstatus nstate]
-                                           (send-outputs status nstate outputs outs
-                                                         resolver control handle-command transition)]
-                                       [nstatus nstate (inc count) (if (some? msg)
-                                                                     read-ins
-                                                                     (dissoc read-ins cid))])
-                                     (catch Throwable ex
-                                       (async/>!! (outs ::flow/error)
-                                                  #::flow{:pid pid, :status status, :state state,
-                                                          :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
-                                       [status state count read-ins])))))
-                             (catch Throwable ex
-                               (async/>!! (outs ::flow/error)
-                                   #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
-                               [status state count read-ins]))]
-                       (when-not (= nstatus :exit) ;;fall out
-                         (recur nstatus nstate (long count) read-ins))))]
-              ((futurize run {:exec exs})))))))
+                               (try
+                                 (let [[nstate outputs] (transform state cid msg)
+                                       [nstatus nstate]
+                                       (send-outputs status nstate outputs outs
+                                                     resolver control handle-command transition)]
+                                   [nstatus nstate (inc count) (if (some? msg)
+                                                                 read-ins
+                                                                 (dissoc read-ins cid))])
+                                 (catch Throwable ex
+                                   (async/>!! (outs ::flow/error)
+                                              #::flow{:pid pid, :status status, :state state,
+                                                      :count (inc count), :cid cid, :msg msg :op :step, :ex ex})
+                                   [status state count read-ins])))))
+                         (catch Throwable ex
+                           (async/>!! (outs ::flow/error)
+                                      #::flow{:pid pid, :status status, :state state, :count (inc count), :ex ex})
+                           [status state count read-ins]))]
+                   (when-not (= nstatus :exit) ;;fall out
+                     (recur nstatus nstate (long count) read-ins))))]
+          ((futurize run {:exec exs})))))))
