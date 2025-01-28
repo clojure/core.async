@@ -22,7 +22,7 @@
 (defonce ^ExecutorService compute-executor
   (Executors/newCachedThreadPool (conc/counted-thread-factory "async-compute-%d" true)))
 
-(defn best-fit-thread-call
+(defn thread-call
   [f exec]
   (let [c (clojure.core.async/chan 1)
         ^ExecutorService e (case exec

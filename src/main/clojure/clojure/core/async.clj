@@ -468,15 +468,7 @@ to catch and handle."
   thread. Returns a channel which will receive the result of calling
   f when completed, then close."
   [f]
-  (exec-services/best-fit-thread-call f :mixed))
-
-(defmacro io-thread
-  "Executes the body in a thread intended for blocking I/O workloads,
-  returning immediately to the calling thread. The body must not do
-  extended computation (if so, use 'thread' instead). Returns a channel
-  which will receive the result of the body when completed, then close."
-  [& body]
-  `(exec-services/best-fit-thread-call (^:once fn* [] ~@body) :io))
+  (exec-services/thread-call f :mixed))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
@@ -484,6 +476,14 @@ to catch and handle."
   the body when completed, then close."
   [& body]
   `(thread-call (^:once fn* [] ~@body)))
+
+(defmacro io-thread
+  "Executes the body in a thread intended for blocking I/O workloads,
+  returning immediately to the calling thread. The body must not do
+  extended computation (if so, use 'thread' instead). Returns a channel
+  which will receive the result of the body when completed, then close."
+  [& body]
+  `(exec-services/thread-call (^:once fn* [] ~@body) :io))
 
 ;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
