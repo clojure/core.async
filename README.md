@@ -67,6 +67,7 @@ Copyright © Rich Hickey and contributors
 
 * next
   * [ASYNC-255](https://clojure.atlassian.net/browse/ASYNC-255) (CLJ) alts guards against put of nil message on entry
+  * Update tools.analyzer.jvm to 1.3.2
 * Release 1.7.701 on 2024.12.17
   * [ASYNC-254](https://clojure.atlassian.net/browse/ASYNC-254) (CLJ) Completions for blocking ops can be directly delivered without enqueuing for dispatch
   * [ASYNC-252](https://clojure.atlassian.net/browse/ASYNC-252) (CLJ) Move go expander from ioc-macros to impl.go namespace
