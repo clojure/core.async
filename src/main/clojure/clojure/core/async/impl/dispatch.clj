@@ -9,7 +9,8 @@
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.dispatch
   (:require [clojure.core.async.impl.protocols :as impl]
-            [clojure.core.async.impl.exec.threadpool :as tp]))
+            [clojure.core.async.impl.exec.threadpool :as tp])
+  (:import [java.util.concurrent ExecutorService]))
 
 (set! *warn-on-reflection* true)
 
@@ -43,3 +44,11 @@
   (if (-> r meta :on-caller?)
     (try (.run r) (catch Throwable t (ex-handler t)))
     (impl/exec @executor r)))
+
+(defn executor-service-call
+  [f exec]
+  (let [^ExecutorService e (case exec
+                             :compute tp/compute-executor
+                             :io tp/io-executor
+                             tp/mixed-executor)]
+    (.execute e f)))

@@ -34,7 +34,8 @@ to catch and handle."
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
            [java.util.concurrent Executors Executor ThreadLocalRandom]
-           [java.util Arrays ArrayList]))
+           [java.util Arrays ArrayList]
+           [clojure.lang Var]))
 
 (alias 'core 'clojure.core)
 
@@ -462,21 +463,35 @@ to catch and handle."
   [& body]
   (#'clojure.core.async.impl.go/go-impl &env body))
 
-(require '[clojure.core.async.impl.exec.services :as exec-services])
+(defn thread-impl
+  [f workload]
+  (let [c (chan 1)]
+    (let [binds (Var/getThreadBindingFrame)]
+      (dispatch/executor-service-call
+       (fn []
+         (Var/resetThreadBindingFrame binds)
+         (try
+           (let [ret (f)]
+             (when-not (nil? ret)
+               (>!! c ret)))
+           (finally
+             (close! c))))
+       workload))
+    c))
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
   f when completed, then close."
   [f]
-  (exec-services/thread-call f :mixed))
+  (thread-impl f :mixed))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
   calling thread. Returns a channel which will receive the result of
   the body when completed, then close."
   [& body]
-  `(thread-call (^:once fn* [] ~@body)))
+  `(thread-impl (^:once fn* [] ~@body) :mixed))
 
 (defmacro io-thread
   "Executes the body in a thread intended for blocking I/O workloads,
@@ -484,7 +499,7 @@ to catch and handle."
   extended computation (if so, use 'thread' instead). Returns a channel
   which will receive the result of the body when completed, then close."
   [& body]
-  `(exec-services/thread-call (^:once fn* [] ~@body) :io))
+  `(thread-impl (^:once fn* [] ~@body) :io))
 
 ;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
