@@ -140,15 +140,22 @@
   [g [pid io-id :as coord] msgs] (g/inject g coord msgs))
 
 (defn process
-  "Given a map of functions (described below), returns a launcher that
+  "Given a function of four arities (0-3), or a map of functions
+  corresponding thereto (described below), returns a launcher that
   creates a process compliant with the process protocol (see the
-  spi/ProcLauncher doc). The possible entries for process-impl-map
-  are :describe, :init, :transition and :transform. This is
-  the core facility for defining the logic for processes via ordinary
-  functions.
+  spi/ProcLauncher doc).
 
-  :describe - required, () -> desc
-  where desc is a map with keys :params :ins and :outs, each of which
+  The possible arities/entries for fn/map are 0 - :describe, 1
+  - :init, 2 - :transition and 3 - :transform. This is the core
+  facility for defining the logic for processes via ordinary
+  functions. Using a var holding a fn as the 'fn' is the preferred
+  method for defining a proc, as it enables hot-code-reloading of the
+  proc logic in a flow, and better names in datafy. You can use the
+  map form to compose the proc logic from disparate functions or to
+  leverage the optionality of some of the entry points.
+
+  arity 0, or :describe - required, () -> description
+  where description is a map with keys :params :ins and :outs, each of which
   in turn is a map of keyword to doc string, and :workload with
   possible values of :mixed :io :compute. All entries in the describe
   return map are optional.
@@ -167,7 +174,7 @@
   the proc. It will also be called by the impl in order to discover
   what channels are needed.
 
-  :init - optional, (arg-map) -> initial-state
+  arity 1, or :init - optional, (arg-map) -> initial-state
   
   init will be called once by the process to establish any initial
   state. The arg-map will be a map of param->val, as supplied in the
@@ -188,7 +195,7 @@
   will be part of the next channel read set. In the absence of this
   predicate all inputs are read.
 
-  :transition - optional, (state transition) -> state'
+  arity 2, or :transition - optional, (state transition) -> state'
 
   transition will be called when the process makes a state transition,
   transition being one of ::flow/resume, ::flow/pause or ::flow/stop
@@ -198,7 +205,7 @@
   process will no longer be used following that. See the SPI for
   details. state' will be the state supplied to subsequent calls.
 
-  :transform - required, (state in-name msg) -> [state' output]
+  arity 3, or :transform - required, (state in-name msg) -> [state' output]
   where output is a map of outid->[msgs*]
 
   The transform fn will be called every time a message arrives at any
@@ -233,30 +240,28 @@
   times out it will be reported on ::flow/error.
 
   When :compute is specified transform must not block!"
-  ([process-impl-map] (process process-impl-map nil))
-  ([process-impl-map {:keys [workload timeout-ms]
-                      :or {timeout-ms 5000} :as opts}]
-   (impl/proc process-impl-map opts)))
+  ([fn-or-map] (process fn-or-map nil))
+  ([fn-or-map {:keys [workload timeout-ms]
+               :or {timeout-ms 5000} :as opts}]
+   (impl/proc fn-or-map opts)))
 
-(defn step-process
-  "Given a (e.g. communication-free) step function f of three
-  arities (described below), and the same opts as 'process', returns a
-  launcher that creates a process compliant with the process
-  protocol (see 'process').
+(defn lift*->step
+  "given a fn f taking one arg and returning a collection of non-nil
+  values, create a 'step' fn as needed by step-process, with one input
+  and one output (named :in and :out), and no state."
+  [f]
+  (fn
+    ([] {:ins {:in (str "the argument to " f)}
+         :outs {:out (str "the return of " f)}})
+    ([_] nil)
+    ([_ _] nil)
+    ([_ _ msg] [nil {:out (f msg)}])))
 
-  The arities of f are:
-
-  ()->desc
-  a function matching the semantics of process' :describe
-
-  (arg-map)->initial-state
-  a function matching the semantics of process' :init
-  
-  (state in-name msg)->[state' output]
-  a function matching the semantics of process' :transform"
-  ([f] (step-process f nil))
-  ([f opts]
-   (process {:describe f, :init f, :transform f} opts)))
+(defn lift1->step
+  "like lift*->step except taking a fn returning one value, which when
+  nil will yield no output."
+  [f]
+  (lift*->step #(when-some [m (f %)] (vector m))))
 
 (defn futurize
   "Takes a fn f and returns a fn that takes the same arguments as f
@@ -271,20 +276,3 @@
   [f & {:keys [exec]
         :or {exec :mixed} :as opts}]
   (impl/futurize f opts))
-
-(defn lift*->step
-  "given a fn f taking one arg and returning a collection of non-nil
-  values, create a 'step' fn as needed by step-process, with one input
-  and one output (named :in and :out), and no state."
-  [f]
-  (fn
-    ([] {:ins {:in (str "the argument to " f)}
-         :outs {:out (str "the return of " f)}})
-    ([_] nil)
-    ([_ _ msg] [nil {:out (f msg)}])))
-
-(defn lift1->step
-  "like lift*->step except taking a fn returning one value, which, when
-  nil, will yield no output."
-  [f]
-  (lift*->step #(when-some [m (f %)] (vector m))))

@@ -233,16 +233,18 @@
 
 (defn proc
   "see lib ns for docs"
-  [{:keys [describe init transition transform] :as impl} {:keys [workload compute-timeout-ms]}]
-  (assert transform "must provide :transform") 
-  (let [{:keys [params ins] :as desc} (describe)
+  [fm {:keys [workload compute-timeout-ms]}]
+  (let [{:keys [describe init transition transform] :as impl}
+        (if (map? fm) fm {:describe fm :init fm :transition fm :transform fm})
+        {:keys [params ins] :as desc} (describe)
         workload (or workload (:workload desc) :mixed)]
+    (assert transform "must provide :transform")
     (assert (or (not params) init) "must have :init if :params")
     (reify
       clojure.core.protocols/Datafiable
       (datafy [_]
         (let [{:keys [params ins outs]} desc]
-          (walk/postwalk datafy {:impl impl :params (-> params keys vec)
+          (walk/postwalk datafy {:impl fm :params (-> params keys vec)
                                  :ins (-> ins keys vec) :outs (-> outs keys vec)})))
       spi/ProcLauncher
       (describe [_] desc)
