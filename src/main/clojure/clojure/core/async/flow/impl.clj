@@ -23,22 +23,10 @@
 (defonce io-exec clojure.lang.Agent/soloExecutor)
 (defonce compute-exec clojure.lang.Agent/pooledExecutor)
 
-(defn oid [x]
-  (symbol (str (-> x class .getSimpleName) "@" (-> x System/identityHashCode Integer/toHexString))))
-
-(defn exec->data [exec]
-  (let [ess (as-> (str exec) ^String es
-              (.substring es (inc (.lastIndexOf es "[")) (.lastIndexOf es "]"))
-              (.split es ","))]
-    (merge {:id (oid exec)
-            :status (first ess)} ;;TODO less fragile
-           (zipmap [:pool-size :active-threads :queued-tasks :completed-tasks]
-                   (map #(-> ^String % (.substring (inc (.lastIndexOf ^String % " "))) Long.) (rest ess))))))
-
 (defn datafy [x]
   (condp instance? x
     clojure.lang.Fn (-> x str symbol)
-    ExecutorService (exec->data x)
+    ExecutorService (str x)
     clojure.lang.Var (symbol x)
     (datafy/datafy x)))
 
