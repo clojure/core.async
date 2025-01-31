@@ -14,6 +14,7 @@
 
 (set! *warn-on-reflection* true)
 
+
 (deftype FixedBuffer [^LinkedList buf ^long n]
   impl/Buffer
   (full? [_this]
@@ -26,11 +27,13 @@
   (close-buf! [_this])
   Counted
   (count [_this]
-    (.size buf)))
+    (.size buf))
+  impl/Capacity
+  (capacity [_this]
+    n))
 
 (defn fixed-buffer [^long n]
   (FixedBuffer. (LinkedList.) n))
-
 
 (deftype DroppingBuffer [^LinkedList buf ^long n]
   impl/UnblockingBuffer
@@ -46,7 +49,10 @@
   (close-buf! [_this])
   Counted
   (count [_this]
-    (.size buf)))
+    (.size buf))
+  impl/Capacity
+  (capacity [_this]
+    n))
 
 (defn dropping-buffer [n]
   (DroppingBuffer. (LinkedList.) n))
@@ -66,7 +72,10 @@
   (close-buf! [_this])
   Counted
   (count [_this]
-    (.size buf)))
+    (.size buf))
+  impl/Capacity
+  (capacity [_this]
+    n))
 
 (defn sliding-buffer [n]
   (SlidingBuffer. (LinkedList.) n))
@@ -91,7 +100,27 @@
       (set! val nil)))
   Counted
   (count [_]
-    (if (undelivered? val) 0 1)))
+    (if (undelivered? val) 0 1))
+  impl/Capacity
+  (capacity [_this]
+    1))
 
 (defn promise-buffer []
   (PromiseBuffer. NO-VAL))
+
+(defn datafy-buffer [buffer]
+  {:type (-> buffer class .getSimpleName symbol)
+   :count (count buffer)
+   :capacity (impl/capacity buffer)})
+
+(extend-protocol clojure.core.protocols/Datafiable
+  FixedBuffer
+  (datafy [b] (datafy-buffer b))
+  DroppingBuffer
+  (datafy [b] (datafy-buffer b))
+  SlidingBuffer
+  (datafy [b] (datafy-buffer b))
+  PromiseBuffer
+  (datafy [b] (datafy-buffer b))
+  Object
+  (datafy [b] nil))
