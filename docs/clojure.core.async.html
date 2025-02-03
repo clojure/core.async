@@ -81,7 +81,8 @@ and use a fixed buffer of that size. If a transducer is supplied a
 buffer must be specified. ex-handler must be a fn of one argument -
 if an exception occurs during transformation it will be called with
 the Throwable as an argument, and any non-nil return value will be
-placed in the channel.</pre></div></div><div class="public anchor" id="var-close.21"><h3>close!</h3><div class="usage"><code>(close! chan)</code></div><div class="doc"><pre class="plaintext">Closes a channel. The channel will no longer accept any puts (they
+placed in the channel. Channels implement Datafiable; use datafy
+to obtain the state of the channel and its buffer.</pre></div></div><div class="public anchor" id="var-close.21"><h3>close!</h3><div class="usage"><code>(close! chan)</code></div><div class="doc"><pre class="plaintext">Closes a channel. The channel will no longer accept any puts (they
 will be ignored). Data in the channel remains available for taking, until
 exhausted, after which takes will return nil. If there are any
 pending takes, they will be dispatched with nil. Closing a closed
