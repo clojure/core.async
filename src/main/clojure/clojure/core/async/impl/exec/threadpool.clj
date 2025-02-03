@@ -9,7 +9,7 @@
 (ns clojure.core.async.impl.exec.threadpool
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.concurrent :as conc])
-  (:import [java.util.concurrent Executors ExecutorService]))
+  (:import [java.util.concurrent Executors]))
 
 (set! *warn-on-reflection* true)
 
@@ -30,12 +30,3 @@
      (reify impl/Executor
        (impl/exec [_ r]
          (.execute executor-svc ^Runnable r))))))
-
-(defonce ^ExecutorService mixed-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-mixed-%d" true)))
-
-(defonce ^ExecutorService io-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-io-%d" true)))
-
-(defonce ^ExecutorService compute-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-compute-%d" true)))

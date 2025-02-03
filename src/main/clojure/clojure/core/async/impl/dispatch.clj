@@ -10,7 +10,7 @@
   clojure.core.async.impl.dispatch
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.exec.threadpool :as tp])
-  (:import [java.util.concurrent ExecutorService]))
+  (:import [java.util.concurrent Executors ExecutorService]))
 
 (set! *warn-on-reflection* true)
 
@@ -38,6 +38,15 @@
       (.uncaughtException (Thread/currentThread) ex))
   nil)
 
+(defonce ^ExecutorService mixed-executor
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-mixed-%d" true)))
+
+(defonce ^ExecutorService io-executor
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-io-%d" true)))
+
+(defonce ^ExecutorService compute-executor
+  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-compute-%d" true)))
+
 (defn run
   "Runs Runnable r on current thread when :on-caller? meta true, else in a thread pool thread."
   [^Runnable r]
@@ -45,7 +54,7 @@
     (try (.run r) (catch Throwable t (ex-handler t)))
     (impl/exec @executor r)))
 
-(defn executor-service-call
+(defn exec
   [f exec]
   (let [^ExecutorService e (case exec
                              :compute tp/compute-executor

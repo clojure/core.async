@@ -467,7 +467,7 @@ to catch and handle."
   [f workload]
   (let [c (chan 1)]
     (let [binds (Var/getThreadBindingFrame)]
-      (dispatch/executor-service-call
+      (dispatch/exec
        (fn []
          (Var/resetThreadBindingFrame binds)
          (try
