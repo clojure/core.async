@@ -21,6 +21,10 @@
   a set of channels for centralized control, reporting, error-handling,
     and execution of the processes
 
+  The flow library itself constructs processes, channels and flows. The
+  user provides configuration data and process logic (step-fns) that
+  specify how the flow should work.
+
   A flow is constructed from flow configuration data which defines a
   directed graph of processes and the connections between
   them. Processes describe their I/O requirements and the
@@ -30,9 +34,9 @@
   policy decisions regarding process settings, threading, buffering etc.
 
   It is expected that applications will rarely define instances of the
-  process protocol but instead use the API functions here, 'process'
-  and 'step-process', that implement the process protocol in terms of
-  calls to ordinary functions that might include no communication or
+  process protocol but instead use the API function 'process' that
+  implements the process protocol in terms of calls to ordinary
+  functions (step-fns) that might include no communication or
   core.async code. In this way the library helps you achieve a strict
   separation of your application logic from its execution,
   communication, lifecycle, error handling and monitoring.
@@ -43,6 +47,10 @@
   stated. This documentation refers to various keywords utilized by
   the library itself as ::flow/xyz, where ::flow is an alias for
   clojure.core.async.flow
+
+  Flows support the Clojure 'datafy' protocol to support
+  observability. See also the 'ping' and 'ping-proc' fns for a live
+  view of processes.
 
   A process is represented in the flow definition by an implementation
   of spi/ProcLauncher that starts it. See the spi docs for
@@ -82,7 +90,7 @@
 
 (defn start
   "starts the entire flow from init values. The processes start paused.
-  Call 'resume' or 'resume-proc' to start flow.  returns a map with keys:
+  Call 'resume' or 'resume-proc' to start flow.  Returns a map with keys:
   
   :report-chan - a core.async chan for reading.'ping' reponses
   will show up here, as will any explicit ::flow/report outputs
@@ -140,19 +148,25 @@
   [g [pid io-id :as coord] msgs] (g/inject g coord msgs))
 
 (defn process
-  "Given a function of four arities (0-3), or a map of functions
-  corresponding thereto (described below), returns a launcher that
-  creates a process compliant with the process protocol (see the
-  spi/ProcLauncher doc).
+  "Given a function of four arities (0-3), aka the 'step-fn', or a map
+  of functions corresponding thereto (described below), returns a
+  launcher that creates a process compliant with the process
+  protocol (see the spi/ProcLauncher doc).
 
-  The possible arities/entries for fn/map are 0 - :describe, 1
-  - :init, 2 - :transition and 3 - :transform. This is the core
-  facility for defining the logic for processes via ordinary
-  functions. Using a var holding a fn as the 'fn' is the preferred
-  method for defining a proc, as it enables hot-code-reloading of the
-  proc logic in a flow, and better names in datafy. You can use the
-  map form to compose the proc logic from disparate functions or to
-  leverage the optionality of some of the entry points.
+  The possible arities/entries for the step-fn/map are
+
+  0 - :describe,
+  1 - :init,
+  2 - :transition
+  3 - :transform.
+
+  This is the core facility for defining the logic for processes via
+  ordinary functions. Using a var holding a fn as the 'step-fn' is the
+  preferred method for defining a proc, as it enables
+  hot-code-reloading of the proc logic in a flow, and better names in
+  datafy. You can use the map form to compose the proc logic from
+  disparate functions or to leverage the optionality of some of the
+  entry points.
 
   arity 0, or :describe - required, () -> description
   where description is a map with keys :params :ins and :outs, each of which
@@ -178,7 +192,10 @@
   
   init will be called once by the process to establish any initial
   state. The arg-map will be a map of param->val, as supplied in the
-  flow def. init must be provided if 'describe' returns :params.
+  flow def. The key ::flow/pid will be added, mapped to the pid
+  associated with the process (useful e.g. if the process wants to
+  refer to itself in reply-to coordinates). init must be provided if
+  'describe' returns :params.
 
   Optionally, a returned init state may contain the
   keys ::flow/in-ports and/or ::flow/out-ports. These should be maps
@@ -247,7 +264,7 @@
 
 (defn lift*->step
   "given a fn f taking one arg and returning a collection of non-nil
-  values, create a 'step' fn as needed by step-process, with one input
+  values, creates a step fn as needed by process, with one input
   and one output (named :in and :out), and no state."
   [f]
   (fn

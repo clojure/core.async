@@ -121,6 +121,4 @@
   SlidingBuffer
   (datafy [b] (datafy-buffer b))
   PromiseBuffer
-  (datafy [b] (datafy-buffer b))
-  Object
-  (datafy [b] nil))
+  (datafy [b] (datafy-buffer b)))
