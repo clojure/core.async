@@ -29,7 +29,6 @@ to catch and handle."
             [clojure.core.async.impl.ioc-macros :as ioc]
             clojure.core.async.impl.go ;; TODO: make conditional
             [clojure.core.async.impl.mutex :as mutex]
-            [clojure.core.async.impl.concurrent :as conc]
             )
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
