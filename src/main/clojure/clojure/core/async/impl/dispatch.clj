@@ -80,25 +80,35 @@
       (.uncaughtException (Thread/currentThread) ex))
   nil)
 
-(defonce ^ExecutorService mixed-executor
-  (Executors/newCachedThreadPool (counted-thread-factory "async-mixed-%d" true)))
+(def construct-es
+  (let [esf (System/getProperty "clojure.core.async.esfactory")]
+    (or
+     (and esf (requiring-resolve (symbol esf)))
+     (fn [workload]
+       (case workload
+         :compute (Executors/newCachedThreadPool (counted-thread-factory "async-compute-%d" true))
+         :io (Executors/newCachedThreadPool (counted-thread-factory "async-io-%d" true))
+         :mixed (Executors/newCachedThreadPool (counted-thread-factory "async-mixed-%d" true))
+         (throw (IllegalArgumentException. (str "Illegal workload tag " workload))))))))
 
-(defonce ^ExecutorService io-executor
-  (Executors/newCachedThreadPool (counted-thread-factory "async-io-%d" true)))
+(defonce ^ExecutorService mixed-executor (construct-es :mixed))
 
-(defonce ^ExecutorService compute-executor
-  (Executors/newCachedThreadPool (counted-thread-factory "async-compute-%d" true)))
+(defonce ^ExecutorService io-executor (construct-es :io))
+
+(defonce ^ExecutorService compute-executor (construct-es :compute))
+
+(defn es-for [workload]
+  (case workload
+    :compute compute-executor
+    :io io-executor
+    :mixed mixed-executor
+    nil))
 
 (defn exec
-  [^Runnable r exec]
-  (let [^ExecutorService e (case exec
-                             :compute compute-executor
-                             :io io-executor
-                             :mixed mixed-executor
-                             nil)]
-    (if e
-      (.execute e r)
-      (impl/exec @executor r))))
+  [^Runnable r workload]
+  (if-let [^ExecutorService e (es-for workload)]
+    (.execute e r)
+    (impl/exec @executor r)))
 
 (defn run
   "Runs Runnable r on current thread when :on-caller? meta true, else in a thread pool thread."
