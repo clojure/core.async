@@ -143,7 +143,7 @@
                       (let [chan-map (fn [ks coll] (zipmap (keys ks) (map #(coll [pid %]) (keys ks))))
                             control-tap (async/chan 10)]
                         (async/tap control-mult control-tap)
-                        (spi/start proc {:pid pid :args args :resolver resolver
+                        (spi/start proc {:pid pid :args (assoc args ::flow/pid pid) :resolver resolver
                                          :ins (assoc (chan-map ins in-chans)
                                                      ::flow/control control-tap)
                                          :outs (assoc (chan-map outs out-chans)
