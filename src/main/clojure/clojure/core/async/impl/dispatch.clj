@@ -89,17 +89,23 @@
 (defonce ^ExecutorService compute-executor
   (Executors/newCachedThreadPool (counted-thread-factory "async-compute-%d" true)))
 
-(defn run
-  "Runs Runnable r on current thread when :on-caller? meta true, else in a thread pool thread."
-  [^Runnable r]
-  (if (-> r meta :on-caller?)
-    (try (.run r) (catch Throwable t (ex-handler t)))
-    (impl/exec @executor r)))
-
 (defn exec
-  [f exec]
+  [^Runnable r exec]
   (let [^ExecutorService e (case exec
                              :compute compute-executor
                              :io io-executor
-                             mixed-executor)]
-    (.execute e f)))
+                             :mixed mixed-executor
+                             nil)]
+    (if e
+      (.execute e r)
+      (impl/exec @executor r))))
+
+(defn run
+  "Runs Runnable r on current thread when :on-caller? meta true, else in a thread pool thread."
+  ([^Runnable r]
+   (if (-> r meta :on-caller?)
+     (try (.run r) (catch Throwable t (ex-handler t)))
+     (exec r nil)))
+  ([^Runnable r workload]
+   (exec r workload)))
+
