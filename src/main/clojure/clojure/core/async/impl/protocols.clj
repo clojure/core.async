@@ -34,6 +34,9 @@
   (add!* [b itm] "if room, add item to the buffer, returns b, called under chan mutex")
   (close-buf! [b] "called on chan closed under chan mutex, return ignored"))
 
+(defprotocol Capacity
+  (capacity [b] "The max capacity of the buffer, nil if unknown"))
+
 (defn add!
   ([b] b)
   ([b itm]

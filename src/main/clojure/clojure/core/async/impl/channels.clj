@@ -8,7 +8,8 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.channels
-  (:require [clojure.core.async.impl.protocols :as impl]
+  (:require [clojure.datafy :as datafy]
+            [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.mutex :as mutex])
   (:import [java.util LinkedList Queue]
@@ -308,10 +309,8 @@
   ManyToManyChannel
   (datafy [c]
     (let [b (.buf c)]
-      {:buffer-type (if b
-                      (-> b class .getSimpleName symbol)
-                      :none)
-       :buffer-count (count b)
-       :put-count (count (.puts c))
-       :take-count (count (.takes c))
-       :closed? (impl/closed? c)})))
+      (cond->
+        {:put-count (count (.puts c))
+         :take-count (count (.takes c))
+         :closed? (impl/closed? c)}
+        b (assoc :buffer (clojure.datafy/datafy b))))))
