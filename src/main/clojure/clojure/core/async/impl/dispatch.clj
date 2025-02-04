@@ -80,16 +80,22 @@
       (.uncaughtException (Thread/currentThread) ex))
   nil)
 
-(def construct-es
-  (let [esf (System/getProperty "clojure.core.async.esfactory")]
-    (or
-     (and esf (requiring-resolve (symbol esf)))
-     (fn [workload]
-       (case workload
-         :compute (Executors/newCachedThreadPool (counted-thread-factory "async-compute-%d" true))
-         :io (Executors/newCachedThreadPool (counted-thread-factory "async-io-%d" true))
-         :mixed (Executors/newCachedThreadPool (counted-thread-factory "async-mixed-%d" true))
-         (throw (IllegalArgumentException. (str "Illegal workload tag " workload))))))))
+(defn- sys-prop-call
+  [prop otherwise]
+  (let [esf (System/getProperty prop)
+        esfn (or (and esf (requiring-resolve (symbol esf))) otherwise)]
+    (esfn)))
+
+(defn construct-es
+  [workload]
+  (case workload
+    :compute (sys-prop-call "clojure.core.async.compute-es-fn"
+                            #(Executors/newCachedThreadPool (counted-thread-factory "async-compute-%d" true)))
+    :io      (sys-prop-call "clojure.core.async.io-es-fn"
+                            #(Executors/newCachedThreadPool (counted-thread-factory "async-io-%d" true)))
+    :mixed   (sys-prop-call "clojure.core.async.mixed-es-fn"
+                            #(Executors/newCachedThreadPool (counted-thread-factory "async-mixed-%d" true)))
+    (throw (IllegalArgumentException. (str "Illegal workload tag " workload)))))
 
 (defonce ^ExecutorService mixed-executor (construct-es :mixed))
 
