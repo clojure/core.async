@@ -462,35 +462,31 @@ to catch and handle."
   [& body]
   (#'clojure.core.async.impl.go/go-impl &env body))
 
-(defn thread-call-impl
-  [f workload]
-  (let [c (chan 1)]
-    (let [binds (Var/getThreadBindingFrame)]
-      (dispatch/exec
-       (fn []
-         (Var/resetThreadBindingFrame binds)
-         (try
-           (let [ret (f)]
-             (when-not (nil? ret)
-               (>!! c ret)))
-           (finally
-             (close! c))))
-       workload))
-    c))
+(defn returning-chan [f c]
+  (fn []
+    (try
+      (let [ret (f)]
+        (when-not (nil? ret)
+          (>!! c ret)))
+      (finally (close! c)))))
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
   f when completed, then close."
   [f]
-  (thread-call-impl f :mixed))
+  (let [c (chan 1)]
+    (-> f bound-fn* (returning-chan c) (dispatch/exec :mixed))
+    c))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
   calling thread. Returns a channel which will receive the result of
   the body when completed, then close."
   [& body]
-  `(thread-call-impl (^:once fn* [] ~@body) :mixed))
+  `(let [c# (chan 1)]
+     (-> (^:once fn* [] ~@body) bound-fn* (returning-chan c#) (dispatch/exec :mixed))
+     c#))
 
 (defmacro io-thread
   "Executes the body in a thread intended for blocking I/O workloads,
@@ -498,7 +494,9 @@ to catch and handle."
   extended computation (if so, use 'thread' instead). Returns a channel
   which will receive the result of the body when completed, then close."
   [& body]
-  `(thread-call-impl (^:once fn* [] ~@body) :io))
+  `(let [c# (chan 1)]
+     (-> (^:once fn* [] ~@body) bound-fn* (returning-chan c#) (dispatch/exec :io))
+     c#))
 
 ;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
