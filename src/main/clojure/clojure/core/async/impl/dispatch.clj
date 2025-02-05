@@ -44,22 +44,7 @@
    any use of the async thread pool."
   (delay (or (Long/getLong "clojure.core.async.pool-size") 8)))
 
-(defn thread-pool-executor
-  ([]
-    (thread-pool-executor nil))
-  ([init-fn]
-   (let [executor-svc (Executors/newFixedThreadPool
-                        @pool-size
-                        (counted-thread-factory "async-dispatch-%d" true
-                          {:init-fn init-fn}))]
-     (reify impl/Executor
-       (impl/exec [_ r]
-         (.execute executor-svc ^Runnable r))))))
-
 (defonce ^:private in-dispatch (ThreadLocal.))
-
-(defonce executor
-  (delay (thread-pool-executor #(.set ^ThreadLocal in-dispatch true))))
 
 (defn in-dispatch-thread?
   "Returns true if the current thread is a go block dispatch pool thread"
@@ -84,15 +69,17 @@
   [workflow]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workflow) "-%d") true)))
 
-(defn- default-construct-executor
-  [workload]
-  (case workload
-    :compute (executor-ctor :compute)
-    :io      (executor-ctor :io)
-    :mixed   (executor-ctor :mixed)))
+(def ^:private default-construct-executor
+  (memoize
+   (fn [workload]
+     (case workload
+       :compute (executor-ctor :compute)
+       :io      (executor-ctor :io)
+       :mixed   (executor-ctor :mixed)
+       :core-async-dispatch (default-construct-executor :io)))))
 
 (defn construct-executor
-  [workload]
+  ^ExecutorService [workload]
   (if-let [sysprop-ctor (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
                           (requiring-resolve (symbol esf)))]
     (or (sysprop-ctor workload) (default-construct-executor workload))
@@ -107,6 +94,12 @@
   [^Runnable r workload]
   (let [^ExecutorService e (executor-for workload)]
     (.execute e r)))
+
+(defonce executor
+  (delay (let [executor-svc (construct-executor :core-async-dispatch)]
+           (reify impl/Executor
+             (impl/exec [_ r]
+               (.execute executor-svc ^Runnable r))))))
 
 (defn run
   "Runs Runnable r on current thread when :on-caller? meta true, else in a thread pool thread."
