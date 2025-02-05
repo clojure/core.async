@@ -96,7 +96,7 @@
     (.execute e r)))
 
 (defonce executor
-  (delay (let [executor-svc (construct-executor :core-async-dispatch)]
+  (delay (let [^ExecutorService executor-svc (construct-executor :core-async-dispatch)]
            (reify impl/Executor
              (impl/exec [_ r]
                (.execute executor-svc ^Runnable r))))))
