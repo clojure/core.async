@@ -82,20 +82,21 @@
 
 (defn- executor-ctor
   [workflow]
-  #(Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name %) "-%d") true)))
+  (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workflow) "-%d") true)))
 
-(def ^:private workflow->es-ctor
-  {:compute (executor-ctor :compute)
-   :io      (executor-ctor :io)
-   :mixed   (executor-ctor :mixed)})
+(defn- default-construct-executor
+  [workload]
+  (case workload
+    :compute (executor-ctor :compute)
+    :io      (executor-ctor :io)
+    :mixed   (executor-ctor :mixed)))
 
 (defn construct-executor
   [workload]
-  (let [default-ctor (workflow->es-ctor workload)]
-    (if-let [sysprop-ctor (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
-                            (requiring-resolve (symbol esf)))]
-      (or (sysprop-ctor workload) (default-ctor workload))
-      (default-ctor workload))))
+  (if-let [sysprop-ctor (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
+                          (requiring-resolve (symbol esf)))]
+    (or (sysprop-ctor workload) (default-construct-executor workload))
+    (default-construct-executor workload)))
 
 (def executor-for
   {:compute (construct-executor :compute)
