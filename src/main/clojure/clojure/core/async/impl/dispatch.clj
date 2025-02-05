@@ -80,49 +80,37 @@
       (.uncaughtException (Thread/currentThread) ex))
   nil)
 
-(def ^:private workflow->es-factory-props
-  {:compute {:sys-prop "clojure.core.async.compute-es-fn"
-             :default  #(Executors/newCachedThreadPool (counted-thread-factory "async-compute-%d" true))}
-   :io      {:sys-prop "clojure.core.async.io-es-fn"
-             :default #(Executors/newCachedThreadPool (counted-thread-factory "async-io-%d" true))}
-   :mixed   {:sys-prop "clojure.core.async.mixed-es-fn"
-             :default #(Executors/newCachedThreadPool (counted-thread-factory "async-mixed-%d" true))}})
+(defn- executor-ctor
+  [workflow]
+  #(Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name %) "-%d") true)))
 
-(defn construct-es
+(def ^:private workflow->es-ctor
+  {:compute (executor-ctor :compute)
+   :io      (executor-ctor :io)
+   :mixed   (executor-ctor :mixed)})
+
+(defn construct-executor
   [workload]
-  (let [{:keys [sys-prop default]} (workflow->es-factory-props workload)
-        es-fn (or (when-let [esf (and sys-prop (System/getProperty sys-prop))]
-                    (requiring-resolve (symbol esf)))
-                  default)]
-    (if es-fn
-      (es-fn)
-      (throw (IllegalArgumentException. (str "Illegal workload tag " workload))))))
+  (let [default-ctor (workflow->es-ctor workload)]
+    (if-let [sysprop-ctor (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
+                            (requiring-resolve (symbol esf)))]
+      (or (sysprop-ctor workload) (default-ctor workload))
+      (default-ctor workload))))
 
-(defonce ^ExecutorService mixed-executor (construct-es :mixed))
-
-(defonce ^ExecutorService io-executor (construct-es :io))
-
-(defonce ^ExecutorService compute-executor (construct-es :compute))
-
-(defn es-for [workload]
-  (case workload
-    :compute compute-executor
-    :io io-executor
-    :mixed mixed-executor
-    nil))
+(def executor-for
+  {:compute (construct-executor :compute)
+   :io (construct-executor :io)
+   :mixed (construct-executor :mixed)})
 
 (defn exec
   [^Runnable r workload]
-  (if-let [^ExecutorService e (es-for workload)]
-    (.execute e r)
-    (impl/exec @executor r)))
+  (let [^ExecutorService e (executor-for workload)]
+    (.execute e r)))
 
 (defn run
   "Runs Runnable r on current thread when :on-caller? meta true, else in a thread pool thread."
-  ([^Runnable r]
-   (if (-> r meta :on-caller?)
-     (try (.run r) (catch Throwable t (ex-handler t)))
-     (exec r nil)))
-  ([^Runnable r workload]
-   (exec r workload)))
+  [^Runnable r]
+  (if (-> r meta :on-caller?)
+    (try (.run r) (catch Throwable t (ex-handler t)))
+    (impl/exec @executor r)))
 
