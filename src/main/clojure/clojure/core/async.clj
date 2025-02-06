@@ -462,41 +462,42 @@ to catch and handle."
   [& body]
   (#'clojure.core.async.impl.go/go-impl &env body))
 
-(defn returning-chan [f c]
-  (fn []
-    (try
-      (let [ret (f)]
-        (when-not (nil? ret)
-          (>!! c ret)))
-      (finally (close! c)))))
-
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
-  f when completed, then close."
-  [f]
-  (let [c (chan 1)]
-    (-> f bound-fn* (returning-chan c) (dispatch/exec :mixed))
-    c))
+  f when completed, then close. workload is a keyword that describes
+  the expected profile of the work performed by f, where:
+
+  :io - may do blocking I/O but must not do extended computation
+  :compute - must not ever block
+  :mixed - anything else
+
+  Calls without a workload are assumed :mixed."
+  ([f] (thread-call f :mixed))
+  ([f workload]
+   (let [c (chan 1)
+         returning-to-chan (fn [bf]
+                             #(try
+                                (when-some [ret (bf)]
+                                  (>!! c ret))
+                                (finally (close! c))))]
+     (-> f bound-fn* returning-to-chan (dispatch/exec workload))
+     c)))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
   calling thread. Returns a channel which will receive the result of
   the body when completed, then close."
   [& body]
-  `(let [c# (chan 1)]
-     (-> (^:once fn* [] ~@body) bound-fn* (returning-chan c#) (dispatch/exec :mixed))
-     c#))
+  `(thread-call (^:once fn* [] ~@body) :mixed))
 
 (defmacro io-thread
-  "Executes the body in a thread intended for blocking I/O workloads,
-  returning immediately to the calling thread. The body must not do
-  extended computation (if so, use 'thread' instead). Returns a channel
-  which will receive the result of the body when completed, then close."
+  "Executes the body in a thread, returning immediately to the calling
+  thread. The body may do blocking I/O but must not do extended computation.
+  Returns a channel which will receive the result of the body when completed,
+  then close."
   [& body]
-  `(let [c# (chan 1)]
-     (-> (^:once fn* [] ~@body) bound-fn* (returning-chan c#) (dispatch/exec :io))
-     c#))
+  `(thread-call (^:once fn* [] ~@body) :io))
 
 ;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
