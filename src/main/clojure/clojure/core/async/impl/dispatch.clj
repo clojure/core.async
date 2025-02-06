@@ -85,10 +85,11 @@
     (or (sysprop-ctor workload) (default-construct-executor workload))
     (default-construct-executor workload)))
 
-(def executor-for
-  {:compute (construct-executor :compute)
-   :io (construct-executor :io)
-   :mixed (construct-executor :mixed)})
+(defn executor-for [workload]
+  (case workload
+    :compute (construct-executor :compute)
+    :io (construct-executor :io)
+    :mixed (construct-executor :mixed)))
 
 (defn exec
   [^Runnable r workload]
