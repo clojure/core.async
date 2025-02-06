@@ -71,27 +71,41 @@
   [workflow]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workflow) "-%d") true)))
 
-(def ^:private default-executor-factory
-  (memoize
-   (fn [workload]
-     (case workload
-       :compute (make-ctp-named :compute)
-       :io      (make-ctp-named :io)
-       :mixed   (make-ctp-named :mixed)
-       :core-async-dispatch (make-ctp-named :io)))))
-
-(defn construct-executor
-  ^ExecutorService [workload]
-  (if-let [sysprop-ctor (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
-                          (requiring-resolve (symbol esf)))]
-    (or (sysprop-ctor workload) (default-executor-factory workload))
-    (default-executor-factory workload)))
-
-(defn executor-for [workload]
+(defn ^:private default-executor-factory
+  [workload]
   (case workload
-    :compute (construct-executor :compute)
-    :io (construct-executor :io)
-    :mixed (construct-executor :mixed)))
+    :compute (make-ctp-named :compute)
+    :io      (make-ctp-named :io)
+    :mixed   (make-ctp-named :mixed)))
+
+(def executor-for
+  "Given a workload tag, returns an ExecutorService instance and memoizes the result. By
+  default, core.async will construct a specialized ExecutorService instance for each tag
+  according to the following tags and their expected workload profiles:
+
+  :io - may do blocking I/O but must not do extended computation
+  :compute - must not ever block
+  :mixed - anything else
+
+  This function will attempt to lookup a user-defined ExecutorService factory in the
+  clojure.core.async.executor-factory system property, which should hold a string naming a
+  namespace qualified var. The factory should accept a tag as listed above and return an
+  ExecutorService instance for that workload or nil to accept the core.async default.
+
+  A user-defined ExecutorService factory may additionally accept a tag :core-async-dispatch
+  and return a specialized core.async dispatch executor service. If the user factory returns
+  nil instead then core.async will use the :io executor service (which may be handled by the
+  user factory)."
+  (memoize
+   (fn ^ExecutorService [workload]
+     (if-let [sysprop-factory (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
+                                (requiring-resolve (symbol esf)))]
+       (if-let [sys-es (sysprop-factory workload)]
+         sys-es
+         (if (= workload :core-async-dispatch)
+           (executor-for :io)
+           (default-executor-factory workload)))
+       (default-executor-factory workload)))))
 
 (defn exec
   [^Runnable r workload]
