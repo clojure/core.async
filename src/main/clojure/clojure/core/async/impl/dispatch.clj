@@ -13,6 +13,10 @@
 
 (set! *warn-on-reflection* true)
 
+(defonce ^:private in-dispatch (ThreadLocal.))
+
+(defonce executor nil)
+
 (defn counted-thread-factory
   "Create a ThreadFactory that maintains a counter for naming Threads.
      name-format specifies thread names - use %d to include counter
@@ -44,8 +48,6 @@
    any use of the async thread pool."
   (delay (or (Long/getLong "clojure.core.async.pool-size") 8)))
 
-(defonce ^:private in-dispatch (ThreadLocal.))
-
 (defn in-dispatch-thread?
   "Returns true if the current thread is a go block dispatch pool thread"
   []
@@ -65,25 +67,25 @@
       (.uncaughtException (Thread/currentThread) ex))
   nil)
 
-(defn- executor-ctor
+(defn- make-ctp-named
   [workflow]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workflow) "-%d") true)))
 
-(def ^:private default-construct-executor
+(def ^:private default-executor-factory
   (memoize
    (fn [workload]
      (case workload
-       :compute (executor-ctor :compute)
-       :io      (executor-ctor :io)
-       :mixed   (executor-ctor :mixed)
-       :core-async-dispatch (default-construct-executor :io)))))
+       :compute (make-ctp-named :compute)
+       :io      (make-ctp-named :io)
+       :mixed   (make-ctp-named :mixed)
+       :core-async-dispatch (make-ctp-named :io)))))
 
 (defn construct-executor
   ^ExecutorService [workload]
   (if-let [sysprop-ctor (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
                           (requiring-resolve (symbol esf)))]
-    (or (sysprop-ctor workload) (default-construct-executor workload))
-    (default-construct-executor workload)))
+    (or (sysprop-ctor workload) (default-executor-factory workload))
+    (default-executor-factory workload)))
 
 (defn executor-for [workload]
   (case workload
@@ -96,16 +98,9 @@
   (let [^ExecutorService e (executor-for workload)]
     (.execute e r)))
 
-(defonce executor
-  (delay (let [^ExecutorService executor-svc (construct-executor :core-async-dispatch)]
-           (reify impl/Executor
-             (impl/exec [_ r]
-               (.execute executor-svc ^Runnable r))))))
-
 (defn run
   "Runs Runnable r on current thread when :on-caller? meta true, else in a thread pool thread."
   [^Runnable r]
   (if (-> r meta :on-caller?)
     (try (.run r) (catch Throwable t (ex-handler t)))
-    (impl/exec @executor r)))
-
+    (exec r :io)))
