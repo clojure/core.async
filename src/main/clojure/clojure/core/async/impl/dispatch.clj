@@ -105,7 +105,9 @@
          (if (= workload :core-async-dispatch)
            (executor-for :io)
            (default-executor-factory workload)))
-       (default-executor-factory workload)))))
+       (if (= workload :core-async-dispatch)
+           (executor-for :io)
+           (default-executor-factory workload))))))
 
 (defn exec
   [^Runnable r workload]
@@ -117,4 +119,4 @@
   [^Runnable r]
   (if (-> r meta :on-caller?)
     (try (.run r) (catch Throwable t (ex-handler t)))
-    (exec r :io)))
+    (exec r :core-async-dispatch)))
