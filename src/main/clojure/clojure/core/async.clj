@@ -466,7 +466,7 @@ to catch and handle."
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
   f when completed, then close. workload is a keyword that describes
-  the expected profile of the work performed by f, where:
+  the work performed by f, where:
 
   :io - may do blocking I/O but must not do extended computation
   :compute - must not ever block

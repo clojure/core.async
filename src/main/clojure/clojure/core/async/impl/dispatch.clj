@@ -71,7 +71,7 @@
   [workflow]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workflow) "-%d") true)))
 
-(defn ^:private default-executor-factory
+(defn ^:private create-default-executor
   [workload]
   (case workload
     :compute (make-ctp-named :compute)
@@ -101,9 +101,10 @@
      (let [sysprop-factory (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
                              (requiring-resolve (symbol esf)))
            sp-exec (and sysprop-factory (sysprop-factory workload))]
-       (if (= workload :core-async-dispatch)
-         (or sp-exec (executor-for :io))
-         (or sp-exec (default-executor-factory workload)))))))
+       (or sp-exec
+           (if (= workload :core-async-dispatch)
+             (executor-for :io)
+             (create-default-executor workload)))))))
 
 (defn exec
   [^Runnable r workload]
