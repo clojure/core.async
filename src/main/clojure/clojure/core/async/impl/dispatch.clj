@@ -98,16 +98,12 @@
   user factory)."
   (memoize
    (fn ^ExecutorService [workload]
-     (if-let [sysprop-factory (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
-                                (requiring-resolve (symbol esf)))]
-       (if-let [sys-es (sysprop-factory workload)]
-         sys-es
-         (if (= workload :core-async-dispatch)
-           (executor-for :io)
-           (default-executor-factory workload)))
+     (let [sysprop-factory (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
+                             (requiring-resolve (symbol esf)))
+           sp-exec (and sysprop-factory (sysprop-factory workload))]
        (if (= workload :core-async-dispatch)
-           (executor-for :io)
-           (default-executor-factory workload))))))
+         (or sp-exec (executor-for :io))
+         (or sp-exec (default-executor-factory workload)))))))
 
 (defn exec
   [^Runnable r workload]
