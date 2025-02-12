@@ -18,7 +18,26 @@ to validate go blocks do not invoke core.async blocking operations.
 Property is read once, at namespace load time. Recommended for use
 primarily during development. Invalid blocking calls will throw in
 go block threads - use Thread.setDefaultUncaughtExceptionHandler()
-to catch and handle."
+to catch and handle.
+
+Set the Java system property `clojure.core.async.executor-factory`
+to specify a user-defined ExecutorService factory function as a
+string naming a namespace qualified var. The factory function should
+take a keyword naming the expected workload profile for the executor
+service instance according to the following:
+
+:io - may do blocking I/O but must not do extended computation
+:compute - must not ever block
+:mixed - anything else
+
+In leiu of returning an object, the factory may return nil to signal
+to core.async to construct an instance instead.
+
+A user-defined ExecutorService factory may additionally accept a
+tag :core-async-dispatch and return a specialized core.async
+dispatch executor service. If returning nil, core.async will
+use the :io executor service (which may be handled by the
+user factory)."
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
   (:require [clojure.core.async.impl.protocols :as impl]
@@ -472,7 +491,7 @@ to catch and handle."
   :compute - must not ever block
   :mixed - anything else
 
-  Calls without a workload are assumed :mixed."
+  Calls without a workload tag are assumed :mixed."
   ([f] (thread-call f :mixed))
   ([f workload]
    (let [c (chan 1)

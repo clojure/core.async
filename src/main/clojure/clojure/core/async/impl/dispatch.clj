@@ -80,22 +80,9 @@
 
 (def executor-for
   "Given a workload tag, returns an ExecutorService instance and memoizes the result. By
-  default, core.async will construct a specialized ExecutorService instance for each tag
-  according to the following tags and their expected workload profiles:
-
-  :io - may do blocking I/O but must not do extended computation
-  :compute - must not ever block
-  :mixed - anything else
-
-  This function will attempt to lookup a user-defined ExecutorService factory in the
-  clojure.core.async.executor-factory system property, which should hold a string naming a
-  namespace qualified var. The factory should accept a tag as listed above and return an
-  ExecutorService instance for that workload or nil to accept the core.async default.
-
-  A user-defined ExecutorService factory may additionally accept a tag :core-async-dispatch
-  and return a specialized core.async dispatch executor service. If the user factory returns
-  nil instead then core.async will use the :io executor service (which may be handled by the
-  user factory)."
+  default, core.async will defer to a user factory (if provided via sys prop) or construct
+  a specialized ExecutorService instance for each tag :io, :compute, and :mixed. When
+  given the tag :core-async-dispatch it will default to the executor service for :io."
   (memoize
    (fn ^ExecutorService [workload]
      (let [sysprop-factory (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
