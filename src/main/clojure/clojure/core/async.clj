@@ -30,11 +30,11 @@ service instance according to the following:
 :compute - must not ever block
 :mixed - anything else
 
-In leiu of returning an object, the factory may return nil to signal
+In lieu of returning an object, the factory may return nil to signal
 to core.async to construct an instance instead.
 
-A user-defined ExecutorService factory may additionally accept a
-tag :core-async-dispatch and return a specialized core.async
+A user-defined factory may additionally accept a tag
+:core-async-dispatch and return a specialized core.async
 dispatch executor service. If returning nil, core.async will
 use the :io executor service (which may be handled by the
 user factory)."
