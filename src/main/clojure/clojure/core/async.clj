@@ -20,24 +20,31 @@ primarily during development. Invalid blocking calls will throw in
 go block threads - use Thread.setDefaultUncaughtExceptionHandler()
 to catch and handle.
 
-Set the Java system property `clojure.core.async.executor-factory`
-to specify a user-defined ExecutorService factory function as a
-string naming a namespace qualified var. The factory function should
-take a keyword naming the expected workload profile for the executor
-service instance according to the following:
+Use the Java system property `clojure.core.async.executor-factory`
+to specify a function that will provide ExecutorServices for
+application-wide use by core.async in lieu of its defaults. The
+property value should name a fully qualified var. The function
+will be passed a keyword indicating the context of use of the
+executor, and should return either an ExecutorService, or nil to
+use the default. Results per keyword will be cached and used for
+the remainder of the application. Possible context arguments are:
 
-:io - may do blocking I/O but must not do extended computation
-:compute - must not ever block
-:mixed - anything else
+:io - used in async/io-thread, for :io workloads in flow/process,
+and for dispatch handling if no explicit dispatch handler is
+provided (see below)
 
-In lieu of returning an object, the factory may return nil to signal
-to core.async to construct an instance instead.
+:mixed - used by async/thread and for :mixed workloads in
+flow/process
 
-A user-defined factory may additionally accept a tag
-:core-async-dispatch and return a specialized core.async
-dispatch executor service. If returning nil, core.async will
-use the :io executor service (which may be handled by the
-user factory)."
+ompute - used for :compute workloads in flow/process
+
+:core-async-dispatch - used for completion fn handling (e.g. in put!
+and take!, as well as go block IOC thunk processing) throughout
+core.async. If not supplied the ExecutorService for :io will be
+used instead.
+
+The set of contexts may grow in the future so the function should
+return nil for unexpected contexts."
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
   (:require [clojure.core.async.impl.protocols :as impl]
