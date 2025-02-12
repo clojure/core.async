@@ -489,9 +489,7 @@ user factory)."
 
   :io - may do blocking I/O but must not do extended computation
   :compute - must not ever block
-  :mixed - anything else
-
-  Calls without a workload tag are assumed :mixed."
+  :mixed - anything else (default)"
   ([f] (thread-call f :mixed))
   ([f workload]
    (let [c (chan 1)
