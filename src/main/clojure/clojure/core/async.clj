@@ -36,7 +36,7 @@ provided (see below)
 :mixed - used by async/thread and for :mixed workloads in
 flow/process
 
-ompute - used for :compute workloads in flow/process
+:compute - used for :compute workloads in flow/process
 
 :core-async-dispatch - used for completion fn handling (e.g. in put!
 and take!, as well as go block IOC thunk processing) throughout
