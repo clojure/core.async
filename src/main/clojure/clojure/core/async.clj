@@ -496,7 +496,9 @@ return nil for unexpected contexts."
 
   :io - may do blocking I/O but must not do extended computation
   :compute - must not ever block
-  :mixed - anything else (default)"
+  :mixed - anything else (default)
+
+  when workload not supplied, defaults to :mixed"
   ([f] (thread-call f :mixed))
   ([f workload]
    (let [c (chan 1)
