@@ -10,10 +10,8 @@
   (b/delete {:path "target"})
   (b/compile-clj {:basis basis, :src-dirs ["src/main/clojure"], :class-dir class-dir,
                   :filter-nses '[clojure.core.async]
-                  :ns-compile '[clojure.core.async.impl.exec.threadpool
-                                clojure.core.async.impl.protocols
+                  :ns-compile '[clojure.core.async.impl.protocols
                                 clojure.core.async.impl.mutex
-                                clojure.core.async.impl.concurrent
                                 clojure.core.async.impl.dispatch
                                 clojure.core.async.impl.ioc-macros
                                 clojure.core.async.impl.buffers
