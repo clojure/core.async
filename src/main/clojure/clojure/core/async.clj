@@ -18,7 +18,33 @@ to validate go blocks do not invoke core.async blocking operations.
 Property is read once, at namespace load time. Recommended for use
 primarily during development. Invalid blocking calls will throw in
 go block threads - use Thread.setDefaultUncaughtExceptionHandler()
-to catch and handle."
+to catch and handle.
+
+Use the Java system property `clojure.core.async.executor-factory`
+to specify a function that will provide ExecutorServices for
+application-wide use by core.async in lieu of its defaults. The
+property value should name a fully qualified var. The function
+will be passed a keyword indicating the context of use of the
+executor, and should return either an ExecutorService, or nil to
+use the default. Results per keyword will be cached and used for
+the remainder of the application. Possible context arguments are:
+
+:io - used in async/io-thread, for :io workloads in flow/process,
+and for dispatch handling if no explicit dispatch handler is
+provided (see below)
+
+:mixed - used by async/thread and for :mixed workloads in
+flow/process
+
+:compute - used for :compute workloads in flow/process
+
+:core-async-dispatch - used for completion fn handling (e.g. in put!
+and take!, as well as go block IOC thunk processing) throughout
+core.async. If not supplied the ExecutorService for :io will be
+used instead.
+
+The set of contexts may grow in the future so the function should
+return nil for unexpected contexts."
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
   (:require [clojure.core.async.impl.protocols :as impl]
@@ -29,7 +55,6 @@ to catch and handle."
             [clojure.core.async.impl.ioc-macros :as ioc]
             clojure.core.async.impl.go ;; TODO: make conditional
             [clojure.core.async.impl.mutex :as mutex]
-            [clojure.core.async.impl.concurrent :as conc]
             )
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
@@ -281,6 +306,12 @@ to catch and handle."
   (let [flag (alt-flag)
         ports (vec ports) ;; ensure vector for indexed nth
         n (count ports)
+        _ (loop [i 0] ;; check for invalid write op
+            (when (< i n)
+              (let [port (nth ports i)]
+                (when (vector? port)
+                  (assert (some? (port 1)) "can't put nil on channel")))
+              (recur (unchecked-inc i))))
         ^ints idxs (random-array n)
         priority (:priority opts)
         ret
@@ -463,33 +494,42 @@ to catch and handle."
   [& body]
   (#'clojure.core.async.impl.go/go-impl &env body))
 
-(defonce ^:private ^Executor thread-macro-executor
-  (Executors/newCachedThreadPool (conc/counted-thread-factory "async-thread-macro-%d" true)))
-
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
-  f when completed, then close."
-  [f]
-  (let [c (chan 1)]
-    (let [binds (Var/getThreadBindingFrame)]
-      (.execute thread-macro-executor
-                (fn []
-                  (Var/resetThreadBindingFrame binds)
-                  (try
-                    (let [ret (f)]
-                      (when-not (nil? ret)
-                        (>!! c ret)))
-                    (finally
-                      (close! c))))))
-    c))
+  f when completed, then close. workload is a keyword that describes
+  the work performed by f, where:
+
+  :io - may do blocking I/O but must not do extended computation
+  :compute - must not ever block
+  :mixed - anything else (default)
+
+  when workload not supplied, defaults to :mixed"
+  ([f] (thread-call f :mixed))
+  ([f workload]
+   (let [c (chan 1)
+         returning-to-chan (fn [bf]
+                             #(try
+                                (when-some [ret (bf)]
+                                  (>!! c ret))
+                                (finally (close! c))))]
+     (-> f bound-fn* returning-to-chan (dispatch/exec workload))
+     c)))
 
 (defmacro thread
   "Executes the body in another thread, returning immediately to the
   calling thread. Returns a channel which will receive the result of
   the body when completed, then close."
   [& body]
-  `(thread-call (^:once fn* [] ~@body)))
+  `(thread-call (^:once fn* [] ~@body) :mixed))
+
+(defmacro io-thread
+  "Executes the body in a thread, returning immediately to the calling
+  thread. The body may do blocking I/O but must not do extended computation.
+  Returns a channel which will receive the result of the body when completed,
+  then close."
+  [& body]
+  `(thread-call (^:once fn* [] ~@body) :io))
 
 ;;;;;;;;;;;;;;;;;;;; ops ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
