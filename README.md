@@ -65,7 +65,7 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
-* next
+* Release 1.8.711-beta1 on 2025.02.19
   * [ASYNC-256](https://clojure.atlassian.net/browse/ASYNC-256) (CLJ) Add io-thread and System property clojure.core.async.executor-factory
   * [ASYNC-255](https://clojure.atlassian.net/browse/ASYNC-255) (CLJ) alts guards against put of nil message on entry
   * Update tools.analyzer.jvm to 1.3.2
