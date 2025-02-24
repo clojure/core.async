@@ -493,6 +493,8 @@ return nil for unexpected contexts."
   [& body]
   (#'clojure.core.async.impl.go/go-impl &env body))
 
+(defonce ^:private thread-macro-executor nil)
+
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling
   thread. Returns a channel which will receive the result of calling
