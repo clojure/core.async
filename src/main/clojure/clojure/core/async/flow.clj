@@ -92,7 +92,7 @@
   "starts the entire flow from init values. The processes start paused.
   Call 'resume' or 'resume-proc' to start flow.  Returns a map with keys:
   
-  :report-chan - a core.async chan for reading.'ping' reponses
+  :report-chan - a core.async chan for reading.'ping' responses
   will show up here, as will any explicit ::flow/report outputs
   from :transform
   

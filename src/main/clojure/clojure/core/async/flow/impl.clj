@@ -11,17 +11,13 @@
             [clojure.core.async.flow :as-alias flow]
             [clojure.core.async.flow.spi :as spi]
             [clojure.core.async.flow.impl.graph :as graph]
+            [clojure.core.async.impl.dispatch :as disp]
             [clojure.walk :as walk]
             [clojure.datafy :as datafy])
   (:import [java.util.concurrent Future Executors ExecutorService TimeUnit]
            [java.util.concurrent.locks ReentrantLock]))
 
 (set! *warn-on-reflection* true)
-
-;;TODO - something specific, e.g. make aware of JDK version and vthreads
-(defonce mixed-exec clojure.lang.Agent/soloExecutor)
-(defonce io-exec clojure.lang.Agent/soloExecutor)
-(defonce compute-exec clojure.lang.Agent/pooledExecutor)
 
 (defn datafy [x]
   (condp instance? x
@@ -32,11 +28,9 @@
 
 (defn futurize ^Future [f {:keys [exec]}]
   (fn [& args]
-    (let [^ExecutorService e (case exec
-                                   :compute compute-exec
-                                   :io io-exec
-                                   :mixed mixed-exec
-                                   exec)]
+    (let [^ExecutorService e (if (instance? ExecutorService exec)
+                               exec
+                               (disp/executor-for exec))]
       (.submit e ^Callable #(apply f args)))))
 
 (defn prep-proc [ret pid {:keys [proc, args, chan-opts] :or {chan-opts {}}}]
@@ -53,12 +47,11 @@
 
 (defn create-flow
   "see lib ns for docs"
-  [{:keys [procs conns mixed-exec io-exec compute-exec]
-    :or {mixed-exec mixed-exec, io-exec io-exec, compute-exec compute-exec}}]
+  [{:keys [procs conns mixed-exec io-exec compute-exec]}]
   (let [lock (ReentrantLock.)
         chans (atom nil)
         execs {:mixed mixed-exec :io io-exec :compute compute-exec}
-        _ (assert (every? #(instance? ExecutorService %) (vals execs))
+        _ (assert (every? #(or (nil? %) (instance? ExecutorService %)) (vals execs))
                   "mixed-exe, io-exec and compute-exec must be ExecutorServices")
         pdescs (reduce-kv prep-proc {} procs)
         allopts (fn [iok] (into {} (mapcat #(map (fn [[k opts]] [[(:pid %) k] opts]) (iok %)) (vals pdescs))))
@@ -136,7 +129,7 @@
                   resolver (reify spi/Resolver
                              (get-write-chan [_ coord]
                                (write-chan coord))
-                             (get-exec [_ context] (execs context)))
+                             (get-exec [_ context] (or (execs context) (disp/executor-for context))))
                   start-proc
                   (fn [{:keys [pid proc args ins outs]}]
                     (try
