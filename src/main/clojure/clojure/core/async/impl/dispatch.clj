@@ -81,7 +81,7 @@
 (defn- make-io-executor
   []
   (if virtual-threads-available?
-    (-> (Class/.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
+    (-> (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
         (.invoke nil (make-array Class 0)))
     (make-ctp-named :io)))
 
