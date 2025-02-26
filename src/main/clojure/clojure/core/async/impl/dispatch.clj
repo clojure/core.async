@@ -81,10 +81,8 @@
 (defn- make-io-executor
   []
   (if virtual-threads-available?
-    (-> (Thread/ofVirtual)
-        (Thread$Builder/.name "async-vthread-io-" 0)
-        .factory
-        Executors/newThreadPerTaskExecutor)
+    (-> (Class/.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
+        (.invoke nil (make-array Class 0)))
     (make-ctp-named :io)))
 
 (defn ^:private create-default-executor
