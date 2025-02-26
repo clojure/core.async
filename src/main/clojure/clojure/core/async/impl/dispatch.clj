@@ -71,11 +71,27 @@
   [workflow]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workflow) "-%d") true)))
 
+(def virtual-threads-available?
+  (try
+    (Class/forName "java.lang.Thread$Builder$OfVirtual")
+    true
+    (catch ClassNotFoundException _
+      false)))
+
+(defn- make-io-executor
+  []
+  (if virtual-threads-available?
+    (-> (Thread/ofVirtual)
+        (Thread$Builder/.name "async-vthread-io-" 0)
+        .factory
+        Executors/newThreadPerTaskExecutor)
+    (make-ctp-named :io)))
+
 (defn ^:private create-default-executor
   [workload]
   (case workload
     :compute (make-ctp-named :compute)
-    :io      (make-ctp-named :io)
+    :io      (make-io-executor)
     :mixed   (make-ctp-named :mixed)))
 
 (def executor-for
