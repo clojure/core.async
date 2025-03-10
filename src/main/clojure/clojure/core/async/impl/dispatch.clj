@@ -8,7 +8,6 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.dispatch
-  (:require [clojure.core.async.impl.protocols :as impl])
   (:import [java.util.concurrent Executors ExecutorService ThreadFactory]))
 
 (set! *warn-on-reflection* true)
@@ -36,16 +35,6 @@
              (.setName (format name-format (swap! counter inc)))
              (.setDaemon daemon))))))))
 
-(defonce
-  ^{:doc "Number of processors reported by the JVM"}
-  processors (.availableProcessors (Runtime/getRuntime)))
-
-(def ^:private pool-size
-  "Value is set via clojure.core.async.pool-size system property; defaults to 8; uses a
-   delay so property can be set from code after core.async namespace is loaded but before
-   any use of the async thread pool."
-  (delay (or (Long/getLong "clojure.core.async.pool-size") 8)))
-
 ;; used only for implementing go-checking
 (def ^:private ^:dynamic *in-go-dispatch* false)
 
@@ -69,8 +58,8 @@
   nil)
 
 (defn- make-ctp-named
-  [workflow]
-  (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workflow) "-%d") true)))
+  [workload]
+  (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
 (defn ^:private create-default-executor
   [workload]
