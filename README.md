@@ -65,6 +65,10 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* Release 1.8.718-beta2 on 2025.03.10
+  * [ASYNC-259](https://clojure.atlassian.net/browse/ASYNC-259) (CLJ) Implement `clojure.core.async.go-checking` with new executor pools
+  * [ASYNC-260](https://clojure.atlassian.net/browse/ASYNC-260) (CLJ) Remove now unused property `clojure.core.async.pool-size`
+  * [ASYNC-261](https://clojure.atlassian.net/browse/ASYNC-261) (CLJ) Put clojure.core.async/thread-macro-executor var back into place
 * Release 1.8.711-beta1 on 2025.02.19
   * [ASYNC-256](https://clojure.atlassian.net/browse/ASYNC-256) (CLJ) Add io-thread and System property clojure.core.async.executor-factory
   * [ASYNC-255](https://clojure.atlassian.net/browse/ASYNC-255) (CLJ) alts guards against put of nil message on entry
