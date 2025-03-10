@@ -13,8 +13,6 @@
 
 (set! *warn-on-reflection* true)
 
-(defonce ^:private in-dispatch (ThreadLocal.))
-
 (defonce executor nil)
 
 (defn counted-thread-factory
@@ -48,15 +46,18 @@
    any use of the async thread pool."
   (delay (or (Long/getLong "clojure.core.async.pool-size") 8)))
 
+;; used only for implementing go-checking
+(def ^:private ^:dynamic *in-go-dispatch* false)
+
 (defn in-dispatch-thread?
-  "Returns true if the current thread is a go block dispatch pool thread"
+  "Returns true if the current thread is used for go block dispatch"
   []
-  (boolean (.get ^ThreadLocal in-dispatch)))
+  (boolean *in-go-dispatch*))
 
 (defn check-blocking-in-dispatch
-  "If the current thread is a dispatch pool thread, throw an exception"
+  "If the current thread is being used for go block dispatch, throw an exception"
   []
-  (when (.get ^ThreadLocal in-dispatch)
+  (when (in-dispatch-thread?)
     (throw (IllegalStateException. "Invalid blocking call in dispatch thread"))))
 
 (defn ex-handler
