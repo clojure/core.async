@@ -143,6 +143,17 @@ return nil for unexpected contexts."
   [^long msecs]
   (timers/timeout msecs))
 
+(defmacro defparkingop
+  [op doc arglist & body]
+  (let [as (mapv #(list 'quote %) arglist)
+        delegate (-> op name (str "!") symbol)]
+    `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
+       (if (dispatch/targetting-vthreads?)
+         (fn [~'& ~'args]
+           ~(list* apply delegate '[args]))
+         (fn ~arglist
+           ~@body)))))
+
 (defmacro defblockingop
   [op doc arglist & body]
   (let [as (mapv #(list 'quote %) arglist)]
@@ -167,11 +178,11 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defn <!
+(defparkingop <!
   "takes a val from port. Must be called inside a (go ...) block. Will
   return nil if closed. Will park if nothing is available."
   [port]
-  (assert nil "<! used not in (go ...) block"))
+  (assert nil ">! used not in (go ...) block"))
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
@@ -206,7 +217,7 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defn >!
+(defparkingop >!
   "puts a val into port. nil values are not allowed. Must be called
   inside a (go ...) block. Will park if no buffer space is available.
   Returns true unless port is already closed."
@@ -349,7 +360,7 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defn alts!
+(defparkingop alts!
   "Completes at most one of several channel operations. Must be called
   inside a (go ...) block. ports is a vector of channel endpoints,
   which can be either a channel to take from or a vector of
@@ -492,7 +503,9 @@ return nil for unexpected contexts."
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (#'clojure.core.async.impl.go/go-impl &env body))
+  (if (dispatch/targetting-vthreads?)
+    `(thread-call (^:once fn* [] ~@body) :io)
+    (#'clojure.core.async.impl.go/go-impl &env body)))
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling

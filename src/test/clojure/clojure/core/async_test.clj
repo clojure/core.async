@@ -194,7 +194,7 @@
       (io-thread (>!! c3 (clojure.string/reverse (<!! c2))))
       (>!! c1 "loop")
       (is (= "POOL" (<!! c3)))))
-  (testing "io-thread parking op should fail"
+  #_(testing "io-thread parking op should fail"
     (let [c1 (chan)]
       (io-thread
        (try

@@ -78,9 +78,28 @@
     (catch ClassNotFoundException _
       false)))
 
+(def aot-compiling? clojure.core/*compile-files*)
+
+(defn vthreads-directive-of
+  "Returns the value of the sysprop clojure.core.async.vthreads, that can be one
+  of three values:
+  - \"unset\" = default to ioc when aot, always
+  - \"target\" = target vthreads when compiling go and require them at runtime
+  use vthreads in io-thread when available
+  - \"avoid\" = use ioc when compiling go (will work regardless), do not use
+  vthreads for io-thread"
+  [s]
+  (= s (System/getProperty "clojure.core.async.vthreads")))
+
+(defn targetting-vthreads? []
+  (or (and aot-compiling? (vthreads-directive-of "target"))
+      (and (not aot-compiling?)
+           (not (vthreads-directive-of "avoid"))
+           virtual-threads-available?)))
+
 (defn- make-io-executor
   []
-  (if virtual-threads-available?
+  (if (targetting-vthreads?)
     (-> (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
         (.invoke nil (make-array Class 0)))
     (make-ctp-named :io)))
