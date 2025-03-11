@@ -309,8 +309,10 @@
   ManyToManyChannel
   (datafy [c]
     (let [b (.buf c)]
-      (cond->
-        {:put-count (count (.puts c))
-         :take-count (count (.takes c))
-         :closed? (impl/closed? c)}
-        b (assoc :buffer (clojure.datafy/datafy b))))))
+      (with-meta
+        (cond->
+          {:put-count (count (.puts c))
+           :take-count (count (.takes c))
+           :closed? (impl/closed? c)}
+          b (assoc :buffer (datafy/datafy b)))
+        {::datafy/obj c}))))
