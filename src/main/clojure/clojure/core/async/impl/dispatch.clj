@@ -71,13 +71,7 @@
 (def aot-compiling? clojure.core/*compile-files*)
 
 (defn vthreads-directive-of
-  "Returns the value of the sysprop clojure.core.async.vthreads, that can be one
-  of three values:
-  - \"unset\" = default to ioc when aot, always
-  - \"target\" = target vthreads when compiling go and require them at runtime
-  use vthreads in io-thread when available
-  - \"avoid\" = use ioc when compiling go (will work regardless), do not use
-  vthreads for io-thread"
+  "Compares s to the value of the sysprop clojure.core.async.vthreads."
   [s]
   (= s (System/getProperty "clojure.core.async.vthreads")))
 

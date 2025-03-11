@@ -40,7 +40,20 @@ core.async. If not supplied the ExecutorService for :io will be
 used instead.
 
 The set of contexts may grow in the future so the function should
-return nil for unexpected contexts."
+return nil for unexpected contexts.
+
+Use the Java system property `clojure.core.async.vthreads` to control
+how core.async uses JDK 21+ virtual threads. The property can be one of
+the following values:
+
+\"unset\" - default to ioc when aot, always
+
+\"target\" - target vthreads when compiling go and require them at runtime
+  use vthreads in io-thread when available
+
+\"avoid\" - use ioc when compiling go (will work regardless), do not use
+  vthreads for io-thread
+"
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
   (:require [clojure.core.async.impl.protocols :as impl]
