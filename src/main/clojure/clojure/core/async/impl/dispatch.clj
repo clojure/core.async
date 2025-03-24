@@ -62,11 +62,12 @@
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
 (def virtual-threads-available?
-  (try
-    (Class/forName "java.lang.Thread$Builder$OfVirtual")
-    true
-    (catch ClassNotFoundException _
-      false)))
+  (delay
+    (try
+      (Class/forName "java.lang.Thread$Builder$OfVirtual")
+      true
+      (catch ClassNotFoundException _
+        false))))
 
 (def aot-compiling? clojure.core/*compile-files*)
 
@@ -81,7 +82,7 @@
 (defn runtime-vthreads? []
   (and (not aot-compiling?)
        (not (vthreads-directive-of "avoid"))
-       virtual-threads-available?))
+       @virtual-threads-available?))
 
 (defn- make-io-executor
   []
