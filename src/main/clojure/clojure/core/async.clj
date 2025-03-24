@@ -156,7 +156,7 @@ unset - default to ioc when aot, always
   (let [as (mapv #(list 'quote %) arglist)
         blockingop (-> op name (str "!") symbol)]
     `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
-       (if (dispatch/targetting-vthreads?)
+       (if (dispatch/runtime-vthreads?)
          (fn [~'& ~'args]
            ~(list* apply blockingop '[args]))
          (fn ~arglist
@@ -511,7 +511,7 @@ unset - default to ioc when aot, always
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (if (dispatch/targetting-vthreads?)
+  (if (or (dispatch/aot-vthreads?) (dispatch/runtime-vthreads?))
     `(thread-call (^:once fn* [] ~@body) :io)
     (#'clojure.core.async.impl.go/go-impl &env body)))
 

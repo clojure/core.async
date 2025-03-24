@@ -75,15 +75,17 @@
   [s]
   (= s (System/getProperty "clojure.core.async.vthreads")))
 
-(defn targetting-vthreads? []
-  (or (and aot-compiling? (vthreads-directive-of "target"))
-      (and (not aot-compiling?)
-           (not (vthreads-directive-of "avoid"))
-           virtual-threads-available?)))
+(defn aot-vthreads? []
+  (and aot-compiling? (vthreads-directive-of "target")))
+
+(defn runtime-vthreads? []
+  (and (not aot-compiling?)
+       (not (vthreads-directive-of "avoid"))
+       virtual-threads-available?))
 
 (defn- make-io-executor
   []
-  (if (targetting-vthreads?)
+  (if (runtime-vthreads?)
     (-> (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
         (.invoke nil (make-array Class 0)))
     (make-ctp-named :io)))
