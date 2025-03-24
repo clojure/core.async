@@ -46,7 +46,7 @@ Use the Java system property `clojure.core.async.vthreads` to control
 how core.async uses JDK 21+ virtual threads. The property can be one of
 the following values:
 
-\"unset\" - default to ioc when aot, always
+unset - default to ioc when aot, always
 
 \"target\" - target vthreads when compiling go and require them at runtime
   use vthreads in io-thread when available
@@ -154,11 +154,11 @@ the following values:
 (defmacro defparkingop
   [op doc arglist & body]
   (let [as (mapv #(list 'quote %) arglist)
-        delegate (-> op name (str "!") symbol)]
+        blockingop (-> op name (str "!") symbol)]
     `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
        (if (dispatch/targetting-vthreads?)
          (fn [~'& ~'args]
-           ~(list* apply delegate '[args]))
+           ~(list* apply blockingop '[args]))
          (fn ~arglist
            ~@body)))))
 
