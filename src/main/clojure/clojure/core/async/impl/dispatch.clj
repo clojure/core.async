@@ -35,13 +35,24 @@
              (.setName (format name-format (swap! counter inc)))
              (.setDaemon daemon))))))))
 
-;; used only for implementing go-checking
-(def ^:private ^:dynamic *in-go-dispatch* false)
+;; go blocking checking
+
+(defonce in-go-dispatch (ThreadLocal.))
+
+(defmacro with-dispatch-thread-marking
+  [& body]
+  (if (Boolean/getBoolean "clojure.core.async.go-checking")
+    `(try
+       (.set in-go-dispatch true)
+       ~@body
+       (finally
+         (.set in-go-dispatch false)))
+    `(do ~@body)))
 
 (defn in-dispatch-thread?
   "Returns true if the current thread is used for go block dispatch"
   []
-  (boolean *in-go-dispatch*))
+  (boolean (.get ^ThreadLocal in-go-dispatch)))
 
 (defn check-blocking-in-dispatch
   "If the current thread is being used for go block dispatch, throw an exception"
