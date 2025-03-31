@@ -1041,23 +1041,19 @@
       second
       (emit-state-machine num-user-params user-transitions))))
 
-(def ^:private go-checking (Boolean/getBoolean "clojure.core.async.go-checking"))
-
 (defn go-impl
   [env body]
-  (let [crossing-env (zipmap (keys env) (repeatedly gensym))
-        run-body `(let [c# (clojure.core.async/chan 1)
-                        captured-bindings# (Var/getThreadBindingFrame)]
-                    (dispatch/run
-                      (^:once fn* []
-                        (let [~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~(vary-meta l dissoc :tag))]) crossing-env)
-                              f# ~(state-machine
-                                    `(do ~@body) 1 [crossing-env env] rt/async-custom-terminators)
-                              state# (-> (f#)
-                                       (rt/aset-all! rt/USER-START-IDX c#
-                                         rt/BINDINGS-IDX captured-bindings#))]
-                          (rt/run-state-machine-wrapped state#))))
-                    c#)]
-    (if go-checking
-      (list 'binding ['clojure.core.async.impl.dispatch/*in-go-dispatch* true] run-body)
-      run-body)))
+  (let [crossing-env (zipmap (keys env) (repeatedly gensym))]
+    `(let [c# (clojure.core.async/chan 1)
+           captured-bindings# (Var/getThreadBindingFrame)]
+       (dispatch/run
+         (^:once fn* []
+           (dispatch/with-dispatch-thread-marking
+             (let [~@(mapcat (fn [[l sym]] [sym `(^:once fn* [] ~(vary-meta l dissoc :tag))]) crossing-env)
+                   f# ~(state-machine
+                         `(do ~@body) 1 [crossing-env env] rt/async-custom-terminators)
+                   state# (-> (f#)
+                            (rt/aset-all! rt/USER-START-IDX c#
+                              rt/BINDINGS-IDX captured-bindings#))]
+               (rt/run-state-machine-wrapped state#)))))
+       c#)))
