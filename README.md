@@ -66,7 +66,7 @@ Copyright © Rich Hickey and contributors
 ## Changelog
 
 * next
-  * Revert [ASYNC-259](https://clojure.atlassian.net/browse/ASYNC-259) (CLJ) Implement `clojure.core.async.go-checking` with new executor pools
+  * [ASYNC-259](https://clojure.atlassian.net/browse/ASYNC-259) (CLJ) Update `clojure.core.async.go-checking` with new executor pools
 * Release 1.8.718-beta2 on 2025.03.10
   * [ASYNC-259](https://clojure.atlassian.net/browse/ASYNC-259) (CLJ) Implement `clojure.core.async.go-checking` with new executor pools
   * [ASYNC-260](https://clojure.atlassian.net/browse/ASYNC-260) (CLJ) Remove now unused property `clojure.core.async.pool-size`
