@@ -65,7 +65,7 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
-* next
+* Release 1.8.726-beta3 on 2025.03.31
   * [ASYNC-259](https://clojure.atlassian.net/browse/ASYNC-259) (CLJ) Update `clojure.core.async.go-checking` with new executor pools
 * Release 1.8.718-beta2 on 2025.03.10
   * [ASYNC-259](https://clojure.atlassian.net/browse/ASYNC-259) (CLJ) Implement `clojure.core.async.go-checking` with new executor pools
