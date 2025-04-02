@@ -65,6 +65,8 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* next
+  * Fix reflection warnings when using `clojure.core.async.go-checking`
 * Release 1.8.730 on 2025.04.02, effective changes since last non-beta release:
   * [ASYNC-256](https://clojure.atlassian.net/browse/ASYNC-256) (CLJ) Add `io-thread` and System property `clojure.core.async.executor-factory`
   * [ASYNC-260](https://clojure.atlassian.net/browse/ASYNC-260) (CLJ) Remove now unused property `clojure.core.async.pool-size`
