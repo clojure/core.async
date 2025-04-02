@@ -62,7 +62,6 @@ unset - default to ioc when aot, always
             [clojure.core.async.impl.timers :as timers]
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.ioc-macros :as ioc]
-            clojure.core.async.impl.go ;; TODO: make conditional
             [clojure.core.async.impl.mutex :as mutex]
             )
   (:import [java.util.concurrent.atomic AtomicLong]
@@ -71,6 +70,9 @@ unset - default to ioc when aot, always
            [java.util Arrays ArrayList]))
 
 (alias 'core 'clojure.core)
+
+(if (not (or (dispatch/aot-vthreads?) (dispatch/runtime-vthreads?)))
+  (require 'clojure.core.async.impl.go))
 
 (set! *warn-on-reflection* false)
 
@@ -513,7 +515,7 @@ unset - default to ioc when aot, always
   [& body]
   (if (or (dispatch/aot-vthreads?) (dispatch/runtime-vthreads?))
     `(thread-call (^:once fn* [] ~@body) :io)
-    (#'clojure.core.async.impl.go/go-impl &env body)))
+    ((find-var 'clojure.core.async.impl.go/go-impl) &env body)))
 
 (defonce ^:private thread-macro-executor nil)
 
