@@ -43,10 +43,10 @@
   [& body]
   (if (Boolean/getBoolean "clojure.core.async.go-checking")
     `(try
-       (.set in-go-dispatch true)
+       (.set ^ThreadLocal in-go-dispatch true)
        ~@body
        (finally
-         (.set in-go-dispatch false)))
+         (.set ^ThreadLocal in-go-dispatch false)))
     `(do ~@body)))
 
 (defn in-dispatch-thread?
