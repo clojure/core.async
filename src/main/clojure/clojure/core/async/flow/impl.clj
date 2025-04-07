@@ -166,16 +166,9 @@
       (pause [_] (send-command ::flow/pause ::flow/all))
       (resume [_] (send-command ::flow/resume ::flow/all))
       (ping [_ timeout-ms] (handle-ping ::flow/all timeout-ms))
-
       (pause-proc [_ pid] (send-command ::flow/pause pid))
       (resume-proc [_ pid] (send-command ::flow/resume pid))
-      (ping-proc [_ pid timeout-ms] (handle-ping pid timeout-ms))
-      (command-proc [_ pid command kvs]
-        (assert (and (namespace command) (not= (namespace ::flow/command) (namespace command)))
-                "extension commands must be in your own namespace")
-        (let [{:keys [control]} (running-chans)]
-          (async/>!! control (merge kvs #::flow{:command command :to pid}))))
-          
+      (ping-proc [_ pid timeout-ms] (handle-ping pid timeout-ms))         
       (inject [_ coord msgs]
         (let [{:keys [resolver]} (running-chans)
               chan (spi/get-write-chan resolver coord)]
