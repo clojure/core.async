@@ -134,12 +134,6 @@
   "like ping, but just pings the specified process"
   [g pid & {:keys [timeout-ms] :or {timeout-ms 1000}}]
   (g/ping-proc g pid timeout-ms))
-
-(defn command-proc
-  "synchronously sends a process-specific command with the given id and
-  additional kvs to the process. The cmd-id must be ns-qualified with
-  a ns you own."
-  [g pid cmd-id more-kvs] (g/command-proc g pid cmd-id more-kvs))
   
 (defn inject
   "asynchronously puts the messages on the channel corresponding to the
