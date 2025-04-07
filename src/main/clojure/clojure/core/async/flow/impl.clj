@@ -26,7 +26,7 @@
     clojure.lang.Var (symbol x)
     (datafy/datafy x)))
 
-(defn futurize ^Future [f {:keys [exec]}]
+(defn futurize [f {:keys [exec]}]
   (fn [& args]
     (let [^ExecutorService e (if (instance? ExecutorService exec)
                                exec
@@ -219,7 +219,7 @@
 
 (defn proc
   "see lib ns for docs"
-  [fm {:keys [workload compute-timeout-ms]}]
+  [fm {:keys [workload compute-timeout-ms] :or {compute-timeout-ms 5000}}]
   (let [{:keys [describe init transition transform] :as impl}
         (if (map? fm) fm {:describe fm :init fm :transition fm :transform fm})
         {:keys [params ins] :as desc} (describe)
@@ -236,10 +236,10 @@
       (describe [_] desc)
       (start [_ {:keys [pid args ins outs resolver]}]
         (assert (or (not params) args) "must provide :args if :params")
-        (let [comp? (= workload :compute)
-              transform (cond-> transform (= workload :compute)
-                                #(.get (futurize transform {:exec (spi/get-exec resolver :compute)})
-                                       compute-timeout-ms TimeUnit/MILLISECONDS))
+        (let [transform (if (= workload :compute)
+                          #(.get ^Future ((futurize transform {:exec (spi/get-exec resolver :compute)}) %1 %2 %3)
+                                 compute-timeout-ms TimeUnit/MILLISECONDS)
+                          transform)
               exs (spi/get-exec resolver (if (= workload :mixed) :mixed :io))
               state (when init (init args))
               ins (into (or ins {}) (::flow/in-ports state))

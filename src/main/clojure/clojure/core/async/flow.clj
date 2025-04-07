@@ -252,8 +252,7 @@
 
   When :compute is specified transform must not block!"
   ([fn-or-map] (process fn-or-map nil))
-  ([fn-or-map {:keys [workload timeout-ms]
-               :or {timeout-ms 5000} :as opts}]
+  ([fn-or-map {:keys [workload compute-timeout-ms] :as opts}]
    (impl/proc fn-or-map opts)))
 
 (defn lift*->step
