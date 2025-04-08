@@ -9,9 +9,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: DeLaGuardo/setup-clojure@13.1
+      - uses: DeLaGuardo/setup-clojure@13.2
         with:
-          tools-deps: '1.12.0.1488'
+          tools-deps: '1.12.0.1530'
 
       - name: Build tests
         run: clojure -M:cljs-test:adv
