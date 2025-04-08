@@ -65,6 +65,8 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* Release next
+  * [ASYNC-234](https://clojure.atlassian.net/browse/ASYNC-234) (CLJ) Inactive alt handlers hold strong references to (potentially large) caller state after the alt completes
 * Release 1.8.735 on 2025.04.02
   * Fix reflection warnings when using `clojure.core.async.go-checking`
 * Release 1.8.730 on 2025.04.02, effective changes since last non-beta release:
