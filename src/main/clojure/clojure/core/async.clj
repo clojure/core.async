@@ -339,7 +339,7 @@ return nil for unexpected contexts."
   namespace docs)."
   [ports & opts]
   (let [p (promise)
-        ret (do-alts (on-caller #(deliver p %)) ports (apply hash-map opts))]
+        ret (do-alts (on-caller (^:once fn* [v] (deliver p v))) ports (apply hash-map opts))]
     (if ret
       @ret
       (deref p))))
@@ -449,7 +449,7 @@ return nil for unexpected contexts."
 (defn ioc-alts! [state cont-block ports & {:as opts}]
   (ioc/aset-all! state ioc/STATE-IDX cont-block)
   (when-let [cb (clojure.core.async/do-alts
-                  (fn [val]
+                  (^:once fn* [val]
                     (ioc/aset-all! state ioc/VALUE-IDX val)
                     (ioc/run-state-machine-wrapped state))
                   ports
