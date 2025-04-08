@@ -189,7 +189,7 @@
 (defn handle-transition
   "when transition, returns maybe new state"
   [transition status nstatus state]
-  (if (and transition (not= status nstatus))
+  (if (not= status nstatus)
     (transition state (case nstatus
                             :exit ::flow/stop
                             :running ::flow/resume
@@ -219,29 +219,25 @@
 
 (defn proc
   "see lib ns for docs"
-  [fm {:keys [workload compute-timeout-ms] :or {compute-timeout-ms 5000}}]
-  (let [{:keys [describe init transition transform] :as impl}
-        (if (map? fm) fm {:describe fm :init fm :transition fm :transform fm})
-        {:keys [params ins] :as desc} (describe)
+  [step {:keys [workload compute-timeout-ms] :or {compute-timeout-ms 5000}}]
+  (let [{:keys [params ins] :as desc} (step)
         workload (or workload (:workload desc) :mixed)]
-    (assert transform "must provide :transform")
-    (assert (or (not params) init) "must have :init if :params")
+    ;;(assert (or (not params) init) "must have :init if :params")
     (reify
       clojure.core.protocols/Datafiable
       (datafy [_]
         (let [{:keys [params ins outs]} desc]
-          (walk/postwalk datafy {:impl fm :params (-> params keys vec)
-                                 :ins (-> ins keys vec) :outs (-> outs keys vec)})))
+          (walk/postwalk datafy {:step step :desc desc})))
       spi/ProcLauncher
       (describe [_] desc)
       (start [_ {:keys [pid args ins outs resolver]}]
         (assert (or (not params) args) "must provide :args if :params")
         (let [transform (if (= workload :compute)
-                          #(.get ^Future ((futurize transform {:exec (spi/get-exec resolver :compute)}) %1 %2 %3)
+                          #(.get ^Future ((futurize step {:exec (spi/get-exec resolver :compute)}) %1 %2 %3)
                                  compute-timeout-ms TimeUnit/MILLISECONDS)
-                          transform)
+                          step)
               exs (spi/get-exec resolver (if (= workload :mixed) :mixed :io))
-              state (when init (init args))
+              state (step args)
               ins (into (or ins {}) (::flow/in-ports state))
               outs (into (or outs {}) (::flow/out-ports state))
               io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
@@ -261,7 +257,7 @@
                        (try
                          (if (= status :paused)
                            (let [nstatus (handle-command status (async/<!! control))
-                                 nstate (handle-transition transition status nstatus state)]
+                                 nstate (handle-transition step status nstatus state)]
                              [nstatus nstate count read-ins])
                            ;;:running
                            (let [ ;;TODO rotate/randomize after control per normal alts?
@@ -275,13 +271,13 @@
                                  cid (io-id c)]
                              (if (= c control)
                                (let [nstatus (handle-command status msg)
-                                     nstate (handle-transition transition status nstatus state)]
+                                     nstate (handle-transition step status nstatus state)]
                                  [nstatus nstate count read-ins])
                                (try
                                  (let [[nstate outputs] (transform state cid msg)
                                        [nstatus nstate]
                                        (send-outputs status nstate outputs outs
-                                                     resolver control handle-command transition)]
+                                                     resolver control handle-command step)]
                                    [nstatus nstate (inc count) (if (some? msg)
                                                                  read-ins
                                                                  (dissoc read-ins cid))])
