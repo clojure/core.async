@@ -37,8 +37,10 @@
   :aot {:extra-paths ["target/classes"]}
   :vthreads {:jvm-opts ["-Dclojure.core.async.vthreads=target"]}
   :no-vthreads {:jvm-opts ["-Dclojure.core.async.vthreads=avoid"]}
+  :go-check {:jvm-opts ["-Dclojure.core.async.go-checking=true"]}
 
   ;; clj -X:dev:test :dirs '["src/test/clojure"]'
+  ;; clj -X:dev:go-check:test :dirs '["src/test/clojure"]'
   ;; clj -X:dev:vthreads:test :dirs '["src/test/clojure"]'
   ;; clj -X:dev:no-vthreads:test :dirs '["src/test/clojure"]'
   ;; clj -X:aot:test :dirs '["target/classes"]' ???
