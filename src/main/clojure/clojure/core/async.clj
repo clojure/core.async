@@ -71,7 +71,7 @@ unset - default to ioc when aot, always
 
 (alias 'core 'clojure.core)
 
-(if (not (or (dispatch/aot-vthreads?) (dispatch/runtime-vthreads?)))
+(when (not (or (dispatch/aot-vthreads?) (dispatch/runtime-vthreads?)))
   (require 'clojure.core.async.impl.go))
 
 (set! *warn-on-reflection* false)

@@ -32,4 +32,16 @@
                      :doc-files ["doc/flow.md"]
                      :output-path "docs"
                      :html {:namespace-list :flat}}}
+  
+  :dev {:extra-paths ["src/test/clojure"]}
+  :aot {:extra-paths ["target/classes"]}
+  :vthreads {:jvm-opts ["-Dclojure.core.async.vthreads=target"]}
+  :no-vthreads {:jvm-opts ["-Dclojure.core.async.vthreads=avoid"]}
+
+  ;; clj -X:dev:test :dirs '["src/test/clojure"]'
+  ;; clj -X:aot:test :dirs '["target/classes"]' ???
+  :test {:extra-deps {io.github.cognitect-labs/test-runner 
+                      {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+         :main-opts ["-m" "cognitect.test-runner"]
+         :exec-fn cognitect.test-runner.api/test}
   }}
