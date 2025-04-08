@@ -39,6 +39,8 @@
   :no-vthreads {:jvm-opts ["-Dclojure.core.async.vthreads=avoid"]}
 
   ;; clj -X:dev:test :dirs '["src/test/clojure"]'
+  ;; clj -X:dev:vthreads:test :dirs '["src/test/clojure"]'
+  ;; clj -X:dev:no-vthreads:test :dirs '["src/test/clojure"]'
   ;; clj -X:aot:test :dirs '["target/classes"]' ???
   :test {:extra-deps {io.github.cognitect-labs/test-runner 
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
