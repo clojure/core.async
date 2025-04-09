@@ -108,18 +108,21 @@
                                    nil))
                                 (async/chan (or buf-or-n 10))))
                   in-chans (zipmap (keys inopts) (map make-chan inopts))
+                  needs-mult? (fn [out ins]
+                                (or (< 1 (count ins))
+                                    (= (first out) (ffirst ins))))
                   out-chans (zipmap (keys outopts)
                                     (map (fn [[coord opts :as co]]
                                            (let [conns (conn-map coord)]
                                              (cond
                                                (empty? conns) nil
+                                               (needs-mult? coord conns) (make-chan co)
                                                ;;direct connect 1:1
-                                               (= 1 (count conns)) (in-chans (first conns))
-                                               :else (make-chan co)))) 
+                                               :else (in-chans (first conns))))) 
                                          outopts))
                   ;;mults
                   _  (doseq [[out ins] conn-map]
-                       (when (< 1 (count ins))
+                       (when (needs-mult? out ins)
                          (let [m (async/mult (out-chans out))]
                            (doseq [in ins]
                              (async/tap m (in-chans in))))))
