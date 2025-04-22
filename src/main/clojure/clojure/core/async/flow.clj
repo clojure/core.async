@@ -142,27 +142,24 @@
   [g [pid io-id :as coord] msgs] (g/inject g coord msgs))
 
 (defn process
-  "Given a function of four arities (0-3), aka the 'step-fn', or a map
-  of functions corresponding thereto (described below), returns a
-  launcher that creates a process compliant with the process
+  "Given a function of four arities (0-3), aka the 'step-fn',
+  returns a launcher that creates a process compliant with the process
   protocol (see the spi/ProcLauncher doc).
 
-  The possible arities/entries for the step-fn/map are
+  The possible arities for the step-fn are
 
-  0 - :describe,
-  1 - :init,
-  2 - :transition
-  3 - :transform.
+  0 - 'describe',   () -> description
+  1 - 'init',       (arg-map) -> initial-state
+  2 - 'transition', (state transition) -> state'
+  3 - 'transform',  (state input msg) -> [state' output-map]
 
   This is the core facility for defining the logic for processes via
   ordinary functions. Using a var holding a fn as the 'step-fn' is the
   preferred method for defining a proc, as it enables
   hot-code-reloading of the proc logic in a flow, and better names in
-  datafy. You can use the map form to compose the proc logic from
-  disparate functions or to leverage the optionality of some of the
-  entry points.
+  datafy.
 
-  arity 0, or :describe - required, () -> description
+  arity 0 - 'describe', () -> description
   where description is a map with keys :params :ins and :outs, each of which
   in turn is a map of keyword to doc string, and :workload with
   possible values of :mixed :io :compute. All entries in the describe
@@ -182,14 +179,13 @@
   the proc. It will also be called by the impl in order to discover
   what channels are needed.
 
-  arity 1, or :init - optional, (arg-map) -> initial-state
+  arity 1 - 'init', (arg-map) -> initial-state
   
-  init will be called once by the process to establish any initial
+  The init arity will be called once by the process to establish any initial
   state. The arg-map will be a map of param->val, as supplied in the
   flow def. The key ::flow/pid will be added, mapped to the pid
   associated with the process (useful e.g. if the process wants to
-  refer to itself in reply-to coordinates). init must be provided if
-  'describe' returns :params.
+  refer to itself in reply-to coordinates). 
 
   Optionally, a returned init state may contain the
   keys ::flow/in-ports and/or ::flow/out-ports. These should be maps
@@ -200,26 +196,27 @@
   outside of it. Use :transition to coordinate the lifecycle of these
   external channels.
 
-  Optionally, _any_ returned state, whether from :init, :transition
-  or :transform, may contain the key ::flow/input-filter, a predicate
+  Optionally, _any_ returned state, whether from init, transition
+  or transform, may contain the key ::flow/input-filter, a predicate
   of cid. Only inputs (including in-ports) satisfying the predicate
   will be part of the next channel read set. In the absence of this
   predicate all inputs are read.
 
-  arity 2, or :transition - optional, (state transition) -> state'
+  arity 2 - 'transition', (state transition) -> state'
 
-  transition will be called when the process makes a state transition,
-  transition being one of ::flow/resume, ::flow/pause or ::flow/stop
+  The transition arity will be called when the process makes a state
+  transition, transition being one of ::flow/resume, ::flow/pause
+  or ::flow/stop
 
-  With this fn a process impl can track changes and coordinate
+  With this a process impl can track changes and coordinate
   resources, especially cleaning up any resources on :stop, since the
   process will no longer be used following that. See the SPI for
   details. state' will be the state supplied to subsequent calls.
 
-  arity 3, or :transform - required, (state in-name msg) -> [state' output]
+  arity 3 - 'transform', (state in-name msg) -> [state' output]
   where output is a map of outid->[msgs*]
 
-  The transform fn will be called every time a message arrives at any
+  The transform arity will be called every time a message arrives at any
   of the inputs. Output can be sent to none, any or all of the :outs
   enumerated, and/or an input named by a [pid inid] tuple (e.g. for
   reply-to), and/or to the ::flow/report output. A step need not
@@ -227,7 +224,7 @@
   may never be nil (per core.async channels). state' will be the state
   supplied to subsequent calls.
 
-  process accepts an option map with keys:
+  process also accepts an option map with keys:
   :workload - one of :mixed, :io or :compute
   :compute-timeout-ms - if :workload is :compute, this timeout (default 5000 msec)
                 will be used when getting the return from the future - see below
@@ -242,18 +239,38 @@
 
   When :io is specified, transform should not do extensive computation.
 
-  When :compute is specified (only allowed for :transform), each call
-  to transform will be run in a separate thread. The process loop will
-  run in an :io context (since it no longer directly calls transform,
-  all it does is I/O) and it will submit transform to the :compute
-  executor then await (blocking, for compute-timeout-ms) the
-  completion of the future returned by the executor. If the future
-  times out it will be reported on ::flow/error.
+  When :compute is specified, each call to transform will be run in a
+  separate thread. The process loop will run in an :io context (since
+  it no longer directly calls transform, all it does is I/O) and it
+  will submit transform to the :compute executor then await (blocking,
+  for compute-timeout-ms) the completion of the future returned by the
+  executor. If the future times out it will be reported
+  on ::flow/error.
 
   When :compute is specified transform must not block!"
-  ([fn-or-map] (process fn-or-map nil))
-  ([fn-or-map {:keys [workload compute-timeout-ms] :as opts}]
-   (impl/proc fn-or-map opts)))
+  ([step-fn] (process step-fn nil))
+  ([step-fn {:keys [workload compute-timeout-ms] :as opts}]
+   (impl/proc step-fn opts)))
+
+(defn map->step
+  "given a map of functions corresponding to step fn arities (see
+  'process'), returns a step fn suitable for passing to 'process'. You
+  can use this map form to compose the proc logic from disparate
+  functions or to leverage the optionality of some of the entry
+  points.
+
+  The keys in the map are:
+  :describe, arity 0 - required
+  :init, arity 1 - optional, but should be provided if 'describe' returns :params.
+  :transition, arity 2 - optional
+  :transform, arity 3 - required"
+  [{:keys [describe init transition transform]}]
+  (assert (and describe transform) "must provide :describe and :transform")
+  (fn
+    ([] (describe))
+    ([arg-map] (when init (init arg-map)))
+    ([state trans] (if transition (transition state trans) state))
+    ([state input msg] (transform state input msg))))
 
 (defn lift*->step
   "given a fn f taking one arg and returning a collection of non-nil
@@ -263,15 +280,20 @@
   (fn
     ([] {:ins {:in (str "the argument to " f)}
          :outs {:out (str "the return of " f)}})
-    ([_] nil)
-    ([_ _] nil)
-    ([_ _ msg] [nil {:out (f msg)}])))
+    ([arg-map] nil)
+    ([state transition] nil)
+    ([state input msg] [nil {:out (f msg)}])))
 
 (defn lift1->step
   "like lift*->step except taking a fn returning one value, which when
   nil will yield no output."
   [f]
-  (lift*->step #(when-some [m (f %)] (vector m))))
+  (fn
+    ([] {:ins {:in (str "the argument to " f)}
+         :outs {:out (str "the return of " f)}})
+    ([arg-map] nil)
+    ([state transition] nil)
+    ([state input msg] [nil (when-some [m (f msg)] {:out (vector m)})])))
 
 (defn futurize
   "Takes a fn f and returns a fn that takes the same arguments as f
