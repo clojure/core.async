@@ -2,6 +2,17 @@
 
 A Clojure library providing facilities for async programming and communication.
 
+## Documentation
+
+* [Rationale](https://clojure.github.io/core.async/rationale.html)
+* [API docs](https://clojure.github.io/core.async/)
+* [Code walkthrough](https://github.com/clojure/core.async/blob/master/examples/walkthrough.clj)
+
+## Presentations
+
+* [Rich Hickey on core.async](https://www.youtube.com/watch?v=yJxFPoxqzWE)
+* [Tim Baldridge on core.async](https://www.youtube.com/watch?v=enwIIGzhahw) from Clojure/conj 2013 ([code](https://github.com/halgari/clojure-conj-2013-core.async-examples)).
+* Tim Baldridge on go macro internals - [part 1](https://www.youtube.com/watch?v=R3PZMIwXN_g) [part 2](https://www.youtube.com/watch?v=SI7qtuuahhU)
 
 ## Releases and Dependency Information
 
@@ -32,18 +43,6 @@ Latest release: 1.8.741
   <version>1.8.741</version>
 </dependency>
 ```
-
-## Documentation
-
-* [Rationale](https://clojure.org/news/2013/06/28/clojure-clore-async-channels)
-* [API docs](https://clojure.github.io/core.async/)
-* [Code walkthrough](https://github.com/clojure/core.async/blob/master/examples/walkthrough.clj)
-
-## Presentations
-
-* [Rich Hickey on core.async](https://www.youtube.com/watch?v=yJxFPoxqzWE)
-* [Tim Baldridge on core.async](https://www.youtube.com/watch?v=enwIIGzhahw) from Clojure/conj 2013 ([code](https://github.com/halgari/clojure-conj-2013-core.async-examples)).
-* Tim Baldridge on go macro internals - [part 1](https://www.youtube.com/watch?v=R3PZMIwXN_g) [part 2](https://www.youtube.com/watch?v=SI7qtuuahhU)
 
 ## Contributing 
 
