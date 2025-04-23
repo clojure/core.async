@@ -32,4 +32,4 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
     - name: test with test-runner
-      run: clj -X:dev:test -Sdeps '{:deps {org.clojure/clojure {:mvn/version ${{ matrix.clojure-version }} }}}' :dirs '["src/test/clojure"]'
+      run: clojure -X:dev:test -Sdeps '{:deps {org.clojure/clojure {:mvn/version "${{ matrix.clojure-version }}"}}}' :dirs '["src/test/clojure"]'
