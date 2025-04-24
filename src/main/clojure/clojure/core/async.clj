@@ -9,10 +9,6 @@
 (ns clojure.core.async
   "Facilities for async programming and communication.
 
-go blocks are dispatched over an internal thread pool, which
-defaults to 8 threads. The size of this pool can be modified using
-the Java system property `clojure.core.async.pool-size`.
-
 Set Java system property `clojure.core.async.go-checking` to true
 to validate go blocks do not invoke core.async blocking operations.
 Property is read once, at namespace load time. Recommended for use
@@ -58,9 +54,8 @@ return nil for unexpected contexts."
             )
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
-           [java.util.concurrent Executors Executor ThreadLocalRandom]
-           [java.util Arrays ArrayList]
-           [clojure.lang Var]))
+           [java.util.concurrent ThreadLocalRandom]
+           [java.util Arrays ArrayList]))
 
 (alias 'core 'clojure.core)
 
@@ -344,7 +339,7 @@ return nil for unexpected contexts."
   namespace docs)."
   [ports & opts]
   (let [p (promise)
-        ret (do-alts (on-caller #(deliver p %)) ports (apply hash-map opts))]
+        ret (do-alts (on-caller (^:once fn* [v] (deliver p v))) ports (apply hash-map opts))]
     (if ret
       @ret
       (deref p))))
@@ -454,7 +449,7 @@ return nil for unexpected contexts."
 (defn ioc-alts! [state cont-block ports & {:as opts}]
   (ioc/aset-all! state ioc/STATE-IDX cont-block)
   (when-let [cb (clojure.core.async/do-alts
-                  (fn [val]
+                  (^:once fn* [val]
                     (ioc/aset-all! state ioc/VALUE-IDX val)
                     (ioc/run-state-machine-wrapped state))
                   ports
@@ -493,6 +488,8 @@ return nil for unexpected contexts."
   completed"
   [& body]
   (#'clojure.core.async.impl.go/go-impl &env body))
+
+(defonce ^:private thread-macro-executor nil)
 
 (defn thread-call
   "Executes f in another thread, returning immediately to the calling

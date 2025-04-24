@@ -11,17 +11,13 @@
             [clojure.core.async.flow :as-alias flow]
             [clojure.core.async.flow.spi :as spi]
             [clojure.core.async.flow.impl.graph :as graph]
+            [clojure.core.async.impl.dispatch :as disp]
             [clojure.walk :as walk]
             [clojure.datafy :as datafy])
   (:import [java.util.concurrent Future Executors ExecutorService TimeUnit]
            [java.util.concurrent.locks ReentrantLock]))
 
 (set! *warn-on-reflection* true)
-
-;;TODO - something specific, e.g. make aware of JDK version and vthreads
-(defonce mixed-exec clojure.lang.Agent/soloExecutor)
-(defonce io-exec clojure.lang.Agent/soloExecutor)
-(defonce compute-exec clojure.lang.Agent/pooledExecutor)
 
 (defn datafy [x]
   (condp instance? x
@@ -30,13 +26,11 @@
     clojure.lang.Var (symbol x)
     (datafy/datafy x)))
 
-(defn futurize ^Future [f {:keys [exec]}]
+(defn futurize [f {:keys [exec]}]
   (fn [& args]
-    (let [^ExecutorService e (case exec
-                                   :compute compute-exec
-                                   :io io-exec
-                                   :mixed mixed-exec
-                                   exec)]
+    (let [^ExecutorService e (if (instance? ExecutorService exec)
+                               exec
+                               (disp/executor-for exec))]
       (.submit e ^Callable #(apply f args)))))
 
 (defn prep-proc [ret pid {:keys [proc, args, chan-opts] :or {chan-opts {}}}]
@@ -53,12 +47,11 @@
 
 (defn create-flow
   "see lib ns for docs"
-  [{:keys [procs conns mixed-exec io-exec compute-exec]
-    :or {mixed-exec mixed-exec, io-exec io-exec, compute-exec compute-exec}}]
+  [{:keys [procs conns mixed-exec io-exec compute-exec]}]
   (let [lock (ReentrantLock.)
         chans (atom nil)
         execs {:mixed mixed-exec :io io-exec :compute compute-exec}
-        _ (assert (every? #(instance? ExecutorService %) (vals execs))
+        _ (assert (every? #(or (nil? %) (instance? ExecutorService %)) (vals execs))
                   "mixed-exe, io-exec and compute-exec must be ExecutorServices")
         pdescs (reduce-kv prep-proc {} procs)
         allopts (fn [iok] (into {} (mapcat #(map (fn [[k opts]] [[(:pid %) k] opts]) (iok %)) (vals pdescs))))
@@ -115,18 +108,21 @@
                                    nil))
                                 (async/chan (or buf-or-n 10))))
                   in-chans (zipmap (keys inopts) (map make-chan inopts))
+                  needs-mult? (fn [out ins]
+                                (or (< 1 (count ins))
+                                    (= (first out) (ffirst ins))))
                   out-chans (zipmap (keys outopts)
                                     (map (fn [[coord opts :as co]]
                                            (let [conns (conn-map coord)]
                                              (cond
                                                (empty? conns) nil
+                                               (needs-mult? coord conns) (make-chan co)
                                                ;;direct connect 1:1
-                                               (= 1 (count conns)) (in-chans (first conns))
-                                               :else (make-chan co)))) 
+                                               :else (in-chans (first conns))))) 
                                          outopts))
                   ;;mults
                   _  (doseq [[out ins] conn-map]
-                       (when (< 1 (count ins))
+                       (when (needs-mult? out ins)
                          (let [m (async/mult (out-chans out))]
                            (doseq [in ins]
                              (async/tap m (in-chans in))))))
@@ -136,7 +132,7 @@
                   resolver (reify spi/Resolver
                              (get-write-chan [_ coord]
                                (write-chan coord))
-                             (get-exec [_ context] (execs context)))
+                             (get-exec [_ context] (or (execs context) (disp/executor-for context))))
                   start-proc
                   (fn [{:keys [pid proc args ins outs]}]
                     (try
@@ -173,16 +169,9 @@
       (pause [_] (send-command ::flow/pause ::flow/all))
       (resume [_] (send-command ::flow/resume ::flow/all))
       (ping [_ timeout-ms] (handle-ping ::flow/all timeout-ms))
-
       (pause-proc [_ pid] (send-command ::flow/pause pid))
       (resume-proc [_ pid] (send-command ::flow/resume pid))
-      (ping-proc [_ pid timeout-ms] (handle-ping pid timeout-ms))
-      (command-proc [_ pid command kvs]
-        (assert (and (namespace command) (not= (namespace ::flow/command) (namespace command)))
-                "extension commands must be in your own namespace")
-        (let [{:keys [control]} (running-chans)]
-          (async/>!! control (merge kvs #::flow{:command command :to pid}))))
-          
+      (ping-proc [_ pid timeout-ms] (handle-ping pid timeout-ms))         
       (inject [_ coord msgs]
         (let [{:keys [resolver]} (running-chans)
               chan (spi/get-write-chan resolver coord)]
@@ -203,7 +192,7 @@
 (defn handle-transition
   "when transition, returns maybe new state"
   [transition status nstatus state]
-  (if (and transition (not= status nstatus))
+  (if (not= status nstatus)
     (transition state (case nstatus
                             :exit ::flow/stop
                             :running ::flow/resume
@@ -233,29 +222,25 @@
 
 (defn proc
   "see lib ns for docs"
-  [fm {:keys [workload compute-timeout-ms]}]
-  (let [{:keys [describe init transition transform] :as impl}
-        (if (map? fm) fm {:describe fm :init fm :transition fm :transform fm})
-        {:keys [params ins] :as desc} (describe)
+  [step {:keys [workload compute-timeout-ms] :or {compute-timeout-ms 5000}}]
+  (let [{:keys [params ins] :as desc} (step)
         workload (or workload (:workload desc) :mixed)]
-    (assert transform "must provide :transform")
-    (assert (or (not params) init) "must have :init if :params")
+    ;;(assert (or (not params) init) "must have :init if :params")
     (reify
       clojure.core.protocols/Datafiable
       (datafy [_]
         (let [{:keys [params ins outs]} desc]
-          (walk/postwalk datafy {:impl fm :params (-> params keys vec)
-                                 :ins (-> ins keys vec) :outs (-> outs keys vec)})))
+          (walk/postwalk datafy {:step step :desc desc})))
       spi/ProcLauncher
       (describe [_] desc)
       (start [_ {:keys [pid args ins outs resolver]}]
         (assert (or (not params) args) "must provide :args if :params")
-        (let [comp? (= workload :compute)
-              transform (cond-> transform (= workload :compute)
-                                #(.get (futurize transform {:exec (spi/get-exec resolver :compute)})
-                                       compute-timeout-ms TimeUnit/MILLISECONDS))
+        (let [transform (if (= workload :compute)
+                          #(.get ^Future ((futurize step {:exec (spi/get-exec resolver :compute)}) %1 %2 %3)
+                                 compute-timeout-ms TimeUnit/MILLISECONDS)
+                          step)
               exs (spi/get-exec resolver (if (= workload :mixed) :mixed :io))
-              state (when init (init args))
+              state (step args)
               ins (into (or ins {}) (::flow/in-ports state))
               outs (into (or outs {}) (::flow/out-ports state))
               io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
@@ -275,7 +260,7 @@
                        (try
                          (if (= status :paused)
                            (let [nstatus (handle-command status (async/<!! control))
-                                 nstate (handle-transition transition status nstatus state)]
+                                 nstate (handle-transition step status nstatus state)]
                              [nstatus nstate count read-ins])
                            ;;:running
                            (let [ ;;TODO rotate/randomize after control per normal alts?
@@ -289,13 +274,13 @@
                                  cid (io-id c)]
                              (if (= c control)
                                (let [nstatus (handle-command status msg)
-                                     nstate (handle-transition transition status nstatus state)]
+                                     nstate (handle-transition step status nstatus state)]
                                  [nstatus nstate count read-ins])
                                (try
                                  (let [[nstate outputs] (transform state cid msg)
                                        [nstatus nstate]
                                        (send-outputs status nstate outputs outs
-                                                     resolver control handle-command transition)]
+                                                     resolver control handle-command step)]
                                    [nstatus nstate (inc count) (if (some? msg)
                                                                  read-ins
                                                                  (dissoc read-ins cid))])

@@ -7,20 +7,20 @@ A Clojure library providing facilities for async programming and communication.
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
-Latest release: 1.7.701
+Latest release: 1.8.741
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "1.7.701"}
+  org.clojure/core.async {:mvn/version "1.8.741"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "1.7.701"]
+ [org.clojure/core.async "1.8.741"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -29,7 +29,7 @@ Latest release: 1.7.701
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>1.7.701</version>
+  <version>1.8.741</version>
 </dependency>
 ```
 
@@ -65,6 +65,20 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* Release 1.8.741 on 2025-04-07
+  * [ASYNC-234](https://clojure.atlassian.net/browse/ASYNC-234) (CLJ) Inactive alt handlers hold strong references to (potentially large) caller state after the alt completes
+* Release 1.8.735 on 2025.04.02
+  * Fix reflection warnings when using `clojure.core.async.go-checking`
+* Release 1.8.730 on 2025.04.02, effective changes since last non-beta release:
+  * [ASYNC-256](https://clojure.atlassian.net/browse/ASYNC-256) (CLJ) Add `io-thread` and System property `clojure.core.async.executor-factory`
+  * [ASYNC-260](https://clojure.atlassian.net/browse/ASYNC-260) (CLJ) Remove now unused property `clojure.core.async.pool-size`
+  * [ASYNC-255](https://clojure.atlassian.net/browse/ASYNC-255) (CLJ) alts guards against put of nil message on entry
+* Release 1.8.726-beta3 on 2025.03.31
+  * [ASYNC-259](https://clojure.atlassian.net/browse/ASYNC-259) (CLJ) Update `clojure.core.async.go-checking` with new executor pools
+* Release 1.8.718-beta2 on 2025.03.10
+  * [ASYNC-259](https://clojure.atlassian.net/browse/ASYNC-259) (CLJ) Implement `clojure.core.async.go-checking` with new executor pools
+  * [ASYNC-260](https://clojure.atlassian.net/browse/ASYNC-260) (CLJ) Remove now unused property `clojure.core.async.pool-size`
+  * [ASYNC-261](https://clojure.atlassian.net/browse/ASYNC-261) (CLJ) Put clojure.core.async/thread-macro-executor var back into place
 * Release 1.8.711-beta1 on 2025.02.19
   * [ASYNC-256](https://clojure.atlassian.net/browse/ASYNC-256) (CLJ) Add io-thread and System property clojure.core.async.executor-factory
   * [ASYNC-255](https://clojure.atlassian.net/browse/ASYNC-255) (CLJ) alts guards against put of nil message on entry

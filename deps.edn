@@ -10,17 +10,17 @@
   ;; For compile test purposes
   ;; clj -T:build compile
   :build
-  {:deps {io.github.clojure/tools.build {:tag "v0.10.6" :sha "52cf7d6"}}
+  {:deps {io.github.clojure/tools.build {:tag "v0.10.8" :sha "2fdfd66"}}
    :ns-default build}
 
   ;; Lint the source
   ;; clj -M:lint
-  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
+  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2025.04.07"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src"]}
 
   ;; Find outdated deps
   ;; clj -M:outdated
-  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.11.1250"}}
+  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.11.1276"}}
              :main-opts ["-m" "antq.core"]}
 
   ;; Regenerate docs in docs/
@@ -33,3 +33,4 @@
                      :output-path "docs"
                      :html {:namespace-list :flat}}}
   }}
+
