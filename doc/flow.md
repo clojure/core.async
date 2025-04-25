@@ -18,7 +18,7 @@ All you need to do in your application is:
 
 2. Define a flow by creating a data structure that enumerates the processes and the connections between their inputs and outputs, as well as various configuration settings for both.
 
-![core.async.flow concerns](https://github.com/clojure/core.async/blob/master/doc/img/flow-concerns.png?raw=true)
+<a href="https://github.com/clojure/core.async/blob/master/doc/img/flow-concerns.png?raw=true"><img src="https://github.com/clojure/core.async/blob/master/doc/img/flow-concerns.png?raw=true" alt="core.async.flow concerns" width="700"/></a>
 
 With these application inputs, c.a.flow does the rest. It inquires of the processes what channels they require, creates those channels, then instantiates the processes making all of the channel connections between them. The processes in turn start threads (in fully user-configurable thread pools), await inputs, monitor the admin control channel, and when inputs arrive make data->data calls to your application logic, taking the return from that and sending it to the designated output channels. The processes follow a protocol used by the flow to do lifecycle management and error handling.
 
