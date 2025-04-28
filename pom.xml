@@ -3,7 +3,7 @@
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
   <!-- Don't set this manually! Call script/build/update_version -->
-  <version>1.9.808-alpha1</version>
+  <version>1.9.809-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>core.async</name>
   <description>Facilities for async programming and communication in Clojure</description>
@@ -27,7 +27,7 @@
     <connection>scm:git:git://github.com/clojure/core.async.git</connection>
     <developerConnection>scm:git:git@github.com:clojure/core.async.git</developerConnection>
     <url>https://github.com/clojure/core.async</url>
-    <tag>v1.9.808-alpha1</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
