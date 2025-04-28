@@ -64,6 +64,9 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* Release 1.9.808-alpha1 on 2025-04-28
+  * First alpha release of core.async.flow - all APIs subject to change
+  * Added datafy support for channels and buffers
 * Release 1.8.741 on 2025-04-07
   * [ASYNC-234](https://clojure.atlassian.net/browse/ASYNC-234) (CLJ) Inactive alt handlers hold strong references to (potentially large) caller state after the alt completes
 * Release 1.8.735 on 2025.04.02
