@@ -14,7 +14,7 @@ __core.async.flow__ provides *concrete* implementations of two more abstractions
 
 All you need to do in your application is:
 
-1. Define ordinary, often pure, data->data functions that the processes will run in their inner loop to do the *computational* part of processing messages. These functions do not handle channels or threads or lifecycle, and do not even know they are running in a flow. They can be tested in isolation, and hot-reloaded. If they encounter a problem they can, and should, just throw an exception. The process will take care of it from there.
+1. Define ordinary, often pure, data->data functions that the processes will run in their inner loop to do the *computational* part of processing messages (aka 'step' functions). These functions do not handle channels or threads or lifecycle, and do not even know they are running in a flow. They can be tested in isolation, and hot-reloaded. If they encounter a problem they can, and should, just throw an exception. The process will take care of it from there.
 
 2. Define a flow by creating a data structure that enumerates the processes and the connections between their inputs and outputs, as well as various configuration settings for both.
 
