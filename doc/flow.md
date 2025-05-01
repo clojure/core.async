@@ -1,4 +1,4 @@
-# core.async.flow
+# Flow
 
 ## Rationale
 
