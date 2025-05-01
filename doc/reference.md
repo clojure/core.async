@@ -1,4 +1,4 @@
-# API overview
+# Reference
 
 ## Channels
 
@@ -58,7 +58,7 @@ Since it is common to combine an `alts` with a conditional return based on the a
 
 Promise channels are special channels that will accept only a single value. Once a value is put to a promise channel, all pending and future consumers will receive only that value. Future puts complete but drop the value. When the channel is closed, consumers will receive either the value (if a put occurred) or nil (if no put occurred) forever.
 
-Promise channels: [promise-chan](https://clojure.github.io/core.async/clojure.core.async.html#var-promise-chan)
+* Promise channels: [promise-chan](https://clojure.github.io/core.async/clojure.core.async.html#var-promise-chan)
 
 ## Managing processes
 
