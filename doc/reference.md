@@ -122,11 +122,3 @@ Because the core.async go block thread pool is fixed size, blocking IO operation
 One common issue is the use of core.async blocking operations inside go blocks. core.async includes a debugging facility to detect this situation (other kinds of blocking operation cannot be detected so this covers only part of the problem). To enable go checking, set the Java system property `clojure.core.async.go-checking=true`. This property is read once, at namespace load time, and should be used in development or testing, not in production.
 
 When go checking is active, invalid blocking calls in a go block will throw in go block threads. By default, these will likely throw to the go block thread's uncaught exception handler and be printed, but you can use `Thread/setDefaultUncaughtExceptionHandler` to change the default behavior (or depending on your system, you may have one already that routes to logging).
-
-## More information
-
-See the following for more information:
-
-* [Rationale](https://clojure.github.io/core.async/rationale.html)
-* [API](https://clojure.github.io/core.async)
-* [Source](https://github.com/clojure/core.async)
