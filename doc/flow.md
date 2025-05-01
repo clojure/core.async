@@ -2,7 +2,7 @@
 
 ## Rationale
 
-The [rationale](rationale.html) for **core.async** says "There comes a time in all good programs when components or subsystems must stop communicating directly with one another." And core.async provides fundamental tools (channels) for doing that. 
+The [rationale](https://clojure.github.io/core.async/rationale.html) for **core.async** says "There comes a time in all good programs when components or subsystems must stop communicating directly with one another." And core.async provides fundamental tools (channels) for doing that.
 
 But using core.async well, e.g. keeping your I/O out of your computational logic, requires discipline and architectural savvy, and to do so consistently throughout an application or organization, conventions. Given channels, many architectural decisions remain regarding thread execution, backpressure, error handling etc. And often the topology of your network of communicating processes *emerges* out of the flow of control of your program as various pieces of code create threads and wire channels together, interleaved with computation, making it difficult to see the topology or administer it in one place.
 
