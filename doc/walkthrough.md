@@ -9,7 +9,7 @@ To use core.async, declare a dependency on Clojure 1.10.0 or higher and the late
 ```clojure
 {:deps
  {org.clojure/clojure {:mvn/version "1.12.0"}
-  org.clojure/core.async {:mvn/version "1.6.673"}}}
+  org.clojure/core.async {:mvn/version "1.8.741"}}}
 ```
 
 To start working with core.async, require the `clojure.core.async` namespace at the REPL:
