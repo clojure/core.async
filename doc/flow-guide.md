@@ -10,7 +10,7 @@ You provide logic to flow in the form of _step-fns_, which are wrapped into runn
 
 Step functions have four arities:
 
-<a href="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities?raw=true"><img src="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities?raw=true" alt="step-fn arities" width="700"/></a>
+<a href="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities.png?raw=true"><img src="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities.png?raw=true" alt="step-fn arities" width="700"/></a>
 
 ### describe (0 arity)
 

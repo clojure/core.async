@@ -6,7 +6,7 @@
 <h2><a href="#step-fns-and-processes" id="step-fns-and-processes"></a>Step fns and processes</h2>
 <p>You provide logic to flow in the form of <em>step-fns</em>, which are wrapped into running processes, executing in a loop. Flow manages the life cycle of the process and handles incoming and outgoing messages by putting or taking them on channels. Step-fns do not access channels directly or hold state, making them easy to test in isolation and reuse.</p>
 <p>Step functions have four arities:</p>
-<p><a href="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities?raw=true"><img src="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities?raw=true" alt="step-fn arities" width="700" /></a></p>
+<p><a href="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities.png?raw=true"><img src="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities.png?raw=true" alt="step-fn arities" width="700" /></a></p>
 <h3><a href="#describe-0-arity" id="describe-0-arity"></a>describe (0 arity)</h3>
 <p>The describe arity must return a static description of the step-fn’s :params, :ins, and :outs. Each of these is a map of name (a keyword) to docstring.</p>
 <p>For example, the describe arity might return this description for a simple step-fn:</p>
