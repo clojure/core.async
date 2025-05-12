@@ -7,7 +7,7 @@
 <p>You provide logic to flow in the form of <em>step-fns</em>, which are wrapped into running processes, executing in a loop. Flow manages the life cycle of the process and handles incoming and outgoing messages by putting or taking them on channels. Step-fns do not access channels directly or hold state, making them easy to test in isolation and reuse.</p>
 <p>Step functions have four arities:</p>
 <p><a href="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities.png?raw=true"><img src="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities.png?raw=true" alt="step-fn arities" width="700" /></a></p>
-<h3><a href="#describe-step-fn-descriptor" id="describe-step-fn-descriptor"></a>describe:  (step-fn) -&gt; descriptor</h3>
+<h3><a href="#describe-step-fn-descriptor" id="describe-step-fn-descriptor"></a>describe:  <code>(step-fn) -&gt; descriptor</code></h3>
 <p>The describe arity must return a static description of the step-fn’s :params, :ins, and :outs. Each of these is a map of name (a keyword) to docstring.</p>
 <p>For example, the describe arity might return this description for a simple step-fn:</p>
 <pre><code class="language-clojure">{:params {:size "Max size"}       ;; step-fn params
@@ -15,12 +15,12 @@
  :outs {:out "Output channel"}}   ;; output channels
 </code></pre>
 <p>The names used for input and output channels should be distinct (no overlap).</p>
-<h3><a href="#init-step-fn-arg-map-init-state" id="init-step-fn-arg-map-init-state"></a>init: (step-fn arg-map) -&gt; init-state</h3>
+<h3><a href="#init-step-fn-arg-map-init-state" id="init-step-fn-arg-map-init-state"></a>init: <code>(step-fn arg-map) -&gt; init-state</code></h3>
 <p>The init arity is called once by the process to takes a set of args from the flow def (corresponding to the params returned from the describe arity) and returns the init state of the process.</p>
-<h3><a href="#transition-step-fn-state-transition-state" id="transition-step-fn-state-transition-state"></a>transition: (step-fn state transition) -&gt; state’</h3>
+<h3><a href="#transition-step-fn-state-transition-state" id="transition-step-fn-state-transition-state"></a>transition: <code>(step-fn state transition) -&gt; state'</code></h3>
 <p>The transition arity is called any time the flow or process undergoes a lifecycle transition (::flow/start, ::flow/stop, ::flow/pause, ::flow/resume). The description arity takes the current state and returns an updated state to be used for subsequent calls.</p>
 <p>The step-fn should use the transition arity to coordinate the creation, pausing, and shutdown of external resources in a process.</p>
-<h3><a href="#transform-step-fn-state-input-msg-state-out-id-msgs" id="transform-step-fn-state-input-msg-state-out-id-msgs"></a>transform: (step-fn state input msg) -&gt; [state’ {out-id <a href="msgs">msgs</a>}]</h3>
+<h3><a href="#transform-step-fn-state-input-msg-state-out-id-msgs" id="transform-step-fn-state-input-msg-state-out-id-msgs"></a>transform: <code>(step-fn state input msg) -&gt; [state' {out-id [msgs]}]</code></h3>
 <p>The transform arity is called in a loop by the process for every message received on an input channel and returns a new state and a map of output cids to messages to return. The process will take care of sending these messages to the output channels. Output can be sent to none, any or all of the :outsenumerated, and/or an input named by a <a href="pid inid">pid inid</a> tuple (e.g. for reply-to), and/or to the ::flow/report output. A step need not output at all (output or msgs can be empyt/nil), however an output <em>message</em> may never be nil (per core.async channels).</p>
 <p>The step-fn may throw excepitons from any arity and they will be handled by flow. Exceptions thrown from the transition or transform arities, the exception will be logged on the flow’s :error-chan.</p>
 <h3><a href="#process-state" id="process-state"></a>Process state</h3>

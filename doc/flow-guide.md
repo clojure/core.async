@@ -12,7 +12,7 @@ Step functions have four arities:
 
 <a href="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities.png?raw=true"><img src="https://github.com/clojure/core.async/blob/master/doc/img/step-fn-arities.png?raw=true" alt="step-fn arities" width="700"/></a>
 
-### describe:  (step-fn) -> descriptor
+### describe:  `(step-fn) -> descriptor`
 
 The describe arity must return a static description of the step-fn's :params, :ins, and :outs. Each of these is a map of name (a keyword) to docstring.
 
@@ -26,17 +26,17 @@ For example, the describe arity might return this description for a simple step-
 
 The names used for input and output channels should be distinct (no overlap).
 
-### init: (step-fn arg-map) -> init-state
+### init: `(step-fn arg-map) -> init-state`
 
 The init arity is called once by the process to takes a set of args from the flow def (corresponding to the params returned from the describe arity) and returns the init state of the process.
 
-### transition: (step-fn state transition) -> state'
+### transition: `(step-fn state transition) -> state'`
 
 The transition arity is called any time the flow or process undergoes a lifecycle transition (::flow/start, ::flow/stop, ::flow/pause, ::flow/resume). The description arity takes the current state and returns an updated state to be used for subsequent calls.
 
 The step-fn should use the transition arity to coordinate the creation, pausing, and shutdown of external resources in a process.
 
-### transform: (step-fn state input msg) -> [state' {out-id [msgs]}]
+### transform: `(step-fn state input msg) -> [state' {out-id [msgs]}]`
 
 The transform arity is called in a loop by the process for every message received on an input channel and returns a new state and a map of output cids to messages to return. The process will take care of sending these messages to the output channels. Output can be sent to none, any or all of the :outsenumerated, and/or an input named by a [pid inid] tuple (e.g. for reply-to), and/or to the ::flow/report output. A step need not output at all (output or msgs can be empyt/nil), however an output _message_ may never be nil (per core.async channels).
 
