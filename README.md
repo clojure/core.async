@@ -2,6 +2,17 @@
 
 A Clojure library providing facilities for async programming and communication.
 
+## Documentation
+
+* [Rationale](https://clojure.github.io/core.async/rationale.html)
+* [API docs](https://clojure.github.io/core.async/)
+* [Code walkthrough](https://github.com/clojure/core.async/blob/master/examples/walkthrough.clj)
+
+## Presentations
+
+* [Rich Hickey on core.async](https://www.youtube.com/watch?v=yJxFPoxqzWE)
+* [Tim Baldridge on core.async](https://www.youtube.com/watch?v=enwIIGzhahw) from Clojure/conj 2013 ([code](https://github.com/halgari/clojure-conj-2013-core.async-examples)).
+* Tim Baldridge on go macro internals - [part 1](https://www.youtube.com/watch?v=R3PZMIwXN_g) [part 2](https://www.youtube.com/watch?v=SI7qtuuahhU)
 
 ## Releases and Dependency Information
 
@@ -33,18 +44,6 @@ Latest release: 1.8.741
 </dependency>
 ```
 
-## Documentation
-
-* [Rationale](https://clojure.org/news/2013/06/28/clojure-clore-async-channels)
-* [API docs](https://clojure.github.io/core.async/)
-* [Code walkthrough](https://github.com/clojure/core.async/blob/master/examples/walkthrough.clj)
-
-## Presentations
-
-* [Rich Hickey on core.async](https://www.youtube.com/watch?v=yJxFPoxqzWE)
-* [Tim Baldridge on core.async](https://www.youtube.com/watch?v=enwIIGzhahw) from Clojure/conj 2013 ([code](https://github.com/halgari/clojure-conj-2013-core.async-examples)).
-* Tim Baldridge on go macro internals - [part 1](https://www.youtube.com/watch?v=R3PZMIwXN_g) [part 2](https://www.youtube.com/watch?v=SI7qtuuahhU)
-
 ## Contributing 
 
 [Contributing to Clojure projects](https://clojure.org/community/contributing) requires a signed Contributor Agreement. Pull requests and GitHub issues are not accepted; please use the [core.async JIRA project](https://clojure.atlassian.net/browse/ASYNC) to report problems or enhancements.
@@ -65,6 +64,9 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* Release 1.9.808-alpha1 on 2025-04-28
+  * First alpha release of core.async.flow - all APIs subject to change
+  * Added datafy support for channels and buffers
 * Release 1.8.741 on 2025-04-07
   * [ASYNC-234](https://clojure.atlassian.net/browse/ASYNC-234) (CLJ) Inactive alt handlers hold strong references to (potentially large) caller state after the alt completes
 * Release 1.8.735 on 2025.04.02
