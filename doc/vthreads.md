@@ -21,7 +21,7 @@ The defaults and mechanisms for customization around these workloads are describ
 
 ## core.async's use of virtual threads
 
-By default, whenever core.aync runs in an environment that supports virtual threads (i.e. a version 21+ JVM), it will use virtual threads to service all `:io` workloads executed with the `io-thread` macro. Additionally, all `go` IOC dispatching will use virtual threads under the hood. 
+By default, whenever core.aync runs in an environment that supports virtual threads (i.e. a version 21+ JVM), it will use virtual threads to service all `:io` workloads executed with the `io-thread` macro. Additionally, all `go` IOC dispatching will use virtual threads under the hood.
 
 ### Specifying a factory for custom thread `ExecutorService` instances
 
