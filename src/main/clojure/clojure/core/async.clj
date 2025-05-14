@@ -46,13 +46,14 @@ Use the Java system property `clojure.core.async.vthreads` to control
 how core.async uses JDK 21+ virtual threads. The property can be one of
 the following values:
 
-unset - default to ioc when aot, always
+unset - always default to ioc when aot, and use virtual threads for
+`io-thread` blocks if available at runtime
 
-\"target\" - target vthreads when compiling go and require them at runtime
-  use vthreads in io-thread when available
+  \"target\" - target vthreads when compiling go and require them at runtime.
+use vthreads in io-thread when available
 
 \"avoid\" - use ioc when compiling go (will work regardless), do not use
-  vthreads for io-thread
+  vthreads for io-thread blocks
 "
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
