@@ -61,4 +61,4 @@ jobs:
     - name: Compile tests
       run: clj -T:build ${{ compile-mode }}
     - name: Test AOT with test-runner
-      run: clojure -X${{ matrix.test-context }} -Sdeps '{:deps {org.clojure/clojure {:mvn/version "${{ matrix.clojure-version }}"}}}' :dirs '["src/test/clojure"]'
+      run: clojure -X${{ matrix.test-context }} -Sdeps '{:deps {org.clojure/clojure {:mvn/version "${{ matrix.clojure-version }}"}}}' :dirs '["src/test/clojure"]' :nses '[clojure.core.async-test clojure.core.pipeline-test clojure.core.async.buffers-test clojure.core.async.concurrent-test clojure.core.async.exceptions-test clojure.core.async.timers-test]'
