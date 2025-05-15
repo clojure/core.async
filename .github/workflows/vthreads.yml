@@ -59,4 +59,4 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
     - name: Compile tests
-      run: clj -T:build ${{ matrix.compile-mode }}
+      run: clojure -T:build ${{ matrix.compile-mode }}
