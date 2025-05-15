@@ -7,7 +7,7 @@
                             :aliases [:dev]}))
 
 (def comp-test-nses '[clojure.core.async-test
-                      ;;clojure.core.pipeline-test
+                      clojure.core.pipeline-test
                       clojure.core.async.buffers-test
                       clojure.core.async.concurrent-test
                       clojure.core.async.exceptions-test
