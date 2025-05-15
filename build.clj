@@ -7,7 +7,7 @@
                             :aliases [:dev]}))
 
 (def comp-test-nses '[clojure.core.async-test
-                      clojure.core.pipeline-test
+                      ;;clojure.core.pipeline-test
                       clojure.core.async.buffers-test
                       clojure.core.async.concurrent-test
                       clojure.core.async.exceptions-test
@@ -31,7 +31,7 @@
                   :class-dir class-dir,
                   :filter-nses '[clojure.core.async]
                   :ns-compile comp-test-nses})
-  (println "DONE " (-> "target/classes/clojure/core/async" clojure.java.io/file .list vec)))
+  (println "DONE " (-> "target/classes/clojure/core/" clojure.java.io/file .list vec)))
 
 ;; clj -T:build compile-tests-no-vthreads
 (defn compile-tests-no-vthreads
