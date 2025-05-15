@@ -34,3 +34,21 @@ jobs:
           cache: 'maven'
     - name: Test source with test-runner
       run: clojure -X${{ matrix.test-context }} -Sdeps '{:deps {org.clojure/clojure {:mvn/version "${{ matrix.clojure-version }}"}}}' :dirs '["src/test/clojure"]'
+  test-aot:
+    strategy:
+      matrix:
+        os: [ubuntu-latest] # macOS-latest, windows-latest]
+        java-version: ["8", "11", "17", "21"]
+        clojure-version: ["1.10.3", "1.11.4", "1.12.0"]
+        test-context: [":aot:test", ":aot:test:vthreads", ":aot:test:no-vthreads", ":aot:test:go-check"]
+        compile-mode: ["compile-tests-no-vthreads", "compile-tests-vthreads"]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Set up Clojure
+      uses: DeLaGuardo/setup-clojure@13.1
+      with:
+          cli: 'latest'    
+    - name: Checkout Clojure Source Code
+      uses: actions/checkout@v4
+      with:
+          ref: ${{ github.event.inputs.asyncRef }}
