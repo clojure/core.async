@@ -30,7 +30,8 @@
                   :src-dirs ["src/test/clojure"]
                   :class-dir class-dir,
                   :filter-nses '[clojure.core.async]
-                  :ns-compile comp-test-nses}))
+                  :ns-compile comp-test-nses})
+  (println "DONE " (-> "target/classes/clojure/core/async" clojure.java.io/file .list vec)))
 
 ;; clj -T:build compile-tests-no-vthreads
 (defn compile-tests-no-vthreads
