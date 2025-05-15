@@ -38,9 +38,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest] # macOS-latest, windows-latest]
-        java-version: ["21"] #, "8", "11", "17"]
+        java-version: ["21", "8", "11", "17"]
         clojure-version: ["1.10.3", "1.11.4", "1.12.0"]
-        test-context: [":aot:test"] #, ":aot:test:vthreads", ":aot:test:no-vthreads", ":aot:test:go-check"]
+        test-context: [":aot:test", ":aot:test:vthreads", ":aot:test:no-vthreads", ":aot:test:go-check"]
         compile-mode: ["compile-tests-vthreads", "compile-tests-no-vthreads"]
     runs-on: ${{ matrix.os }}
     steps:
