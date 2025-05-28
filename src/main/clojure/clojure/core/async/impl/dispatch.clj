@@ -80,19 +80,18 @@
       (catch ClassNotFoundException _
         false))))
 
-(def aot-compiling? clojure.core/*compile-files*)
-
-(defn vthreads-directive-of
-  "Compares s to the value of the sysprop clojure.core.async.vthreads."
-  [s]
-  (= s (System/getProperty "clojure.core.async.vthreads")))
+(defn vthreads-directive
+  "Retrieves the value of the sysprop clojure.core.async.vthreads."
+  []
+  (System/getProperty "clojure.core.async.vthreads"))
 
 (defn aot-vthreads? []
-  (and aot-compiling? (vthreads-directive-of "target")))
+  (and clojure.core/*compile-files*
+       (= (vthreads-directive) "target")))
 
 (defn runtime-vthreads? []
-  (and (not aot-compiling?)
-       (not (vthreads-directive-of "avoid"))
+  (and (not clojure.core/*compile-files*)
+       (not= (vthreads-directive) "avoid")
        @virtual-threads-available?))
 
 (defn- make-io-executor
