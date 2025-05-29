@@ -58,7 +58,7 @@
 <p>Instead of the explicit thread and blocking call, we use a go block for the producer. The consumer uses a go block to take, then returns a result channel, from which we do a blocking take.</p>
 <p>== Alts</p>
 <p>One killer feature for channels over queues is the ability to wait on many channels at the same time (like a socket select). This is done with <code>alts!!</code> (ordinary threads) or <code>alts!</code> in go blocks.</p>
-<p>We can create a background thread with alts that combines inputs on either of two channels. <code>alts!!</code> takes a set of operations to perform - either a channel to take from or a <a href="channel value">channel value</a> to put and returns the value (nil for put) and channel that succeeded:</p>
+<p>We can create a background thread with alts that combines inputs on either of two channels. <code>alts!!</code> takes a set of operations to perform - either a channel to take from or a channel value to put and returns the value (nil for put) and channel that succeeded:</p>
 <pre><code class="language-clojure">(let [c1 (a/chan)
       c2 (a/chan)]
   (a/thread (while true
