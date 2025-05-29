@@ -49,7 +49,7 @@ the following values:
 unset - always default to ioc when aot, and use virtual threads for
 `io-thread` blocks if available at runtime
 
-  \"target\" - target vthreads when compiling go and require them at runtime.
+\"target\" - target vthreads when compiling go and require them at runtime.
 use vthreads in io-thread when available
 
 \"avoid\" - use ioc when compiling go (will work regardless), do not use
