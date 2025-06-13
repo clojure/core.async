@@ -85,14 +85,18 @@
   []
   (System/getProperty "clojure.core.async.vthreads"))
 
+(def compiled-vthreads-flag (vthreads-directive))
+
 (defn aot-vthreads? []
   (and clojure.core/*compile-files*
        (= (vthreads-directive) "target")))
 
-(defn runtime-vthreads? []
-  (and (not clojure.core/*compile-files*)
-       (not= (vthreads-directive) "avoid")
-       @virtual-threads-available?))
+(def runtime-vthreads?
+  (memoize
+   (fn []
+     (and (not clojure.core/*compile-files*)
+          (not= (vthreads-directive) "avoid")
+          @virtual-threads-available?))))
 
 (defn- make-io-executor
   []

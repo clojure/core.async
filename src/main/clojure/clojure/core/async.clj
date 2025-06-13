@@ -515,7 +515,11 @@ use vthreads in io-thread when available
   completed"
   [& body]
   (if (or (dispatch/aot-vthreads?) (dispatch/runtime-vthreads?))
-    `(thread-call (^:once fn* [] ~@body) :io)
+    `(if (and (= dispatch/compiled-vthreads-flag "target") (not (dispatch/runtime-vthreads?)))
+       (throw (ex-info "Code compiled to target virtual threads, but is running on a JVM without vthread support."
+                       {:compiled-vthreads-flag dispatch/compiled-vthreads-flag
+                        :runtime-jvm-version (System/getProperty "java.version")}))
+       (thread-call (^:once fn* [] ~@body) :io))
     ((find-var 'clojure.core.async.impl.go/go-impl) &env body)))
 
 (defonce ^:private thread-macro-executor nil)
