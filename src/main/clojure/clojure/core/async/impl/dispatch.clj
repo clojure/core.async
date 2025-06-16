@@ -85,8 +85,6 @@
   []
   (System/getProperty "clojure.core.async.vthreads"))
 
-(def compiled-vthreads-flag (vthreads-directive))
-
 (defn aot-vthreads? []
   (and clojure.core/*compile-files*
        (= (vthreads-directive) "target")))
@@ -97,6 +95,11 @@
      (and (not clojure.core/*compile-files*)
           (not= (vthreads-directive) "avoid")
           @virtual-threads-available?))))
+
+(defn ensure-runtime-vthreads! []
+  (when (not (runtime-vthreads?))
+    (throw (ex-info "Code compiled to target virtual threads, but is running on a JVM without vthread support."
+                    {:runtime-jvm-version (System/getProperty "java.version")}))))
 
 (defn- make-io-executor
   []
