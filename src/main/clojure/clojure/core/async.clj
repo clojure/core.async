@@ -46,14 +46,22 @@ Use the Java system property `clojure.core.async.vthreads` to control
 how core.async uses JDK 21+ virtual threads. The property can be one of
 the following values:
 
-unset - always default to ioc when aot, and use virtual threads for
-`io-thread` blocks if available at runtime
+unset - core.async will opportunistically use vthreads when available
+(≥ Java 21) and will otherwise use the old IOC impl. io-thread and :io
+thread pool will run on platform threads if vthreads are not available.
+If AOT compiling, go blocks will always use IOC so that the resulting
+bytecode works on all JVMs (so no change in compiled output)
 
-\"target\" - target vthreads when compiling go and require them at runtime.
-use vthreads in io-thread when available
+\"target\" - means that you are targeting virtual threads. At runtime
+from source, go blocks will use vthreads if available, but will fall back
+to IOC if not available. If AOT compiling, go blocks are always compiled
+as normal Clojure code to be run on vthreads and will throw at runtime
+if vthreads are not available (Java <21)
 
-\"avoid\" - use ioc when compiling go (will work regardless), do not use
-  vthreads for io-thread blocks
+\"avoid\" - means that vthreads will not be used - you can use this to
+minimize impacts if you are not yet ready to evaluate vthreads in your app.
+If AOT compiling, go blocks will use IOC. At runtime, io-thread and the
+:io thread pool use platform threads
 "
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
