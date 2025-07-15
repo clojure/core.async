@@ -73,7 +73,9 @@
   :args - a map of param->val which will be passed to the process ctor
   :chan-opts - a map of in-or-out-id->{:keys [buf-or-n xform]}, where buf-or-n
                and xform have their meanings per core.async/chan
-               the default is {:buf-or-n 10}
+               the default is {:buf-or-n 10}. For efficiency, Flow creates
+               only the in channel per in/out pair and so :chan-opts
+               should be associated with the in channel.
   
   :conns - a collection of [[from-pid outid] [to-pid inid]] tuples.
 

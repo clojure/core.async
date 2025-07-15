@@ -62,7 +62,11 @@
         conn-map (reduce (fn [ret [out in :as conn]]
                            (if (and (contains? outopts out)
                                     (contains? inopts in))
-                             (update ret out set-conj in)
+                             (if (seq (vals (get outopts out)))
+                               (throw (ex-info (str "only one channel created for connection. "
+                                                    ":chan-opts must be associated with input side.")
+                                               {:conn conn, :out-opts outopts}))
+                               (update ret out set-conj in))
                              (throw (ex-info "invalid connection" {:conn conn}))))
                          {} conns)
         running-chans #(or (deref chans) (throw (Exception. "flow not running")))
