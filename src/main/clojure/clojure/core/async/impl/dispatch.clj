@@ -85,25 +85,42 @@
   []
   (System/getProperty "clojure.core.async.vthreads"))
 
-(defn aot-vthreads? []
-  (and clojure.core/*compile-files*
-       (= (vthreads-directive) "target")))
+(defn target-vthreads? []
+  (= (vthreads-directive) "target"))
 
-(def runtime-vthreads?
+(def vthreads-available-and-allowed?
   (memoize
    (fn []
-     (and (not clojure.core/*compile-files*)
-          (not= (vthreads-directive) "avoid")
+     (and (not= (vthreads-directive) "avoid")
           @virtual-threads-available?))))
 
 (defn ensure-runtime-vthreads! []
-  (when (not (runtime-vthreads?))
+  (when (not (vthreads-available-and-allowed?))
     (throw (ex-info "Code compiled to target virtual threads, but is running on a JVM without vthread support."
                     {:runtime-jvm-version (System/getProperty "java.version")}))))
 
+(defn dynamic-require [& args]
+  (let [p (promise)
+        n *ns*
+        ll @#'clojure.core/*loaded-libs*]
+    (.start
+     (Thread.
+      (fn []
+        (deliver p
+                 (binding [*ns* n
+                           clojure.core/*loaded-libs* ll]
+                   (try
+                     (apply require args)
+                     (catch Exception e
+                       e)))))))
+    (let [res @p]
+      (if (instance? Exception res)
+        (throw res)
+        res))))
+
 (defn- make-io-executor
   []
-  (if (runtime-vthreads?)
+  (if (vthreads-available-and-allowed?)
     (-> (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
         (.invoke nil (make-array Class 0)))
     (make-ctp-named :io)))

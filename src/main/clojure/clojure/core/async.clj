@@ -58,10 +58,15 @@ to IOC if not available. If AOT compiling, go blocks are always compiled
 as normal Clojure code to be run on vthreads and will throw at runtime
 if vthreads are not available (Java <21)
 
-\"avoid\" - means that vthreads will not be used - you can use this to
-minimize impacts if you are not yet ready to evaluate vthreads in your app.
-If AOT compiling, go blocks will use IOC. At runtime, io-thread and the
-:io thread pool use platform threads
+\"avoid\" - means that vthreads will not be used by core.async - you can
+use this to minimize impacts if you are not yet ready to utilize vthreads
+in your app. If AOT compiling, go blocks will use IOC. At runtime, io-thread
+and the :io thread pool use platform threads
+
+Note: existing IOC compiled go blocks from older core.async versions continue
+to work (we retain and load the IOC state machine runtime - this does not
+require the analyzer), and you can interact with the same channels from both
+IOC and vthread code.
 "
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
@@ -80,8 +85,8 @@ If AOT compiling, go blocks will use IOC. At runtime, io-thread and the
 
 (alias 'core 'clojure.core)
 
-(when (not (or (dispatch/aot-vthreads?) (dispatch/runtime-vthreads?)))
-  (require 'clojure.core.async.impl.go))
+(def go-becomes-ioc? (not (or (dispatch/vthreads-available-and-allowed?)
+                              (dispatch/target-vthreads?))))
 
 (set! *warn-on-reflection* false)
 
@@ -163,11 +168,13 @@ If AOT compiling, go blocks will use IOC. At runtime, io-thread and the
   (timers/timeout msecs))
 
 (defmacro defparkingop
+  "Emits either parking op or reimplement as blocking op when vthreads
+  available."
   [op doc arglist & body]
   (let [as (mapv #(list 'quote %) arglist)
         blockingop (-> op name (str "!") symbol)]
     `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
-       (if (dispatch/runtime-vthreads?)
+       (if (dispatch/vthreads-available-and-allowed?)
          (fn [~'& ~'args]
            ~(list* apply blockingop '[args]))
          (fn ~arglist
@@ -198,8 +205,9 @@ If AOT compiling, go blocks will use IOC. At runtime, io-thread and the
       (deref p))))
 
 (defparkingop <!
-  "takes a val from port. Must be called inside a (go ...) block. Will
-  return nil if closed. Will park if nothing is available."
+  "takes a val from port. Must be called inside a (go ...) block, or on
+  a virtual thread. Will return nil if closed. Will park if nothing is
+  available."
   [port]
   (assert nil "<! used not in (go ...) block"))
 
@@ -238,7 +246,8 @@ If AOT compiling, go blocks will use IOC. At runtime, io-thread and the
 
 (defparkingop >!
   "puts a val into port. nil values are not allowed. Must be called
-  inside a (go ...) block. Will park if no buffer space is available.
+  inside a (go ...) block, or on a virtual thread. Will park if no buffer
+  space is available.
   Returns true unless port is already closed."
   [port val]
   (assert nil ">! used not in (go ...) block"))
@@ -381,9 +390,9 @@ If AOT compiling, go blocks will use IOC. At runtime, io-thread and the
 
 (defparkingop alts!
   "Completes at most one of several channel operations. Must be called
-  inside a (go ...) block. ports is a vector of channel endpoints,
-  which can be either a channel to take from or a vector of
-  [channel-to-put-to val-to-put], in any combination. Takes will be
+  inside a (go ...) block, or on a virtual thread. ports is a vector of
+  channel endpoints, which can be either a channel to take from or a vector
+  of [channel-to-put-to val-to-put], in any combination. Takes will be
   made as if by <!, and puts will be made as if by >!. Unless
   the :priority option is true, if more than one port operation is
   ready a non-deterministic choice will be made. If no operation is
@@ -522,10 +531,13 @@ If AOT compiling, go blocks will use IOC. At runtime, io-thread and the
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (cond (dispatch/aot-vthreads?) `(do (dispatch/ensure-runtime-vthreads!)
-                                      (thread-call (^:once fn* [] ~@body) :io))
-        (dispatch/runtime-vthreads?) `(thread-call (^:once fn* [] ~@body) :io)
-        :default ((find-var 'clojure.core.async.impl.go/go-impl) &env body)))
+  (let [rt-check-step (when clojure.core/*compile-files*
+                        '(dispatch/ensure-runtime-vthreads!))]
+    (if go-becomes-ioc?
+      (do (dispatch/dynamic-require 'clojure.core.async.impl.go)
+          ((find-var 'clojure.core.async.impl.go/go-impl) &env body))
+      `(do ~rt-check-step
+           (thread-call (^:once fn* [] ~@body) :io)))))
 
 (defonce ^:private thread-macro-executor nil)
 
