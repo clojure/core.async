@@ -88,11 +88,9 @@
 (defn target-vthreads? []
   (= (vthreads-directive) "target"))
 
-(def vthreads-available-and-allowed?
-  (memoize
-   (fn []
-     (and (not= (vthreads-directive) "avoid")
-          @virtual-threads-available?))))
+(defn vthreads-available-and-allowed? []
+  (and (not= (vthreads-directive) "avoid")
+       @virtual-threads-available?))
 
 (defn ensure-runtime-vthreads! []
   (when (not (vthreads-available-and-allowed?))
@@ -111,10 +109,9 @@
                            clojure.core/*loaded-libs* ll]
                    (try
                      (apply require args)
-                     (catch Exception e
-                       e)))))))
+                     (catch Throwable t t)))))))
     (let [res @p]
-      (if (instance? Exception res)
+      (if res
         (throw res)
         res))))
 

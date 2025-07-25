@@ -532,9 +532,9 @@ IOC and vthread code.
   completed"
   [& body]
   (let [rt-check-step (when clojure.core/*compile-files*
-                        '(dispatch/ensure-runtime-vthreads!))]
+                        `(dispatch/ensure-runtime-vthreads!))]
     (if go-becomes-ioc?
-      (do (dispatch/dynamic-require 'clojure.core.async.impl.go)
+      (do (clojure.core.async.impl.dispatch/dynamic-require 'clojure.core.async.impl.go)
           ((find-var 'clojure.core.async.impl.go/go-impl) &env body))
       `(do ~rt-check-step
            (thread-call (^:once fn* [] ~@body) :io)))))
