@@ -72,7 +72,7 @@
   [workload]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
-(def virtual-threads-available?
+(def ^:private virtual-threads-available?
   (delay
     (try
       (Class/forName "java.lang.Thread$Builder$OfVirtual")
@@ -80,7 +80,7 @@
       (catch ClassNotFoundException _
         false))))
 
-(defn vthreads-directive
+(defn- vthreads-directive
   "Retrieves the value of the sysprop clojure.core.async.vthreads."
   []
   (System/getProperty "clojure.core.async.vthreads"))
@@ -89,31 +89,13 @@
   (= (vthreads-directive) "target"))
 
 (defn vthreads-available-and-allowed? []
-  (and (not= (vthreads-directive) "avoid")
-       @virtual-threads-available?))
+  (and @virtual-threads-available?
+       (not= (vthreads-directive) "avoid")))
 
 (defn ensure-runtime-vthreads! []
   (when (not (vthreads-available-and-allowed?))
     (throw (ex-info "Code compiled to target virtual threads, but is running on a JVM without vthread support."
                     {:runtime-jvm-version (System/getProperty "java.version")}))))
-
-(defn dynamic-require [& args]
-  (let [p (promise)
-        n *ns*
-        ll @#'clojure.core/*loaded-libs*]
-    (.start
-     (Thread.
-      (fn []
-        (deliver p
-                 (binding [*ns* n
-                           clojure.core/*loaded-libs* ll]
-                   (try
-                     (apply require args)
-                     (catch Throwable t t)))))))
-    (let [res @p]
-      (if res
-        (throw res)
-        res))))
 
 (defn- make-io-executor
   []

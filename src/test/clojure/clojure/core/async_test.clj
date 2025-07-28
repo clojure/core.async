@@ -193,15 +193,7 @@
       (io-thread (>!! c2 (clojure.string/upper-case (<!! c1))))
       (io-thread (>!! c3 (clojure.string/reverse (<!! c2))))
       (>!! c1 "loop")
-      (is (= "POOL" (<!! c3)))))
-  #_(testing "io-thread parking op should fail"
-    (let [c1 (chan)]
-      (io-thread
-       (try
-         (>! c1 :no)
-         (catch AssertionError _
-           (>!! c1 :yes))))
-      (is (= :yes (<!! c1))))))
+      (is (= "POOL" (<!! c3))))))
 
 (deftest ops-tests
   (testing "map<"
