@@ -516,24 +516,25 @@ IOC and vthread code.
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
-(defn- dynamic-require [& args]
-  (let [p (promise)
-        n *ns*
-        ll @#'clojure.core/*loaded-libs*]
-    (.start
-     (Thread.
-      (fn []
-        (try
-          (let [result (binding [*ns* n
-                                 clojure.core/*loaded-libs* ll]
-                         (apply require args))]
-            (deliver p result))
-          (catch Throwable t
-            (deliver p t))))))
-    (let [res @p]
-      (if res
-        (throw res)
-        res))))
+(defn- dynamic-require [nsym]
+  (when (not (contains? @@#'clojure.core/*loaded-libs* nsym))
+    (let [p (promise)
+          n *ns*
+          ll @#'clojure.core/*loaded-libs*]
+      (dispatch/exec
+       (^:once fn* []
+         (try
+           (let [result (binding [*ns* n
+                                  clojure.core/*loaded-libs* ll]
+                          (require nsym))]
+             (deliver p result))
+           (catch Throwable t
+             (deliver p t))))
+       :io)
+      (let [res @p]
+        (if res
+          (throw res)
+          res)))))
 
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
@@ -554,10 +555,9 @@ IOC and vthread code.
   (if go-becomes-ioc?
     (do (dynamic-require 'clojure.core.async.impl.go)
         ((find-var 'clojure.core.async.impl.go/go-impl) &env body))
-    (let [rt-check-step (when clojure.core/*compile-files*
-                          `(dispatch/ensure-runtime-vthreads!))]
-      `(do ~rt-check-step
-           (thread-call (^:once fn* [] ~@body) :io)))))
+    `(do ~(when clojure.core/*compile-files*
+            `(dispatch/ensure-runtime-vthreads!))
+         (thread-call (^:once fn* [] ~@body) :io))))
 
 (defonce ^:private thread-macro-executor nil)
 
