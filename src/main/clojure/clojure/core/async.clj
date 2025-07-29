@@ -516,7 +516,14 @@ IOC and vthread code.
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
-(defn- dynamic-require [nsym]
+(defn- dynamic-require
+  "Like require but takes only a single namespace symbol and attempts to
+  require the namespace on a separate thread. This is done to start
+  with a fresh dynamic environment augmented only with the vars
+  needed by require to perform its job. If the namespace is
+  found to have already been loaded then this function will return
+  immediately."
+  [nsym]
   (when (not (contains? @@#'clojure.core/*loaded-libs* nsym))
     (let [p (promise)
           n *ns*
