@@ -86,8 +86,8 @@ IOC and vthread code.
 (alias 'core 'clojure.core)
 
 (def ^:private go-becomes-ioc?
-  (not (or (dispatch/vthreads-available-and-allowed?)
-           (dispatch/target-vthreads?))))
+  (not (and (dispatch/vthreads-available-and-allowed?)
+            (dispatch/target-vthreads?))))
 
 (set! *warn-on-reflection* false)
 
@@ -533,7 +533,7 @@ IOC and vthread code.
          (try
            (let [result (binding [*ns* n
                                   clojure.core/*loaded-libs* ll]
-                          (require nsym))]
+                          (#'clojure.core/serialized-require nsym))]
              (deliver p result))
            (catch Throwable t
              (deliver p t))))
