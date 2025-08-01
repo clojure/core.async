@@ -516,7 +516,7 @@ IOC and vthread code.
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
-(defn- dynamic-require
+(defn- require-fresh
   "Like require but takes only a single namespace symbol and attempts to
   require the namespace on a separate thread. This is done to start
   with a fresh dynamic environment augmented only with the vars
@@ -560,7 +560,7 @@ IOC and vthread code.
   completed"
   [& body]
   (if go-becomes-ioc?
-    (do (dynamic-require 'clojure.core.async.impl.go)
+    (do (require-fresh 'clojure.core.async.impl.go)
         ((find-var 'clojure.core.async.impl.go/go-impl) &env body))
     `(do ~(when clojure.core/*compile-files*
             `(dispatch/ensure-runtime-vthreads!))
