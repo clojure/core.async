@@ -85,10 +85,6 @@ IOC and vthread code.
 
 (alias 'core 'clojure.core)
 
-(def ^:private go-becomes-ioc?
-  (not (and (dispatch/vthreads-available-and-allowed?)
-            (dispatch/target-vthreads?))))
-
 (set! *warn-on-reflection* false)
 
 (defn fn-handler
@@ -559,7 +555,7 @@ IOC and vthread code.
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (if go-becomes-ioc?
+  (if (not (dispatch/target-vthreads?))
     (do (require-fresh 'clojure.core.async.impl.go)
         ((find-var 'clojure.core.async.impl.go/go-impl) &env body))
     `(do ~(when clojure.core/*compile-files*

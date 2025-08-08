@@ -94,8 +94,9 @@
 
 (defn ensure-runtime-vthreads! []
   (when (not (vthreads-available-and-allowed?))
-    (throw (ex-info "Code compiled to target virtual threads, but is running on a JVM without vthread support."
-                    {:runtime-jvm-version (System/getProperty "java.version")}))))
+    (throw (ex-info "Code compiled to target virtual threads, but is running without vthread support."
+                    {:runtime-jvm-version (System/getProperty "java.version")
+                     :vthreads-directive (vthreads-directive)}))))
 
 (defn- make-io-executor
   []
