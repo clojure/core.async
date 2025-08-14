@@ -53,10 +53,10 @@ If AOT compiling, go blocks will always use IOC so that the resulting
 bytecode works on all JVMs (so no change in compiled output)
 
 \"target\" - means that you are targeting virtual threads. At runtime
-from source, go blocks will use vthreads if available, but will fall back
-to IOC if not available. If AOT compiling, go blocks are always compiled
-as normal Clojure code to be run on vthreads and will throw at runtime
-if vthreads are not available (Java <21)
+from source, go blocks will throw if vthreads are not available. 
+If AOT compiling, go blocks are always compiled as normal Clojure 
+code to be run on vthreads and will throw at runtime if vthreads are
+not available (Java <21)
 
 \"avoid\" - means that vthreads will not be used by core.async - you can
 use this to minimize impacts if you are not yet ready to utilize vthreads
@@ -558,9 +558,12 @@ IOC and vthread code.
   (if (not (dispatch/target-vthreads?))
     (do (require-fresh 'clojure.core.async.impl.go)
         ((find-var 'clojure.core.async.impl.go/go-impl) &env body))
-    `(do ~(when clojure.core/*compile-files*
-            `(dispatch/ensure-runtime-vthreads!))
-         (thread-call (^:once fn* [] ~@body) :io))))
+    (if (and (not (dispatch/vthreads-available-and-allowed?))
+             (not clojure.core/*compile-files*))
+      (do (dispatch/ensure-runtime-vthreads!)
+          `(thread-call (^:once fn* [] ~@body) :io))
+      `(do (dispatch/ensure-runtime-vthreads!)
+           (thread-call (^:once fn* [] ~@body) :io)))))
 
 (defonce ^:private thread-macro-executor nil)
 
