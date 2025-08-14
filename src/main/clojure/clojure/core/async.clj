@@ -555,15 +555,15 @@ IOC and vthread code.
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (if (not (dispatch/target-vthreads?))
-    (do (require-fresh 'clojure.core.async.impl.go)
-        ((find-var 'clojure.core.async.impl.go/go-impl) &env body))
-    (if (and (not (dispatch/vthreads-available-and-allowed?))
-             (not clojure.core/*compile-files*))
-      (do (dispatch/ensure-runtime-vthreads!)
-          `(thread-call (^:once fn* [] ~@body) :io))
+  (if (dispatch/target-vthreads?)
+    (if (or (dispatch/vthreads-available-and-allowed?)
+             clojure.core/*compile-files*)
       `(do (dispatch/ensure-runtime-vthreads!)
-           (thread-call (^:once fn* [] ~@body) :io)))))
+           (thread-call (^:once fn* [] ~@body) :io))
+      (do (dispatch/ensure-runtime-vthreads!)
+          `(thread-call (^:once fn* [] ~@body) :io)))
+    (do (require-fresh 'clojure.core.async.impl.go)
+        ((find-var 'clojure.core.async.impl.go/go-impl) &env body))))
 
 (defonce ^:private thread-macro-executor nil)
 
