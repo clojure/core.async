@@ -32,7 +32,7 @@ The init arity is called once by the process to takes a set of args from the flo
 
 ### transition: `(step-fn state transition) -> state'`
 
-The transition arity is called any time the flow or process undergoes a lifecycle transition (::flow/start, ::flow/stop, ::flow/pause, ::flow/resume). The description arity takes the current state and returns an updated state to be used for subsequent calls.
+The transition arity is called any time the flow or process undergoes a lifecycle transition (::flow/start, ::flow/stop, ::flow/pause, ::flow/resume). The transition arity takes the current state and returns an updated state to be used for subsequent calls.
 
 The step-fn should use the transition arity to coordinate the creation, pausing, and shutdown of external resources in a process.
 
@@ -40,7 +40,7 @@ The step-fn should use the transition arity to coordinate the creation, pausing,
 
 The transform arity is called in a loop by the process for every message received on an input channel and returns a new state and a map of output cids to messages to return. The process will take care of sending these messages to the output channels. Output can be sent to none, any or all of the :outsenumerated, and/or an input named by a [pid inid] tuple (e.g. for reply-to), and/or to the ::flow/report output. A step need not output at all (output or msgs can be empyt/nil), however an output _message_ may never be nil (per core.async channels).
 
-The step-fn may throw excepitons from any arity and they will be handled by flow. Exceptions thrown from the transition or transform arities, the exception will be logged on the flow's :error-chan.
+The step-fn may throw exceptions from any arity and they will be handled by flow. If exceptions are thrown from the transition or transform arities, the exception will be logged on the flow's :error-chan.
 
 ### Process state
 
@@ -67,7 +67,7 @@ Process launchers can be created using the [process](https://clojure.github.io/c
 * `::workload` - one of `:mixed`, `:io` or `:compute`
 * `:compute-timeout-ms` - if :workload is :compute, this timeout (default 5000 msec) will be used when getting the return from the future - see below
 
-A :workload supplied as an option to `process` will override any :workload returned by the :describe fn of the process launcher. If neither are provded the default is :mixed.
+A :workload supplied as an option to `process` will override any :workload returned by the :describe fn of the process launcher. If neither are provided the default is :mixed.
 
 In the :workload context of :mixed or :io, this dictates the type of thread in which the process loop will run, _including its calls to transform_. 
 
