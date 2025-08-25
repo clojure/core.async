@@ -165,14 +165,14 @@ IOC and vthread code.
   (timers/timeout msecs))
 
 (defn- defparkingop-helper [op doc arglist body]
-  (let [as (mapv #(list 'quote %) arglist)
-        blockingop (-> op name (str "!") symbol)]
-    `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
-       (if dispatch/vthreads-available-and-allowed?
-         (fn [~'& ~'args]
-           ~(list* apply blockingop '[args]))
-         (fn ~arglist
-           ~@body)))))
+  (let [as (mapv #(list 'quote %) arglist)]
+    (list `def (with-meta op {:arglists `(list ~as) :doc doc})
+          (if (or dispatch/target-vthreads?
+                  (and dispatch/vthreads-available-and-allowed?
+                       (not clojure.core/*compile-files*)))
+            (let [blockingop (-> op name (str "!") symbol)]
+              `(fn [~'& ~'args] ~(list* apply blockingop '[args])))
+            `(fn ~arglist ~@body)))))
 
 (defmacro defparkingop
   "Emits either parking op or reimplement as blocking op when vthreads
