@@ -73,12 +73,11 @@
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
 (def ^:private virtual-threads-available?
-  (delay
-    (try
-      (Class/forName "java.lang.Thread$Builder$OfVirtual")
-      true
-      (catch ClassNotFoundException _
-        false))))
+  (try
+    (Class/forName "java.lang.Thread$Builder$OfVirtual")
+    true
+    (catch ClassNotFoundException _
+      false)))
 
 (defn- vthreads-directive
   "Retrieves the value of the sysprop clojure.core.async.vthreads."
@@ -89,7 +88,7 @@
   (= (vthreads-directive) "target"))
 
 (def vthreads-available-and-allowed?
-  (and @virtual-threads-available?
+  (and virtual-threads-available?
        (not= (vthreads-directive) "avoid")))
 
 (defn report-vthreads-not-available-error! []
