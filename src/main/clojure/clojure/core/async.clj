@@ -164,18 +164,21 @@ IOC and vthread code.
   [^long msecs]
   (timers/timeout msecs))
 
-(defmacro defparkingop
-  "Emits either parking op or reimplement as blocking op when vthreads
-  available."
-  [op doc arglist & body]
+(defn- defparkingop-helper [op doc arglist body]
   (let [as (mapv #(list 'quote %) arglist)
         blockingop (-> op name (str "!") symbol)]
     `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
-       (if (dispatch/vthreads-available-and-allowed?)
+       (if dispatch/vthreads-available-and-allowed?
          (fn [~'& ~'args]
            ~(list* apply blockingop '[args]))
          (fn ~arglist
            ~@body)))))
+
+(defmacro defparkingop
+  "Emits either parking op or reimplement as blocking op when vthreads
+  available."
+  [op doc arglist & body]
+  (defparkingop-helper op doc arglist body))
 
 (defmacro defblockingop
   [op doc arglist & body]
@@ -512,7 +515,7 @@ IOC and vthread code.
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
-(defn- require-fresh
+(defn- require-in-new-binding-context
   "Like require but takes only a single namespace symbol and attempts to
   require the namespace on a separate thread. This is done to start
   with a fresh dynamic environment augmented only with the vars
@@ -539,6 +542,18 @@ IOC and vthread code.
           (throw res)
           res)))))
 
+(defn- go-vthreads-helper [body env]
+  (cond (not dispatch/target-vthreads?)
+        (do (require-in-new-binding-context 'clojure.core.async.impl.go)
+            ((find-var 'clojure.core.async.impl.go/go-impl) env body))
+
+        (or dispatch/vthreads-available-and-allowed? clojure.core/*compile-files*)
+        `(do (dispatch/ensure-runtime-vthreads!)
+             (thread-call (^:once fn* [] ~@body) :io))
+
+        :default
+        (dispatch/report-vthreads-not-available-error!)))
+
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
   calling thread. Additionally, any visible calls to <!, >! and alt!/alts!
@@ -555,15 +570,7 @@ IOC and vthread code.
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (if (dispatch/target-vthreads?)
-    (if (or (dispatch/vthreads-available-and-allowed?)
-             clojure.core/*compile-files*)
-      `(do (dispatch/ensure-runtime-vthreads!)
-           (thread-call (^:once fn* [] ~@body) :io))
-      (do (dispatch/ensure-runtime-vthreads!)
-          `(thread-call (^:once fn* [] ~@body) :io)))
-    (do (require-fresh 'clojure.core.async.impl.go)
-        ((find-var 'clojure.core.async.impl.go/go-impl) &env body))))
+  (go-vthreads-helper body &env))
 
 (defonce ^:private thread-macro-executor nil)
 

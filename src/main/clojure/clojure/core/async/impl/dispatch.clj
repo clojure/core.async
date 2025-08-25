@@ -85,22 +85,25 @@
   []
   (System/getProperty "clojure.core.async.vthreads"))
 
-(defn target-vthreads? []
+(def target-vthreads?
   (= (vthreads-directive) "target"))
 
-(defn vthreads-available-and-allowed? []
+(def vthreads-available-and-allowed?
   (and @virtual-threads-available?
        (not= (vthreads-directive) "avoid")))
 
+(defn report-vthreads-not-available-error! []
+  (throw (ex-info "Code compiled to target virtual threads, but is running without vthread support."
+                  {:runtime-jvm-version (System/getProperty "java.version")
+                   :vthreads-directive (vthreads-directive)})))
+
 (defn ensure-runtime-vthreads! []
-  (when (not (vthreads-available-and-allowed?))
-    (throw (ex-info "Code compiled to target virtual threads, but is running without vthread support."
-                    {:runtime-jvm-version (System/getProperty "java.version")
-                     :vthreads-directive (vthreads-directive)}))))
+  (when (not vthreads-available-and-allowed?)
+    (report-vthreads-not-available-error!)))
 
 (defn- make-io-executor
   []
-  (if (vthreads-available-and-allowed?)
+  (if vthreads-available-and-allowed?
     (-> (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
         (.invoke nil (make-array Class 0)))
     (make-ctp-named :io)))
