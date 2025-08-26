@@ -53,8 +53,8 @@ If AOT compiling, go blocks will always use IOC so that the resulting
 bytecode works on all JVMs (so no change in compiled output)
 
 \"target\" - means that you are targeting virtual threads. At runtime
-from source, go blocks will throw if vthreads are not available. 
-If AOT compiling, go blocks are always compiled as normal Clojure 
+from source, go blocks will throw if vthreads are not available.
+If AOT compiling, go blocks are always compiled as normal Clojure
 code to be run on vthreads and will throw at runtime if vthreads are
 not available (Java <21)
 
@@ -551,7 +551,7 @@ IOC and vthread code.
         `(do (dispatch/ensure-runtime-vthreads!)
              (thread-call (^:once fn* [] ~@body) :io))
 
-        :default
+        :else
         (dispatch/report-vthreads-not-available-error!)))
 
 (defmacro go
