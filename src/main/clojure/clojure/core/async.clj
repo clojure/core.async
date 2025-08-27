@@ -167,9 +167,7 @@ IOC and vthread code.
 (defn- defparkingop-helper [op doc arglist body]
   (let [as (mapv #(list 'quote %) arglist)]
     (list `def (with-meta op {:arglists `(list ~as) :doc doc})
-          (if (or dispatch/target-vthreads?
-                  (and dispatch/vthreads-available-and-allowed?
-                       (not clojure.core/*compile-files*)))
+          (if dispatch/vthreads-available-and-allowed?
             (let [blockingop (-> op name (str "!") symbol)]
               `(fn [~'& ~'args] ~(list* apply blockingop '[args])))
             `(fn ~arglist ~@body)))))
