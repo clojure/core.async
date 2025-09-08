@@ -164,19 +164,20 @@ IOC and vthread code.
   [^long msecs]
   (timers/timeout msecs))
 
-(defn- defparkingop* [op doc arglist body]
+(defn- defparkingop* [op doc arglist]
   (let [as (mapv #(list 'quote %) arglist)
         blockingop (-> op name (str "!") symbol)]
     `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
-       (if dispatch/vthreads-available-and-allowed?
-         (fn [~'& ~'args] ~(list* apply blockingop '[args]))
-         (fn ~arglist ~@body)))))
+       (fn [~'& ~'args]
+         (if (= "VirtualThread" (.getSimpleName (class (Thread/currentThread))))
+           ~(list* apply blockingop '[args])
+           (assert nil ~(str op " used not in (go ...) block")))))))
 
 (defmacro defparkingop
-  "Emits a Var definition that initializes as a parking op or as a
-  blocking op when vthreads available and allowed."
-  [op doc arglist & body]
-  (defparkingop* op doc arglist body))
+  "Emits a Var with a function that checks if it's running in a virtual thread. If so then
+  the related blocking op will be called, otherwise the function throws."
+  [op doc arglist]
+  (defparkingop* op doc arglist))
 
 (defmacro defblockingop
   [op doc arglist & body]
@@ -206,8 +207,7 @@ IOC and vthread code.
   "takes a val from port. Must be called inside a (go ...) block, or on
   a virtual thread. Will return nil if closed. Will park if nothing is
   available."
-  [port]
-  (assert nil "<! used not in (go ...) block"))
+  [port])
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
@@ -247,8 +247,7 @@ IOC and vthread code.
   inside a (go ...) block, or on a virtual thread. Will park if no buffer
   space is available.
   Returns true unless port is already closed."
-  [port val]
-  (assert nil ">! used not in (go ...) block"))
+  [port val])
 
 (defn- nop [_])
 (def ^:private fhnop (fn-handler nop))
@@ -409,8 +408,7 @@ IOC and vthread code.
   used, nor in what order should they be, so they should not be
   depended upon for side effects."
 
-  [ports & {:as opts}]
-  (assert nil "alts! used not in (go ...) block"))
+  [ports & {:as opts}])
 
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
