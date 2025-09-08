@@ -164,7 +164,7 @@ IOC and vthread code.
   [^long msecs]
   (timers/timeout msecs))
 
-(defn- defparkingop-helper [op doc arglist body]
+(defn- defparkingop* [op doc arglist body]
   (let [as (mapv #(list 'quote %) arglist)
         blockingop (-> op name (str "!") symbol)]
     `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
@@ -176,7 +176,7 @@ IOC and vthread code.
   "Emits a Var definition that initializes as a parking op or as a
   blocking op when vthreads available and allowed."
   [op doc arglist & body]
-  (defparkingop-helper op doc arglist body))
+  (defparkingop* op doc arglist body))
 
 (defmacro defblockingop
   [op doc arglist & body]
@@ -540,7 +540,7 @@ IOC and vthread code.
           (throw res)
           res)))))
 
-(defn- go-vthreads-helper [body env]
+(defn- go* [body env]
   (cond (not dispatch/target-vthreads?)
         (do (require-in-new-binding-context 'clojure.core.async.impl.go)
             ((find-var 'clojure.core.async.impl.go/go-impl) env body))
@@ -568,7 +568,7 @@ IOC and vthread code.
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (go-vthreads-helper body &env))
+  (go* body &env))
 
 (defonce ^:private thread-macro-executor nil)
 
