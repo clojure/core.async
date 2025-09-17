@@ -169,7 +169,7 @@ IOC and vthread code.
         blockingop (-> op name (str "!") symbol)]
     `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
        (fn [~'& ~'args]
-         (if (= "VirtualThread" (.getSimpleName (class (Thread/currentThread))))
+         (if (dispatch/in-vthread?)
            ~(list* apply blockingop '[args])
            (assert nil ~(str op " used not in (go ...) block")))))))
 

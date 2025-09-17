@@ -91,6 +91,9 @@
   (and virtual-threads-available?
        (not= (vthreads-directive) "avoid")))
 
+(defn in-vthread? []
+  (= "VirtualThread" (.getSimpleName (class (Thread/currentThread)))))
+
 (defn report-vthreads-not-available-error! []
   (throw (ex-info "Code compiled to target virtual threads, but is running without vthread support."
                   {:runtime-jvm-version (System/getProperty "java.version")
