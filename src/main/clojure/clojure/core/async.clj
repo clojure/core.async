@@ -511,36 +511,9 @@ IOC and vthread code.
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
-(defn- require-in-new-binding-context
-  "Like require but takes only a single namespace symbol and attempts to
-  require the namespace on a separate thread. This is done to start
-  with a fresh dynamic environment augmented only with the vars
-  needed by require to perform its job. If the namespace is
-  found to have already been loaded then this function will return
-  immediately."
-  [nsym]
-  (when (not (contains? @@#'clojure.core/*loaded-libs* nsym))
-    (let [p (promise)
-          n *ns*
-          ll @#'clojure.core/*loaded-libs*]
-      (dispatch/exec
-       (^:once fn* []
-         (try
-           (let [result (binding [*ns* n
-                                  clojure.core/*loaded-libs* ll]
-                          (#'clojure.core/serialized-require nsym))]
-             (deliver p result))
-           (catch Throwable t
-             (deliver p t))))
-       :io)
-      (let [res @p]
-        (if res
-          (throw res)
-          res)))))
-
 (defn- go* [body env]
   (cond (not dispatch/target-vthreads?)
-        (do (require-in-new-binding-context 'clojure.core.async.impl.go)
+        (do (require 'clojure.core.async.impl.go)
             ((find-var 'clojure.core.async.impl.go/go-impl) env body))
 
         (or dispatch/vthreads-available-and-allowed? clojure.core/*compile-files*)
