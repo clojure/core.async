@@ -72,6 +72,15 @@
   [workload]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
+(defn ensure-clojure-version! [maj min incr]
+  (let [{:keys [major minor incremental]} *clojure-version*]
+    (when (or (< maj major)
+              (< min minor)
+              (< incr incremental))
+      (throw (ex-info (str "Clojure version greater than " maj "." min "." incr
+                           " required to run this version of core.async")
+                      {:clojure-version *clojure-version*})))))
+
 (def ^:private virtual-threads-available?
   (try
     (Class/forName "java.lang.Thread$Builder$OfVirtual")
@@ -86,6 +95,9 @@
 
 (def target-vthreads?
   (= (vthreads-directive) "target"))
+
+(def unset-vthreads?
+  (nil? (vthreads-directive)))
 
 (def vthreads-available-and-allowed?
   (and virtual-threads-available?

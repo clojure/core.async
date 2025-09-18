@@ -511,9 +511,13 @@ IOC and vthread code.
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
+(defn- dynamic-require [nsym]
+  (dispatch/ensure-clojure-version! 1 11 4)
+  (require nsym))
+
 (defn- go* [body env]
   (cond (not dispatch/target-vthreads?)
-        (do (require 'clojure.core.async.impl.go)
+        (do (dynamic-require 'clojure.core.async.impl.go)
             ((find-var 'clojure.core.async.impl.go/go-impl) env body))
 
         (or dispatch/vthreads-available-and-allowed? clojure.core/*compile-files*)
