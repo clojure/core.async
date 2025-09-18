@@ -105,11 +105,10 @@
 
 (def ^:private virtual-thread?
   (if virtual-threads-available?
-    (let [lookup (MethodHandles/lookup)
-          t (MethodType/methodType Boolean/TYPE)
-          ^MethodHandle mh (.findVirtual lookup Thread "isVirtual" t)]
-      (fn [^Thread thread]
-        (.invokeWithArguments mh [thread])))
+    (let [meth (.getMethod (Class/forName "java.lang.Thread") "isVirtual" (into-array Class []))
+          vargs (object-array 0)]
+      (fn [thread]
+        (.invoke meth thread vargs)))
     (constantly false)))
 
 (defn in-vthread? []
