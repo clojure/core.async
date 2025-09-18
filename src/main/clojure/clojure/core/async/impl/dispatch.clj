@@ -78,8 +78,9 @@
     (when (or (< maj major)
               (< min minor)
               (< incr incremental))
-      (throw (ex-info (str "Clojure version greater than or equal to " maj "." min "." incr
-                           " required to the the go block analyzer.")
+      (throw (ex-info (str "core.async go block expander requires Clojure version ≥"
+                           maj "." min "." incr
+                           " to load")
                       {:clojure-version *clojure-version*})))))
 
 (def virtual-threads-available?
