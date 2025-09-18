@@ -75,10 +75,7 @@
 
 (defn ensure-clojure-version! [maj min incr]
   (let [{:keys [major minor incremental]} *clojure-version*]
-    (when-not
-        (or (> major maj)
-            (and (= major maj) (> minor min))
-            (and (= major maj) (= minor min) (>= incremental incr)))
+    (when (neg? (compare [major minor incremental] [maj min incr]))
       (throw (ex-info (str "core.async go block expander requires Clojure version ≥"
                            maj "." min "." incr
                            " to load")
