@@ -8,7 +8,8 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.dispatch
-  (:import [java.util.concurrent Executors ExecutorService ThreadFactory]))
+  (:import [java.util.concurrent Executors ExecutorService ThreadFactory]
+           [java.lang.invoke MethodHandles MethodHandle MethodType]))
 
 (set! *warn-on-reflection* true)
 
@@ -77,8 +78,8 @@
     (when (or (< maj major)
               (< min minor)
               (< incr incremental))
-      (throw (ex-info (str "Clojure version greater than " maj "." min "." incr
-                           " required to run this version of core.async")
+      (throw (ex-info (str "Clojure version greater than or equal to " maj "." min "." incr
+                           " required to the the go block analyzer.")
                       {:clojure-version *clojure-version*})))))
 
 (def virtual-threads-available?
@@ -103,14 +104,18 @@
   (and virtual-threads-available?
        (not= (vthreads-directive) "avoid")))
 
-(def ^:private virtual?
+(def ^:private virtual-thread?
   (if virtual-threads-available?
-    (eval `(fn [^Thread t#] (~'.isVirtual t#)))
+    (let [lookup (MethodHandles/lookup)
+          t (MethodType/methodType Boolean/TYPE)
+          ^MethodHandle mh (.findVirtual lookup Thread "isVirtual" t)]
+      (fn [^Thread thread]
+        (.invokeWithArguments mh [thread])))
     (constantly false)))
 
 (defn in-vthread? []
   (and virtual-threads-available?
-       (virtual? (Thread/currentThread))))
+       (virtual-thread? (Thread/currentThread))))
 
 (defn report-vthreads-not-available-error! []
   (throw (ex-info "Code compiled to target virtual threads, but is running without vthread support."
