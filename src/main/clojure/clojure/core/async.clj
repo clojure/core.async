@@ -205,8 +205,8 @@ IOC and vthread code.
 
 (defparkingop <!
   "takes a val from port. Must be called inside a (go ...) block, or on
-  a virtual thread. Will return nil if closed. Will park if nothing is
-  available."
+  a virtual thread (no matter how it was started). Will return nil if
+  closed. Will park if nothing is available."
   [port])
 
 (defn take!
@@ -244,8 +244,8 @@ IOC and vthread code.
 
 (defparkingop >!
   "puts a val into port. nil values are not allowed. Must be called
-  inside a (go ...) block, or on a virtual thread. Will park if no buffer
-  space is available.
+  inside a (go ...) block, or on a virtual thread (no matter how it
+  was started). Will park if no buffer space is available.
   Returns true unless port is already closed."
   [port val])
 
@@ -387,14 +387,14 @@ IOC and vthread code.
 
 (defparkingop alts!
   "Completes at most one of several channel operations. Must be called
-  inside a (go ...) block, or on a virtual thread. ports is a vector of
-  channel endpoints, which can be either a channel to take from or a vector
-  of [channel-to-put-to val-to-put], in any combination. Takes will be
-  made as if by <!, and puts will be made as if by >!. Unless
-  the :priority option is true, if more than one port operation is
-  ready a non-deterministic choice will be made. If no operation is
-  ready and a :default value is supplied, [default-val :default] will
-  be returned, otherwise alts! will park until the first operation to
+  inside a (go ...) block, or on a virtual thread (no matter how it was
+  started). ports is a vector of channel endpoints, which can be either
+  a channel to take from or a vector of [channel-to-put-to val-to-put],
+  in any combination. Takes will be made as if by <!, and puts will be
+  made as if by >!. Unless the :priority option is true, if more than one
+  port operation is ready a non-deterministic choice will be made. If no
+  operation is ready and a :default value is supplied, [default-val :default]
+  will be returned, otherwise alts! will park until the first operation to
   become ready completes. Returns [val port] of the completed
   operation, where val is the value taken for takes, and a
   boolean (true unless already closed, as per put!) for puts.
@@ -512,20 +512,25 @@ IOC and vthread code.
     (when ret @ret)))
 
 (defn- dynamic-require [nsym]
-  (dispatch/ensure-clojure-version! 1 11 4)
+  (dispatch/ensure-clojure-version! 1 12 3)
   (require nsym))
 
 (defn- go* [body env]
-  (cond (not dispatch/target-vthreads?)
-        (do (dynamic-require 'clojure.core.async.impl.go)
-            ((find-var 'clojure.core.async.impl.go/go-impl) env body))
+  (cond (and (not dispatch/virtual-threads-available?)
+             dispatch/target-vthreads?
+             (not clojure.core/*compile-files*))
+        (dispatch/report-vthreads-not-available-error!)
 
-        (or dispatch/vthreads-available-and-allowed? clojure.core/*compile-files*)
+        (or dispatch/target-vthreads?
+            (and dispatch/unset-vthreads?
+                 dispatch/virtual-threads-available?
+                 (not clojure.core/*compile-files*)))
         `(do (dispatch/ensure-runtime-vthreads!)
              (thread-call (^:once fn* [] ~@body) :io))
 
         :else
-        (dispatch/report-vthreads-not-available-error!)))
+        (do (dynamic-require 'clojure.core.async.impl.go)
+            ((find-var 'clojure.core.async.impl.go/go-impl) env body))))
 
 (defmacro go
   "Asynchronously executes the body, returning immediately to the

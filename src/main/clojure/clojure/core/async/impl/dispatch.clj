@@ -81,7 +81,7 @@
                            " required to run this version of core.async")
                       {:clojure-version *clojure-version*})))))
 
-(def ^:private virtual-threads-available?
+(def virtual-threads-available?
   (try
     (Class/forName "java.lang.Thread$Builder$OfVirtual")
     true
@@ -103,8 +103,14 @@
   (and virtual-threads-available?
        (not= (vthreads-directive) "avoid")))
 
+(def ^:private virtual?
+  (if virtual-threads-available?
+    (eval `(fn [^Thread t#] (~'.isVirtual t#)))
+    (constantly false)))
+
 (defn in-vthread? []
-  (= "VirtualThread" (.getSimpleName (class (Thread/currentThread)))))
+  (and virtual-threads-available?
+       (virtual? (Thread/currentThread))))
 
 (defn report-vthreads-not-available-error! []
   (throw (ex-info "Code compiled to target virtual threads, but is running without vthread support."
