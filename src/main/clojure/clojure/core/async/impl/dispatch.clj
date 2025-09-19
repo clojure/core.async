@@ -73,13 +73,15 @@
   [workload]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
-(defn ensure-clojure-version! [maj min incr]
-  (let [{:keys [major minor incremental]} *clojure-version*]
-    (when (neg? (compare [major minor incremental] [maj min incr]))
-      (throw (ex-info (str "core.async go block expander requires Clojure version ≥"
-                           maj "." min "." incr
-                           " to load")
-                      {:clojure-version *clojure-version*})))))
+(def ensure-clojure-version!
+  (memoize
+   (fn [maj min incr]
+     (let [{:keys [major minor incremental]} *clojure-version*]
+       (when (neg? (compare [major minor incremental] [maj min incr]))
+         (throw (ex-info (str "core.async go block expander requires Clojure version ≥"
+                              maj "." min "." incr
+                              " to load")
+                         {:clojure-version *clojure-version*})))))))
 
 (def virtual-threads-available?
   (try
@@ -105,10 +107,7 @@
 
 (def ^:private virtual-thread?
   (if virtual-threads-available?
-    (let [meth (.getMethod (Class/forName "java.lang.Thread") "isVirtual" (into-array Class []))
-          vargs (object-array 0)]
-      (fn [thread]
-        (.invoke meth thread vargs)))
+    (eval `(fn [^Thread t#] (~'.isVirtual t#)))
     (constantly false)))
 
 (defn in-vthread? []
