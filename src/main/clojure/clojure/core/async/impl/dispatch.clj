@@ -73,15 +73,12 @@
   [workload]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
-(def ensure-clojure-version!
-  (memoize
-   (fn [maj min incr]
-     (let [{:keys [major minor incremental]} *clojure-version*]
-       (when (neg? (compare [major minor incremental] [maj min incr]))
-         (throw (ex-info (str "core.async go block expander requires Clojure version ≥"
-                              maj "." min "." incr
-                              " to load")
-                         {:clojure-version *clojure-version*})))))))
+(defn at-least-clojure-version?
+  [[maj min incr]]
+  (let [{:keys [major minor incremental]} *clojure-version*]
+    (not (neg? (compare [major minor incremental] [maj min incr])))))
+
+(def lazy-loading-supported? (at-least-clojure-version? [1 12 3]))
 
 (def virtual-threads-available?
   (try

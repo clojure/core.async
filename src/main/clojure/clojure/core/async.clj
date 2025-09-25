@@ -83,6 +83,9 @@ IOC and vthread code.
            [java.util.concurrent ThreadLocalRandom]
            [java.util Arrays ArrayList]))
 
+(when (not dispatch/lazy-loading-supported?)
+  (require 'clojure.core.async.impl.go))
+
 (alias 'core 'clojure.core)
 
 (set! *warn-on-reflection* false)
@@ -512,8 +515,9 @@ IOC and vthread code.
     (when ret @ret)))
 
 (defn- dynamic-require [nsym]
-  (dispatch/ensure-clojure-version! 1 12 3)
-  (require nsym))
+  (when (and dispatch/lazy-loading-supported?
+             (not (contains? @@#'clojure.core/*loaded-libs* nsym)))
+    (#'clojure.core/serialized-require nsym)))
 
 (defn- go* [body env]
   (cond (and (not dispatch/virtual-threads-available?)
