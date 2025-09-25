@@ -8,8 +8,7 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.dispatch
-  (:import [java.util.concurrent Executors ExecutorService ThreadFactory]
-           [java.lang.invoke MethodHandles MethodHandle MethodType]))
+  (:import [java.util.concurrent Executors ExecutorService ThreadFactory]))
 
 (set! *warn-on-reflection* true)
 
