@@ -85,7 +85,7 @@ IOC and vthread code.
 
 (def ^:private lazy-loading-supported? (dispatch/at-least-clojure-version? [1 12 3]))
 
-(when (not lazy-loading-supported?)
+(when-not lazy-loading-supported?
   (require 'clojure.core.async.impl.go))
 
 (alias 'core 'clojure.core)
