@@ -40,7 +40,34 @@ core.async. If not supplied the ExecutorService for :io will be
 used instead.
 
 The set of contexts may grow in the future so the function should
-return nil for unexpected contexts."
+return nil for unexpected contexts.
+
+Use the Java system property `clojure.core.async.vthreads` to control
+how core.async uses JDK 21+ virtual threads. The property can be one of
+the following values:
+
+unset - core.async will opportunistically use vthreads when available
+(≥ Java 21) and will otherwise use the old IOC impl. io-thread and :io
+thread pool will run on platform threads if vthreads are not available.
+If AOT compiling, go blocks will always use IOC so that the resulting
+bytecode works on all JVMs (so no change in compiled output)
+
+\"target\" - means that you are targeting virtual threads. At runtime
+from source, go blocks will throw if vthreads are not available.
+If AOT compiling, go blocks are always compiled as normal Clojure
+code to be run on vthreads and will throw at runtime if vthreads are
+not available (Java <21)
+
+\"avoid\" - means that vthreads will not be used by core.async - you can
+use this to minimize impacts if you are not yet ready to utilize vthreads
+in your app. If AOT compiling, go blocks will use IOC. At runtime, io-thread
+and the :io thread pool use platform threads
+
+Note: existing IOC compiled go blocks from older core.async versions continue
+to work (we retain and load the IOC state machine runtime - this does not
+require the analyzer), and you can interact with the same channels from both
+IOC and vthread code.
+"
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
   (:require [clojure.core.async.impl.protocols :as impl]
@@ -49,13 +76,17 @@ return nil for unexpected contexts."
             [clojure.core.async.impl.timers :as timers]
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.ioc-macros :as ioc]
-            clojure.core.async.impl.go ;; TODO: make conditional
             [clojure.core.async.impl.mutex :as mutex]
             )
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
            [java.util.concurrent ThreadLocalRandom]
            [java.util Arrays ArrayList]))
+
+(def ^:private lazy-loading-supported? (dispatch/at-least-clojure-version? [1 12 3]))
+
+(when-not lazy-loading-supported?
+  (require 'clojure.core.async.impl.go))
 
 (alias 'core 'clojure.core)
 
@@ -138,6 +169,21 @@ return nil for unexpected contexts."
   [^long msecs]
   (timers/timeout msecs))
 
+(defn- defparkingop* [op doc arglist]
+  (let [as (mapv #(list 'quote %) arglist)
+        blockingop (-> op name (str "!") symbol)]
+    `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
+       (fn [~'& ~'args]
+         (if (dispatch/in-vthread?)
+           ~(list* apply blockingop '[args])
+           (assert nil ~(str op " used not in (go ...) block")))))))
+
+(defmacro defparkingop
+  "Emits a Var with a function that checks if it's running in a virtual thread. If so then
+  the related blocking op will be called, otherwise the function throws."
+  [op doc arglist]
+  (defparkingop* op doc arglist))
+
 (defmacro defblockingop
   [op doc arglist & body]
   (let [as (mapv #(list 'quote %) arglist)]
@@ -162,11 +208,11 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defn <!
-  "takes a val from port. Must be called inside a (go ...) block. Will
-  return nil if closed. Will park if nothing is available."
-  [port]
-  (assert nil "<! used not in (go ...) block"))
+(defparkingop <!
+  "takes a val from port. Must be called inside a (go ...) block, or on
+  a virtual thread (no matter how it was started). Will return nil if
+  closed. Will park if nothing is available."
+  [port])
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
@@ -201,12 +247,12 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defn >!
+(defparkingop >!
   "puts a val into port. nil values are not allowed. Must be called
-  inside a (go ...) block. Will park if no buffer space is available.
+  inside a (go ...) block, or on a virtual thread (no matter how it
+  was started). Will park if no buffer space is available.
   Returns true unless port is already closed."
-  [port val]
-  (assert nil ">! used not in (go ...) block"))
+  [port val])
 
 (defn- nop [_])
 (def ^:private fhnop (fn-handler nop))
@@ -344,16 +390,16 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defn alts!
+(defparkingop alts!
   "Completes at most one of several channel operations. Must be called
-  inside a (go ...) block. ports is a vector of channel endpoints,
-  which can be either a channel to take from or a vector of
-  [channel-to-put-to val-to-put], in any combination. Takes will be
-  made as if by <!, and puts will be made as if by >!. Unless
-  the :priority option is true, if more than one port operation is
-  ready a non-deterministic choice will be made. If no operation is
-  ready and a :default value is supplied, [default-val :default] will
-  be returned, otherwise alts! will park until the first operation to
+  inside a (go ...) block, or on a virtual thread (no matter how it was
+  started). ports is a vector of channel endpoints, which can be either
+  a channel to take from or a vector of [channel-to-put-to val-to-put],
+  in any combination. Takes will be made as if by <!, and puts will be
+  made as if by >!. Unless the :priority option is true, if more than one
+  port operation is ready a non-deterministic choice will be made. If no
+  operation is ready and a :default value is supplied, [default-val :default]
+  will be returned, otherwise alts! will park until the first operation to
   become ready completes. Returns [val port] of the completed
   operation, where val is the value taken for takes, and a
   boolean (true unless already closed, as per put!) for puts.
@@ -367,8 +413,7 @@ return nil for unexpected contexts."
   used, nor in what order should they be, so they should not be
   depended upon for side effects."
 
-  [ports & {:as opts}]
-  (assert nil "alts! used not in (go ...) block"))
+  [ports & {:as opts}])
 
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
@@ -471,6 +516,22 @@ return nil for unexpected contexts."
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
+(defn- go* [body env]
+  (cond (and (not dispatch/virtual-threads-available?)
+             dispatch/target-vthreads?
+             (not clojure.core/*compile-files*))
+        (dispatch/report-vthreads-not-available-error!)
+
+        (or dispatch/target-vthreads?
+            (and dispatch/unset-vthreads?
+                 dispatch/virtual-threads-available?
+                 (not clojure.core/*compile-files*)))
+        `(do (dispatch/ensure-runtime-vthreads!)
+             (thread-call (^:once fn* [] ~@body) :io))
+
+        :else
+        ((requiring-resolve 'clojure.core.async.impl.go/go-impl) env body)))
+
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
   calling thread. Additionally, any visible calls to <!, >! and alt!/alts!
@@ -487,7 +548,7 @@ return nil for unexpected contexts."
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (#'clojure.core.async.impl.go/go-impl &env body))
+  (go* body &env))
 
 (defonce ^:private thread-macro-executor nil)
 

@@ -72,11 +72,63 @@
   [workload]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
+(defn at-least-clojure-version?
+  [[maj min incr]]
+  (let [{:keys [major minor incremental]} *clojure-version*]
+    (not (neg? (compare [major minor incremental] [maj min incr])))))
+
+(def virtual-threads-available?
+  (try
+    (Class/forName "java.lang.Thread$Builder$OfVirtual")
+    true
+    (catch ClassNotFoundException _
+      false)))
+
+(defn- vthreads-directive
+  "Retrieves the value of the sysprop clojure.core.async.vthreads."
+  []
+  (System/getProperty "clojure.core.async.vthreads"))
+
+(def target-vthreads?
+  (= (vthreads-directive) "target"))
+
+(def unset-vthreads?
+  (nil? (vthreads-directive)))
+
+(def vthreads-available-and-allowed?
+  (and virtual-threads-available?
+       (not= (vthreads-directive) "avoid")))
+
+(def ^:private virtual-thread?
+  (if virtual-threads-available?
+    (eval `(fn [^Thread t#] (~'.isVirtual t#)))
+    (constantly false)))
+
+(defn in-vthread? []
+  (and virtual-threads-available?
+       (virtual-thread? (Thread/currentThread))))
+
+(defn report-vthreads-not-available-error! []
+  (throw (ex-info "Code compiled to target virtual threads, but is running without vthread support."
+                  {:runtime-jvm-version (System/getProperty "java.version")
+                   :vthreads-directive (vthreads-directive)})))
+
+(defn ensure-runtime-vthreads! []
+  (when (not vthreads-available-and-allowed?)
+    (report-vthreads-not-available-error!)))
+
+(defn- make-io-executor
+  []
+  (if vthreads-available-and-allowed?
+    (-> (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
+        (.invoke nil (make-array Class 0)))
+    (make-ctp-named :io)))
+
 (defn ^:private create-default-executor
   [workload]
   (case workload
     :compute (make-ctp-named :compute)
-    :io      (make-ctp-named :io)
+    :io      (make-io-executor)
     :mixed   (make-ctp-named :mixed)))
 
 (def executor-for
