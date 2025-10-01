@@ -83,7 +83,9 @@ IOC and vthread code.
            [java.util.concurrent ThreadLocalRandom]
            [java.util Arrays ArrayList]))
 
-(when (not dispatch/lazy-loading-supported?)
+(def ^:private lazy-loading-supported? (dispatch/at-least-clojure-version? [1 12 3]))
+
+(when (not lazy-loading-supported?)
   (require 'clojure.core.async.impl.go))
 
 (alias 'core 'clojure.core)
@@ -514,11 +516,6 @@ IOC and vthread code.
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
-(defn- dynamic-require [nsym]
-  (when (and dispatch/lazy-loading-supported?
-             (not (contains? @@#'clojure.core/*loaded-libs* nsym)))
-    (#'clojure.core/serialized-require nsym)))
-
 (defn- go* [body env]
   (cond (and (not dispatch/virtual-threads-available?)
              dispatch/target-vthreads?
@@ -533,8 +530,7 @@ IOC and vthread code.
              (thread-call (^:once fn* [] ~@body) :io))
 
         :else
-        (do (dynamic-require 'clojure.core.async.impl.go)
-            ((find-var 'clojure.core.async.impl.go/go-impl) env body))))
+        ((requiring-resolve 'clojure.core.async.impl.go/go-impl) env body)))
 
 (defmacro go
   "Asynchronously executes the body, returning immediately to the

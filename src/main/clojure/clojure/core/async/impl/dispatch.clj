@@ -77,8 +77,6 @@
   (let [{:keys [major minor incremental]} *clojure-version*]
     (not (neg? (compare [major minor incremental] [maj min incr])))))
 
-(def lazy-loading-supported? (at-least-clojure-version? [1 12 3]))
-
 (def virtual-threads-available?
   (try
     (Class/forName "java.lang.Thread$Builder$OfVirtual")
