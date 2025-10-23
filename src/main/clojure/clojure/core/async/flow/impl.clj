@@ -34,7 +34,7 @@
       (.submit e ^Callable #(apply f args)))))
 
 (defn prep-proc [ret pid {:keys [proc, args, chan-opts] :or {chan-opts {}}}]
-  (let [{:keys [ins outs]} (spi/describe proc)
+  (let [{:keys [ins outs signal-select]} (spi/describe proc)
         copts (fn [cs]
                 (zipmap (keys cs) (map #(chan-opts %) (keys cs))))
         inopts (copts ins)
@@ -43,7 +43,7 @@
               (some (partial contains? outopts) (keys inopts)))
       (throw (ex-info ":ins and :outs cannot share ids within a process"
                       {:pid pid :ins (keys inopts) :outs (keys outopts)})))
-    (assoc ret pid {:pid pid :proc proc :ins inopts :outs outopts :args args})))
+    (assoc ret pid {:pid pid :proc proc :ins inopts :outs outopts :args args :signal-select signal-select})))
 
 (defn create-flow
   "see lib ns for docs"
@@ -119,7 +119,18 @@
                                                (needs-mult? coord conns) (make-chan co)
                                                ;;direct connect 1:1
                                                :else (in-chans (first conns))))) 
-                                         outopts))
+                                         outopts))                 
+                  ;;pid->{:select :chan}
+                  castees (reduce (fn [ret {:keys [pid signal-select]}]
+                                    (assoc ret pid
+                                           {:select signal-select
+                                            :chan (async/chan (async/sliding-buffer 100))}))
+                                     {} (vals pdescs))
+                  cast (fn [sigid msgs]
+                         (doseq [{:keys [select chan]} (vals castees)]
+                           (when (and select (select sigid))
+                             (doseq [m msgs]
+                               (async/>!! chan [sigid m])))))
                   ;;mults
                   _  (doseq [[out ins] conn-map]
                        (when (needs-mult? out ins)
@@ -128,7 +139,7 @@
                              (async/tap m (in-chans in))))))
                   write-chan #(if-let [[_ c] (or (find in-chans %) (find out-chans %))]
                                 c
-                                (throw (ex-info "can't resolve channel with coord" {:coord %})))
+                                (throw (ex-info "can't resolve channel with io-id" {:io-id %})))
                   resolver (reify spi/Resolver
                              (get-write-chan [_ coord]
                                (write-chan coord))
@@ -139,9 +150,11 @@
                       (let [chan-map (fn [ks coll] (zipmap (keys ks) (map #(coll [pid %]) (keys ks))))
                             control-tap (async/chan 10)]
                         (async/tap control-mult control-tap)
-                        (spi/start proc {:pid pid :args (assoc args ::flow/pid pid) :resolver resolver
+                        (spi/start proc {:pid pid :args (assoc args ::flow/pid pid)
+                                         :resolver resolver :cast cast
                                          :ins (assoc (chan-map ins in-chans)
-                                                     ::flow/control control-tap)
+                                                     ::flow/control control-tap
+                                                     ::flow/casts (-> pid castees :chan))
                                          :outs (assoc (chan-map outs out-chans)
                                                       ::flow/error error-chan
                                                       ::flow/report report-chan)}))
@@ -151,7 +164,7 @@
               (doseq [p (vals pdescs)]
                 (start-proc p))
               ;;the only connection to a running flow is via channels
-              (reset! chans {:control control-chan :resolver resolver
+              (reset! chans {:control control-chan :resolver resolver :cast cast
                              :report report-chan, :error error-chan
                              :ins in-chans, :outs out-chans})
               {:report-chan report-chan :error-chan error-chan}))
@@ -172,12 +185,14 @@
       (pause-proc [_ pid] (send-command ::flow/pause pid))
       (resume-proc [_ pid] (send-command ::flow/resume pid))
       (ping-proc [_ pid timeout-ms] (handle-ping pid timeout-ms))         
-      (inject [_ coord msgs]
-        (let [{:keys [resolver]} (running-chans)
-              chan (spi/get-write-chan resolver coord)]
-          ((futurize #(doseq [m msgs]
-                        (async/>!! chan m))
-                     {:exec :io})))))))
+      (inject [_ [target id :as coord] msgs]
+        (let [{:keys [resolver cast]} (running-chans)
+              do-io (if (= target ::flow/cast)
+                      #(cast id msgs)
+                      (let [chan (spi/get-write-chan resolver coord)]
+                        #(doseq [m msgs]
+                           (async/>!! chan m))))]
+          ((futurize do-io {:exec :io})))))))
 
 (defn handle-command
   [pid pong status cmd]
@@ -199,26 +214,29 @@
                             :paused ::flow/pause))
     state))
 
-(defn send-outputs [status state outputs outs resolver control handle-command transition]
+(defn send-outputs [status state outputs outs resolver control handle-command transition cast]
   (loop [nstatus status, nstate state, outputs (seq outputs)]
     (if (or (nil? outputs) (= nstatus :exit))
       [nstatus nstate]
       (let [[output msgs] (first outputs)]
-        (if-let [outc (or (outs output) (spi/get-write-chan resolver output))]
-          (let [[nstatus nstate]
-                (loop [nstatus nstatus, nstate nstate, msgs (seq msgs)]
-                  (if (or (nil? msgs) (= nstatus :exit))
-                    [nstatus nstate]
-                    (let [[v c] (async/alts!!
-                                 [control [outc (first msgs)]]
-                                 :priority true)]
-                      (if (= c control)
-                        (let [nnstatus (handle-command nstatus v)
-                              nnstate (handle-transition transition nstatus nnstatus nstate)]
-                          (recur nnstatus nnstate msgs))
-                        (recur nstatus nstate (next msgs))))))]
-            (recur nstatus nstate (next outputs)))
-          (recur nstatus nstate  (next outputs)))))))
+        (if (and (vector? output) (= (first output) ::flow/cast))
+          (do (cast (second output) msgs)
+              (recur nstatus nstate (next outputs)))
+          (if-let [outc (or (outs output) (spi/get-write-chan resolver output))]
+            (let [[nstatus nstate]
+                  (loop [nstatus nstatus, nstate nstate, msgs (seq msgs)]
+                    (if (or (nil? msgs) (= nstatus :exit))
+                      [nstatus nstate]
+                      (let [[v c] (async/alts!!
+                                   [control [outc (first msgs)]]
+                                   :priority true)]
+                        (if (= c control)
+                          (let [nnstatus (handle-command nstatus v)
+                                nnstate (handle-transition transition nstatus nnstatus nstate)]
+                            (recur nnstatus nnstate msgs))
+                          (recur nstatus nstate (next msgs))))))]
+              (recur nstatus nstate (next outputs)))
+            (recur nstatus nstate  (next outputs))))))))
 
 (defn proc
   "see lib ns for docs"
@@ -233,7 +251,7 @@
           (walk/postwalk datafy {:step step :desc desc})))
       spi/ProcLauncher
       (describe [_] desc)
-      (start [_ {:keys [pid args ins outs resolver]}]
+      (start [_ {:keys [pid args ins outs resolver cast]}]
         (assert (or (not params) args) "must provide :args if :params")
         (let [transform (if (= workload :compute)
                           #(.get ^Future ((futurize step {:exec (spi/get-exec resolver :compute)}) %1 %2 %3)
@@ -245,11 +263,12 @@
               outs (into (or outs {}) (::flow/out-ports state))
               io-id (zipmap (concat (vals ins) (vals outs)) (concat (keys ins) (keys outs)))
               control (::flow/control ins)
-              read-ins (dissoc ins ::flow/control)
+              casts (::flow/casts ins)
+              read-ins (dissoc ins ::flow/control ::flow/casts)
               run
               #(loop [status :paused, state state, count 0, read-ins read-ins]
                  (let [pong (fn [c]
-                              (let [pins (dissoc ins ::flow/control)
+                              (let [pins (dissoc ins ::flow/control ::flow/casts)
                                     pouts (dissoc outs ::flow/error ::flow/report)]
                                 (async/>!! c (walk/postwalk datafy
                                                 #::flow{:pid pid, :status status
@@ -269,7 +288,7 @@
                                                            (if (ipred cid)
                                                              (conj ret chan)
                                                              ret))
-                                                         [control] read-ins))
+                                                         [control casts] read-ins))
                                  [msg c] (async/alts!! read-chans :priority true)
                                  cid (io-id c)]
                              (if (= c control)
@@ -277,10 +296,13 @@
                                      nstate (handle-transition step status nstatus state)]
                                  [nstatus nstate count read-ins])
                                (try
-                                 (let [[nstate outputs] (transform state cid msg)
+                                 (let [[nstate outputs]
+                                       (if (= c casts) ;;[sigid msg]
+                                         (transform state (first msg) (second msg))
+                                         (transform state cid msg))
                                        [nstatus nstate]
                                        (send-outputs status nstate outputs outs
-                                                     resolver control handle-command step)]
+                                                     resolver control handle-command step cast)]
                                    [nstatus nstate (inc count) (if (some? msg)
                                                                  read-ins
                                                                  (dissoc read-ins cid))])

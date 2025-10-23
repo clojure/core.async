@@ -33,6 +33,17 @@
   details. The flow configuration provides a centralized place for
   policy decisions regarding process settings, threading, buffering etc.
 
+  Flow also provides a subsystem for broadcast communication of
+  out-of-band messages without explicit connections or
+  declarations. This could for example be used to communicate the
+  passage of (real or virtual) time. Broadcast messages are associated
+  with (otherwise undeclared) signal-ids, and will be received by
+  processes selecting those ids. Broadcasts messages will arrive along
+  with messages from process inputs, so signal-ids must not conflict
+  with any process input-id. Thus namespaced keywords, UUIDs etc or
+  tuples thereof are recommended as signal-ids. See process
+  describe/transform and inject below for details.
+  
   It is expected that applications will rarely define instances of the
   process protocol but instead use the API function 'process' that
   implements the process protocol in terms of calls to ordinary
@@ -71,16 +82,22 @@
 
   :proc - a function that starts a process
   :args - a map of param->val which will be passed to the process ctor
-  :chan-opts - a map of in-or-out-id->{:keys [buf-or-n xform]}, where buf-or-n
+  :chan-opts - a map of io-id->{:keys [buf-or-n xform]},
+               where io-id is an input/output name, and buf-or-n
                and xform have their meanings per core.async/chan
-               the default is {:buf-or-n 10}
+               the default for inputs and outputs is {:buf-or-n 10}
   
   :conns - a collection of [[from-pid outid] [to-pid inid]] tuples.
 
   Inputs and outputs support multiple connections. When an output is
-  connected multiple times every connection will get every message,
-  as per a core.async/mult.
+  connected multiple times every connection will get every message, as
+  per a core.async/mult. Note that non-multed outputs do not have
+  corresponding channels and thus any chan-opts will be ignored.
 
+  Broadcast signals are conveyed to a process via a channel with an
+  async/sliding-buffer of size 100, thus signals not handled in a
+  timely manner will be dropped in favor of later arriving signals.
+  
   :mixed-exec/:io-exec/:compute-exec -> ExecutorService
   These can be used to specify the ExecutorService to use for the
   corresonding workload, in lieu of the lib defaults.
@@ -136,9 +153,11 @@
   (g/ping-proc g pid timeout-ms))
   
 (defn inject
-  "asynchronously puts the messages on the channel corresponding to the
-  input or output of the process, returning a future that will
-  complete when done."
+  "asynchronously puts the messages on the channel corresponding to
+  the input or output of the process, returning a future that will
+  complete when done. You can broadcast messages on a signal using the
+  special coord [::flow/cast a-signal-id]. Note that signals cannot be
+  sent to a particular process."
   [g [pid io-id :as coord] msgs] (g/inject g coord msgs))
 
 (defn process
@@ -160,20 +179,25 @@
   datafy.
 
   arity 0 - 'describe', () -> description
-  where description is a map with keys :params :ins and :outs, each of which
-  in turn is a map of keyword to doc string, and :workload with
-  possible values of :mixed :io :compute. All entries in the describe
-  return map are optional.
+  where description is a map with possible keys:
+  :params :ins and :outs, each of which in turn is a map of keyword to doc string
+  :signal-select - a predicate of a signal-id. Messages on approved
+                   signals will appear in the transform arity (see below)
+                   For the simple case of enumerated signal-ids, use a set,
+                   e.g. #{:this/signal :that/signal}
+                   If no :signal-select is provided, no signals will be received
+  :workload with possible values of :mixed :io :compute.
+  All entries in the describe return map are optional.
   
   :params describes the initial arguments to setup the state for the function.
-  :ins enumerates the input[s], for which the flow will create channels
-  :outs enumerates the output[s], for which the flow may create channels.
+  :ins enumerates the process input[s], for which the flow will create channels
+  :outs enumerates the process output[s], for which the flow _may_ create channels.
   :workload - describes the nature of the workload, one of :mixed :io or :compute
           an :io workload should not do extended computation
           a :compute workload should never block
   
-  No key may be present in both :ins and :outs, allowing for a uniform
-  channel coordinate system of [:process-id :channel-id]. The
+  No io-id key may be present in both :ins and :outs, allowing for a
+  uniform channel coordinate system of [:process-id :channel-id]. The
   ins/outs/params returned will be the ins/outs/params of the
   process. describe may be called by users to understand how to use
   the proc. It will also be called by the impl in order to discover
@@ -213,16 +237,23 @@
   process will no longer be used following that. See the SPI for
   details. state' will be the state supplied to subsequent calls.
 
-  arity 3 - 'transform', (state in-name msg) -> [state' output]
+  arity 3 - 'transform', (state in-or-signal-id msg) -> [state' output]
   where output is a map of outid->[msgs*]
 
-  The transform arity will be called every time a message arrives at any
-  of the inputs. Output can be sent to none, any or all of the :outs
-  enumerated, and/or an input named by a [pid inid] tuple (e.g. for
-  reply-to), and/or to the ::flow/report output. A step need not
-  output at all (output or msgs can be empyt/nil), however an output _message_
-  may never be nil (per core.async channels). state' will be the state
-  supplied to subsequent calls.
+  The transform arity will be called every time a message arrives at
+  any of the inputs or signals (selected via :signal-select in
+  describe), identified by the id. Output can be sent to none, any or
+  all of the :outs enumerated, and/or an input named by a [pid in-id]
+  coord tuple (e.g. for reply-to), and/or to the ::flow/report
+  output.
+
+  You can broadcast output to all processes selecting a signal via
+  the special coord [::flow/cast a-signal-id] Note that signals cannot
+  be sent to a particular process.
+
+  A step need not output at all (output or msgs can be empty/nil),
+  however an output _message_ may never be nil (per core.async
+  channels). state' will be the state supplied to subsequent calls.
 
   process also accepts an option map with keys:
   :workload - one of :mixed, :io or :compute
