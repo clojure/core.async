@@ -254,7 +254,7 @@ IOC and vthread code.
   Returns true unless port is already closed."
   [port val])
 
-(defn- nop [_])
+(def ^:private nop (on-caller (fn [_])))
 (def ^:private fhnop (fn-handler nop))
 
 (defn put!
