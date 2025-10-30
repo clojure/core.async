@@ -64,6 +64,8 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* next
+  * [ASYNC-269](https://clojure.atlassian.net/browse/ASYNC-269) (CLJ) Noop callbacks dispatch on caller thread
 * Release 1.9.829-alpha2 on 2025-10-01
   * [ASYNC-262](https://clojure.atlassian.net/browse/ASYNC-262) (CLJ) Use virtual threads when available for go and io-thread
 * Release 1.9.808-alpha1 on 2025-04-28
