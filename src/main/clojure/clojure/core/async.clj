@@ -43,7 +43,7 @@ The set of contexts may grow in the future so the function should
 return nil for unexpected contexts. In the case where system
 properties are set to enable the use of virtual threads (see below)
 core.async will ignore the cutom executor for :io workloads and
-  instead use its default Executor to construct virtual threads for
+instead use its default Executor to construct virtual threads for
 :io. When this circumstance occurs a warning will be printed.
 
 Use the Java system property `clojure.core.async.vthreads` to control
@@ -71,7 +71,7 @@ There are caveats in setting the jdk.trackAllThreads property to false and it's
 advised to understand the implications of doing so and the tradeoffs involved
 compared to using virtual threads.
 
-Note: Even when targetting virtual threads, existing IOC compiled go blocks
+Note: Even when targeting virtual threads, existing IOC compiled go blocks
 from older core.async versions continue to work (we retain and load the IOC state
 machine runtime - this does not require the analyzer), and you can interact with
 the same channels from both IOC and vthread code.
