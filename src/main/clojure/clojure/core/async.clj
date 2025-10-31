@@ -17,11 +17,11 @@ go block threads - use Thread.setDefaultUncaughtExceptionHandler()
 to catch and handle.
 
 Use the Java system property `clojure.core.async.executor-factory`
-to specify a function that will provide ExecutorServices for
+to specify a function that will provide Executor for
 application-wide use by core.async in lieu of its defaults. The
 property value should name a fully qualified var. The function
 will be passed a keyword indicating the context of use of the
-executor, and should return either an ExecutorService, or nil to
+executor, and should return either an Executor, or nil to
 use the default. Results per keyword will be cached and used for
 the remainder of the application. Possible context arguments are:
 
@@ -36,37 +36,45 @@ flow/process
 
 :core-async-dispatch - used for completion fn handling (e.g. in put!
 and take!, as well as go block IOC thunk processing) throughout
-core.async. If not supplied the ExecutorService for :io will be
+core.async. If not supplied the Executor for :io will be
 used instead.
 
 The set of contexts may grow in the future so the function should
-return nil for unexpected contexts.
+return nil for unexpected contexts. In the case where system
+properties are set to enable the use of virtual threads (see below)
+core.async will ignore the cutom executor for :io workloads and
+  instead use its default Executor to construct virtual threads for
+:io. When this circumstance occurs a warning will be printed.
 
 Use the Java system property `clojure.core.async.vthreads` to control
 how core.async uses JDK 21+ virtual threads. The property can be one of
 the following values:
 
-unset - core.async will opportunistically use vthreads when available
-(≥ Java 21) and will otherwise use the old IOC impl. io-thread and :io
-thread pool will run on platform threads if vthreads are not available.
-If AOT compiling, go blocks will always use IOC so that the resulting
-bytecode works on all JVMs (so no change in compiled output)
+unset - means that vthreads will not be used by core.async. If AOT
+compiling, go blocks will use IOC. At runtime, io-thread and the :io
+thread pool use platform threads.
 
 \"target\" - means that you are targeting virtual threads. At runtime
-from source, go blocks will throw if vthreads are not available.
-If AOT compiling, go blocks are always compiled as normal Clojure
-code to be run on vthreads and will throw at runtime if vthreads are
-not available (Java <21)
+from source, go blocks will throw if vthreads are not available. If AOT
+compiling, go blocks are always compiled as normal Clojure code to be run
+on vthreads and will throw at runtime if vthreads are not available
+(Java <21). Further, a second system property setting is required to allow
+virtual threads to operate in the way that IOC threads have historically.
+The jdk.trackAllThreads property must be set to false to disable JDK global
+thread tracking. Without this setting, unterminated virtual threads are
+strongly held by the JDK and not garbage-collected when the objects that
+they're blocked on are themselves garbage-collected. This condition leads to a
+memory leak in the common use case in core.async where go blocks are started
+but fall out of scope. Historically, the resources associated with the go block
+were collected, but when backed by strongly-held virtual threads they are not.
+There are caveats in setting the jdk.trackAllThreads property to false and it's
+advised to understand the implications of doing so and the tradeoffs involved
+compared to using virtual threads.
 
-\"avoid\" - means that vthreads will not be used by core.async - you can
-use this to minimize impacts if you are not yet ready to utilize vthreads
-in your app. If AOT compiling, go blocks will use IOC. At runtime, io-thread
-and the :io thread pool use platform threads
-
-Note: existing IOC compiled go blocks from older core.async versions continue
-to work (we retain and load the IOC state machine runtime - this does not
-require the analyzer), and you can interact with the same channels from both
-IOC and vthread code.
+Note: Even when targetting virtual threads, existing IOC compiled go blocks
+from older core.async versions continue to work (we retain and load the IOC state
+machine runtime - this does not require the analyzer), and you can interact with
+the same channels from both IOC and vthread code.
 "
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
