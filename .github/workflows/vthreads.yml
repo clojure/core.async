@@ -1,5 +1,8 @@
 name: Test VThreads
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:

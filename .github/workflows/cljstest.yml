@@ -1,4 +1,8 @@
 name: CLJS Tests
+
+permissions:
+  contents: read
+
 on: [push]
 
 jobs:
