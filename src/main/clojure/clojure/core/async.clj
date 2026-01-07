@@ -17,11 +17,11 @@ go block threads - use Thread.setDefaultUncaughtExceptionHandler()
 to catch and handle.
 
 Use the Java system property `clojure.core.async.executor-factory`
-to specify a function that will provide ExecutorServices for
+to specify a function that will provide an Executor instance for
 application-wide use by core.async in lieu of its defaults. The
 property value should name a fully qualified var. The function
 will be passed a keyword indicating the context of use of the
-executor, and should return either an ExecutorService, or nil to
+executor, and should return either an Executor, or nil to
 use the default. Results per keyword will be cached and used for
 the remainder of the application. Possible context arguments are:
 
@@ -36,7 +36,7 @@ flow/process
 
 :core-async-dispatch - used for completion fn handling (e.g. in put!
 and take!, as well as go block IOC thunk processing) throughout
-core.async. If not supplied the ExecutorService for :io will be
+core.async. If not supplied, the Executor for :io will be
 used instead.
 
 The set of contexts may grow in the future so the function should

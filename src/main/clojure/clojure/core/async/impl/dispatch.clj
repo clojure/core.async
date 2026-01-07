@@ -8,7 +8,7 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.dispatch
-  (:import [java.util.concurrent Executors ExecutorService ThreadFactory]))
+  (:import [java.util.concurrent Executors Executor ExecutorService ThreadFactory]))
 
 (set! *warn-on-reflection* true)
 
@@ -120,8 +120,9 @@
 (defn- make-io-executor
   []
   (if vthreads-available-and-allowed?
-    (-> (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))
-        (.invoke nil (make-array Class 0)))
+    (reify Executor
+      (execute [_ r]
+        (Thread/startVirtualThread r)))
     (make-ctp-named :io)))
 
 (defn ^:private create-default-executor
@@ -132,12 +133,12 @@
     :mixed   (make-ctp-named :mixed)))
 
 (def executor-for
-  "Given a workload tag, returns an ExecutorService instance and memoizes the result. By
+  "Given a workload tag, returns an Executor instance and memoizes the result. By
   default, core.async will defer to a user factory (if provided via sys prop) or construct
-  a specialized ExecutorService instance for each tag :io, :compute, and :mixed. When
+  a specialized Executor instance for each tag :io, :compute, and :mixed. When
   given the tag :core-async-dispatch it will default to the executor service for :io."
   (memoize
-   (fn ^ExecutorService [workload]
+   (fn ^Executor [workload]
      (let [sysprop-factory (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
                              (requiring-resolve (symbol esf)))
            sp-exec (and sysprop-factory (sysprop-factory workload))]
@@ -148,7 +149,7 @@
 
 (defn exec
   [^Runnable r workload]
-  (let [^ExecutorService e (executor-for workload)]
+  (let [^Executor e (executor-for workload)]
     (.execute e r)))
 
 (defn run
