@@ -120,9 +120,10 @@
 (defn- make-io-executor
   []
   (if vthreads-available-and-allowed?
-    (reify Executor
-      (execute [_ r]
-        (Thread/startVirtualThread r)))
+    (let [svt (.getDeclaredMethod Thread "startVirtualThread" (into-array Class [Runnable]))]
+      (reify Executor
+        (execute [_ r]
+          (.invoke svt nil (object-array [r])))))
     (make-ctp-named :io)))
 
 (defn ^:private create-default-executor
