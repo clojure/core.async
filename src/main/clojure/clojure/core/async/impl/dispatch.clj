@@ -8,7 +8,7 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.dispatch
-  (:import [java.util.concurrent Executors Executor ExecutorService ThreadFactory]))
+  (:import [java.util.concurrent Executors Executor ThreadFactory]))
 
 (set! *warn-on-reflection* true)
 
