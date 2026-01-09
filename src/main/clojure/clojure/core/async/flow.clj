@@ -98,8 +98,8 @@
   async/sliding-buffer of size 100, thus signals not handled in a
   timely manner will be dropped in favor of later arriving signals.
   
-  :mixed-exec/:io-exec/:compute-exec -> ExecutorService
-  These can be used to specify the ExecutorService to use for the
+  :mixed-exec/:io-exec/:compute-exec -> Executor
+  These can be used to specify the Executor to use for the
   corresonding workload, in lieu of the lib defaults.
 
   N.B. The flow is not started. See 'start'"
@@ -334,7 +334,7 @@
 
   futurize accepts kwarg options:
   :exec - one of the workloads :mixed, :io, :compute
-          or a j.u.c.ExecutorService object,
+          or a j.u.c.Executor object,
           default :mixed"
   [f & {:keys [exec]
         :or {exec :mixed} :as opts}]
