@@ -8,17 +8,9 @@
 
 (ns clojure.core.async.flow-test
   (:require [clojure.test :refer :all]
-            [clojure.core.async.impl.dispatch :as dispatch]))
+            [clojure.core.async.flow :as flow]))
 
-(defmacro deftest-against
-  [ver name & body]
-  (when (dispatch/at-least-clojure-version? ver)
-    `(deftest ~name ~@body)))
-
-(when (dispatch/at-least-clojure-version? [1 11 0])
-  (require '[clojure.core.async.flow :as flow]))
-
-(deftest-against [1 11 0] test-futurize
+(deftest test-futurize
   (testing ""
     (let [es (reify java.util.concurrent.ExecutorService
                (^java.util.concurrent.Future submit [_ ^Callable f]
