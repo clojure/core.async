@@ -7,10 +7,17 @@
 ;;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.core.async.flow-test
-  (:require [clojure.test :refer :all]
-            [clojure.core.async.flow :as flow]))
+  (:require [clojure.test :refer :all]))
 
-(deftest test-futurize
+(defmacro deftest-against
+  [ver name & body]
+  (when (clojure.core.async.impl.dispatch/at-least-clojure-version? ver)
+    `(deftest ~name ~@body)))
+
+(when (clojure.core.async.impl.dispatch/at-least-clojure-version? [1 11 0])
+  (require '[clojure.core.async.flow :as flow]))
+
+(deftest-against [1 11 0] test-futurize
   (testing ""
     (let [es (reify java.util.concurrent.ExecutorService
                (^java.util.concurrent.Future submit [_ ^Callable f]
