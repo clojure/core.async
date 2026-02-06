@@ -121,7 +121,7 @@
            sp-exec (and sysprop-factory (sysprop-factory workload))]
        (or sp-exec
            (if (= workload :core-async-dispatch)
-             (executor-for :io)
+             (executor-for :mixed)
              (create-default-executor workload)))))))
 
 (defn exec
