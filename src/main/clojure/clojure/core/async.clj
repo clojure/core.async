@@ -40,34 +40,7 @@ core.async. If not supplied, the Executor for :io will be
 used instead.
 
 The set of contexts may grow in the future so the function should
-return nil for unexpected contexts.
-
-Use the Java system property `clojure.core.async.vthreads` to control
-how core.async uses JDK 21+ virtual threads. The property can be one of
-the following values:
-
-unset - core.async will opportunistically use vthreads when available
-(≥ Java 21) and will otherwise use the old IOC impl. io-thread and :io
-thread pool will run on platform threads if vthreads are not available.
-If AOT compiling, go blocks will always use IOC so that the resulting
-bytecode works on all JVMs (so no change in compiled output)
-
-\"target\" - means that you are targeting virtual threads. At runtime
-from source, go blocks will throw if vthreads are not available.
-If AOT compiling, go blocks are always compiled as normal Clojure
-code to be run on vthreads and will throw at runtime if vthreads are
-not available (Java <21)
-
-\"avoid\" - means that vthreads will not be used by core.async - you can
-use this to minimize impacts if you are not yet ready to utilize vthreads
-in your app. If AOT compiling, go blocks will use IOC. At runtime, io-thread
-and the :io thread pool use platform threads
-
-Note: existing IOC compiled go blocks from older core.async versions continue
-to work (we retain and load the IOC state machine runtime - this does not
-require the analyzer), and you can interact with the same channels from both
-IOC and vthread code.
-"
+return nil for unexpected contexts."
   (:refer-clojure :exclude [reduce transduce into merge map take partition
                             partition-by bounded-count])
   (:require [clojure.core.async.impl.protocols :as impl]
@@ -516,22 +489,6 @@ IOC and vthread code.
   (let [ret (impl/take! port (fn-handler nop false))]
     (when ret @ret)))
 
-(defn- go* [body env]
-  (cond (and (not dispatch/virtual-threads-available?)
-             dispatch/target-vthreads?
-             (not clojure.core/*compile-files*))
-        (dispatch/report-vthreads-not-available-error!)
-
-        (or dispatch/target-vthreads?
-            (and dispatch/unset-vthreads?
-                 dispatch/virtual-threads-available?
-                 (not clojure.core/*compile-files*)))
-        `(do (dispatch/ensure-runtime-vthreads!)
-             (thread-call (^:once fn* [] ~@body) :io))
-
-        :else
-        ((requiring-resolve 'clojure.core.async.impl.go/go-impl) env body)))
-
 (defmacro go
   "Asynchronously executes the body, returning immediately to the
   calling thread. Additionally, any visible calls to <!, >! and alt!/alts!
@@ -548,7 +505,7 @@ IOC and vthread code.
   Returns a channel which will receive the result of the body when
   completed"
   [& body]
-  (go* body &env))
+  ((requiring-resolve 'clojure.core.async.impl.go/go-impl) &env body))
 
 (defonce ^:private thread-macro-executor nil)
 
