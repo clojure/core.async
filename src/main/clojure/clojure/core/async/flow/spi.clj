@@ -82,7 +82,7 @@
           N.B. outputs may be nil if not connected
   :resolver - an impl of spi/Resolver, which can be used to find
               channels given their logical [pid cid] coordinates, as well as to
-              obtain ExecutorServices corresponding to the
+              obtain Executors corresponding to the
               logical :mixed/:io/:compute contexts"))
 
 (defprotocol Resolver
@@ -91,5 +91,5 @@
     write to or nil (in which case the output should be dropped,
     e.g. nothing is connected).")
   (get-exec [_ context]
-    "returns the ExecutorService for the given context, one
+    "returns the Executor for the given context, one
      of :mixed, :io, :compute"))
