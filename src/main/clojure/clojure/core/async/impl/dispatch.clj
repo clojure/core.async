@@ -79,15 +79,6 @@
     (catch ClassNotFoundException _
       false)))
 
-(def ^:private virtual-thread?
-  (if virtual-threads-available?
-    (eval `(fn [^Thread t#] (~'.isVirtual t#)))
-    (constantly false)))
-
-(defn in-vthread? []
-  (and virtual-threads-available?
-       (virtual-thread? (Thread/currentThread))))
-
 (defn- make-io-executor
   []
   (if virtual-threads-available?
