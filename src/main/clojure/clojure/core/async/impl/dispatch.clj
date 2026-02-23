@@ -92,7 +92,7 @@
   [workload]
   (case workload
     :compute (make-ctp-named :compute)
-    :io      (make-ctp-named :io)
+    :io      (make-io-executor)
     :mixed   (make-ctp-named :mixed)))
 
 (def executor-for
