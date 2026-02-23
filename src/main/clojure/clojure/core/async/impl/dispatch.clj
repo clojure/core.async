@@ -72,11 +72,6 @@
   [workload]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
-(defn at-least-clojure-version?
-  [[maj min incr]]
-  (let [{:keys [major minor incremental]} *clojure-version*]
-    (not (neg? (compare [major minor incremental] [maj min incr])))))
-
 (def virtual-threads-available?
   (try
     (Class/forName "java.lang.Thread$Builder$OfVirtual")

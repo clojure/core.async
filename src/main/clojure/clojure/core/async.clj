@@ -56,7 +56,12 @@ return nil for unexpected contexts."
            [java.util.concurrent ThreadLocalRandom]
            [java.util Arrays ArrayList]))
 
-(def ^:private lazy-loading-supported? (dispatch/at-least-clojure-version? [1 12 3]))
+(defn- at-least-clojure-version?
+  [[maj min incr]]
+  (let [{:keys [major minor incremental]} *clojure-version*]
+    (not (neg? (compare [major minor incremental] [maj min incr])))))
+
+(def ^:private lazy-loading-supported? (at-least-clojure-version? [1 12 3]))
 
 (when-not lazy-loading-supported?
   (require 'clojure.core.async.impl.go))
@@ -142,21 +147,6 @@ return nil for unexpected contexts."
   [^long msecs]
   (timers/timeout msecs))
 
-(defn- defparkingop* [op doc arglist]
-  (let [as (mapv #(list 'quote %) arglist)
-        blockingop (-> op name (str "!") symbol)]
-    `(def ~(with-meta op {:arglists `(list ~as) :doc doc})
-       (fn [~'& ~'args]
-         (if (dispatch/in-vthread?)
-           ~(list* apply blockingop '[args])
-           (assert nil ~(str op " used not in (go ...) block")))))))
-
-(defmacro defparkingop
-  "Emits a Var with a function that checks if it's running in a virtual thread. If so then
-  the related blocking op will be called, otherwise the function throws."
-  [op doc arglist]
-  (defparkingop* op doc arglist))
-
 (defmacro defblockingop
   [op doc arglist & body]
   (let [as (mapv #(list 'quote %) arglist)]
@@ -181,11 +171,11 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defparkingop <!
-  "takes a val from port. Must be called inside a (go ...) block, or on
-  a virtual thread (no matter how it was started). Will return nil if
-  closed. Will park if nothing is available."
-  [port])
+(defn <!
+  "takes a val from port. Must be called inside a (go ...) block. Will
+  return nil if closed. Will park if nothing is available."
+  [port]
+  (assert nil "<! used not in (go ...) block"))
 
 (defn take!
   "Asynchronously takes a val from port, passing to fn1. Will pass nil
@@ -220,12 +210,12 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defparkingop >!
+(defn >!
   "puts a val into port. nil values are not allowed. Must be called
-  inside a (go ...) block, or on a virtual thread (no matter how it
-  was started). Will park if no buffer space is available.
+  inside a (go ...) block. Will park if no buffer space is available.
   Returns true unless port is already closed."
-  [port val])
+  [port val]
+  (assert nil ">! used not in (go ...) block"))
 
 (def ^:private nop (on-caller (fn [_])))
 (def ^:private fhnop (fn-handler nop))
@@ -363,16 +353,16 @@ return nil for unexpected contexts."
       @ret
       (deref p))))
 
-(defparkingop alts!
-  "Completes at most one of several channel operations. Must be called
-  inside a (go ...) block, or on a virtual thread (no matter how it was
-  started). ports is a vector of channel endpoints, which can be either
-  a channel to take from or a vector of [channel-to-put-to val-to-put],
-  in any combination. Takes will be made as if by <!, and puts will be
-  made as if by >!. Unless the :priority option is true, if more than one
-  port operation is ready a non-deterministic choice will be made. If no
-  operation is ready and a :default value is supplied, [default-val :default]
-  will be returned, otherwise alts! will park until the first operation to
+(defn alts!
+"Completes at most one of several channel operations. Must be called
+  inside a (go ...) block. ports is a vector of channel endpoints,
+  which can be either a channel to take from or a vector of
+  [channel-to-put-to val-to-put], in any combination. Takes will be
+  made as if by <!, and puts will be made as if by >!. Unless
+  the :priority option is true, if more than one port operation is
+  ready a non-deterministic choice will be made. If no operation is
+  ready and a :default value is supplied, [default-val :default] will
+  be returned, otherwise alts! will park until the first operation to
   become ready completes. Returns [val port] of the completed
   operation, where val is the value taken for takes, and a
   boolean (true unless already closed, as per put!) for puts.
@@ -386,7 +376,8 @@ return nil for unexpected contexts."
   used, nor in what order should they be, so they should not be
   depended upon for side effects."
 
-  [ports & {:as opts}])
+  [ports & {:as opts}]
+  (assert nil "alts! used not in (go ...) block"))
 
 (defn do-alt [alts clauses]
   (assert (even? (count clauses)) "unbalanced clauses")
@@ -542,7 +533,8 @@ return nil for unexpected contexts."
   "Executes the body in a thread, returning immediately to the calling
   thread. The body may do blocking I/O but must not do extended computation.
   Returns a channel which will receive the result of the body when completed,
-  then close."
+  then close. When virtual threads are available in the runtime JVM (>= v21)
+  then core.async will dispatch body to one."
   [& body]
   `(thread-call (^:once fn* [] ~@body) :io))
 
