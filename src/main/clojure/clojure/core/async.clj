@@ -494,7 +494,10 @@ return nil for unexpected contexts."
   core.async blocking ops (those ending in !!) and other blocking IO.
 
   Returns a channel which will receive the result of the body when
-  completed"
+  completed.
+
+  go blocks will remain in memory only while their referenced channels
+  remain in memory."
   [& body]
   ((requiring-resolve 'clojure.core.async.impl.go/go-impl) &env body))
 
@@ -533,8 +536,12 @@ return nil for unexpected contexts."
   "Executes the body in a thread, returning immediately to the calling
   thread. The body may do blocking I/O but must not do extended computation.
   Returns a channel which will receive the result of the body when completed,
-  then close. When virtual threads are available in the runtime JVM (>= v21)
-  then core.async will dispatch body to one."
+  then close.
+
+  When virtual threads are available in the runtime JVM (>= v21)
+  then core.async will dispatch body to one. Like regular threads, (and unlike
+  go blocks) virtual threads  must terminate ordinarily and will keep
+  referenced resources alive until they do."
   [& body]
   `(thread-call (^:once fn* [] ~@body) :io))
 
