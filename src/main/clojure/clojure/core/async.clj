@@ -496,8 +496,9 @@ return nil for unexpected contexts."
   Returns a channel which will receive the result of the body when
   completed.
 
-  go blocks will remain in memory only while their referenced channels
-  remain in memory."
+  The resources associated with a go block may be reclaimed, and the block
+  never resumed, when the channels with which it interacts are no longer
+  referenced (outside of the go block)."
   [& body]
   ((requiring-resolve 'clojure.core.async.impl.go/go-impl) &env body))
 
