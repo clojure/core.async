@@ -8,7 +8,7 @@
 
 (ns ^{:skip-wiki true}
   clojure.core.async.impl.dispatch
-  (:import [java.util.concurrent Executors ExecutorService ThreadFactory]))
+  (:import [java.util.concurrent Executors Executor ThreadFactory]))
 
 (set! *warn-on-reflection* true)
 
@@ -72,31 +72,47 @@
   [workload]
   (Executors/newCachedThreadPool (counted-thread-factory (str "async-" (name workload) "-%d") true)))
 
+(def virtual-threads-available?
+  (try
+    (Class/forName "java.lang.Thread$Builder$OfVirtual")
+    true
+    (catch ClassNotFoundException _
+      false)))
+
+(defn- make-io-executor
+  []
+  (if virtual-threads-available?
+    (let [svt (.getDeclaredMethod Thread "startVirtualThread" (into-array Class [Runnable]))]
+      (reify Executor
+        (execute [_ r]
+          (.invoke svt nil (object-array [r])))))
+    (make-ctp-named :io)))
+
 (defn ^:private create-default-executor
   [workload]
   (case workload
     :compute (make-ctp-named :compute)
-    :io      (make-ctp-named :io)
+    :io      (make-io-executor)
     :mixed   (make-ctp-named :mixed)))
 
 (def executor-for
-  "Given a workload tag, returns an ExecutorService instance and memoizes the result. By
+  "Given a workload tag, returns an Executor instance and memoizes the result. By
   default, core.async will defer to a user factory (if provided via sys prop) or construct
-  a specialized ExecutorService instance for each tag :io, :compute, and :mixed. When
+  a specialized Executor instance for each tag :io, :compute, and :mixed. When
   given the tag :core-async-dispatch it will default to the executor service for :io."
   (memoize
-   (fn ^ExecutorService [workload]
+   (fn ^Executor [workload]
      (let [sysprop-factory (when-let [esf (System/getProperty "clojure.core.async.executor-factory")]
                              (requiring-resolve (symbol esf)))
            sp-exec (and sysprop-factory (sysprop-factory workload))]
        (or sp-exec
            (if (= workload :core-async-dispatch)
-             (executor-for :io)
+             (executor-for :mixed)
              (create-default-executor workload)))))))
 
 (defn exec
   [^Runnable r workload]
-  (let [^ExecutorService e (executor-for workload)]
+  (let [^Executor e (executor-for workload)]
     (.execute e r)))
 
 (defn run

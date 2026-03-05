@@ -14,7 +14,7 @@
             [clojure.core.async.impl.dispatch :as disp]
             [clojure.walk :as walk]
             [clojure.datafy :as datafy])
-  (:import [java.util.concurrent Future Executors ExecutorService TimeUnit]
+  (:import [java.util.concurrent Future Executors Executor TimeUnit]
            [java.util.concurrent.locks ReentrantLock]))
 
 (set! *warn-on-reflection* true)
@@ -22,16 +22,16 @@
 (defn datafy [x]
   (condp instance? x
     clojure.lang.Fn (-> x str symbol)
-    ExecutorService (str x)
+    Executor (str x)
     clojure.lang.Var (symbol x)
     (datafy/datafy x)))
 
 (defn futurize [f {:keys [exec]}]
   (fn [& args]
-    (let [^ExecutorService e (if (instance? ExecutorService exec)
-                               exec
-                               (disp/executor-for exec))]
-      (.submit e ^Callable #(apply f args)))))
+    (let [^Executor e (if (instance? Executor exec)
+                        exec
+                        (disp/executor-for exec))]
+      (.execute e ^Runnable #(apply f args)))))
 
 (defn prep-proc [ret pid {:keys [proc, args, chan-opts] :or {chan-opts {}}}]
   (let [{:keys [ins outs signal-select]} (spi/describe proc)
@@ -51,8 +51,8 @@
   (let [lock (ReentrantLock.)
         chans (atom nil)
         execs {:mixed mixed-exec :io io-exec :compute compute-exec}
-        _ (assert (every? #(or (nil? %) (instance? ExecutorService %)) (vals execs))
-                  "mixed-exe, io-exec and compute-exec must be ExecutorServices")
+        _ (assert (every? #(or (nil? %) (instance? Executor %)) (vals execs))
+                  "mixed-exe, io-exec and compute-exec must be Executors")
         pdescs (reduce-kv prep-proc {} procs)
         allopts (fn [iok] (into {} (mapcat #(map (fn [[k opts]] [[(:pid %) k] opts]) (iok %)) (vals pdescs))))
         inopts (allopts :ins)

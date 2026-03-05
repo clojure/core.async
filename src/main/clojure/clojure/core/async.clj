@@ -17,11 +17,11 @@ go block threads - use Thread.setDefaultUncaughtExceptionHandler()
 to catch and handle.
 
 Use the Java system property `clojure.core.async.executor-factory`
-to specify a function that will provide ExecutorServices for
+to specify a function that will provide an Executor instance for
 application-wide use by core.async in lieu of its defaults. The
 property value should name a fully qualified var. The function
 will be passed a keyword indicating the context of use of the
-executor, and should return either an ExecutorService, or nil to
+executor, and should return either an Executor, or nil to
 use the default. Results per keyword will be cached and used for
 the remainder of the application. Possible context arguments are:
 
@@ -36,7 +36,7 @@ flow/process
 
 :core-async-dispatch - used for completion fn handling (e.g. in put!
 and take!, as well as go block IOC thunk processing) throughout
-core.async. If not supplied the ExecutorService for :io will be
+core.async. If not supplied, the Executor for :io will be
 used instead.
 
 The set of contexts may grow in the future so the function should
@@ -49,13 +49,22 @@ return nil for unexpected contexts."
             [clojure.core.async.impl.timers :as timers]
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.ioc-macros :as ioc]
-            clojure.core.async.impl.go ;; TODO: make conditional
             [clojure.core.async.impl.mutex :as mutex]
             )
   (:import [java.util.concurrent.atomic AtomicLong]
            [java.util.concurrent.locks Lock]
            [java.util.concurrent ThreadLocalRandom]
            [java.util Arrays ArrayList]))
+
+(defn- at-least-clojure-version?
+  [[maj min incr]]
+  (let [{:keys [major minor incremental]} *clojure-version*]
+    (not (neg? (compare [major minor incremental] [maj min incr])))))
+
+(def ^:private lazy-loading-supported? (at-least-clojure-version? [1 12 3]))
+
+(when-not lazy-loading-supported?
+  (require 'clojure.core.async.impl.go))
 
 (alias 'core 'clojure.core)
 
@@ -485,9 +494,13 @@ return nil for unexpected contexts."
   core.async blocking ops (those ending in !!) and other blocking IO.
 
   Returns a channel which will receive the result of the body when
-  completed"
+  completed.
+
+  The resources associated with a go block may be reclaimed, and the block
+  never resumed, when the channels with which it interacts are no longer
+  referenced (outside of the go block)."
   [& body]
-  (#'clojure.core.async.impl.go/go-impl &env body))
+  ((requiring-resolve 'clojure.core.async.impl.go/go-impl) &env body))
 
 (defonce ^:private thread-macro-executor nil)
 
@@ -524,7 +537,12 @@ return nil for unexpected contexts."
   "Executes the body in a thread, returning immediately to the calling
   thread. The body may do blocking I/O but must not do extended computation.
   Returns a channel which will receive the result of the body when completed,
-  then close."
+  then close.
+
+  Will dispatch to a virtual thread if available in the runtime JVM, and an
+  ordinary thread if not. Like 'thread's (and unlike 'go' blocks) 'io-thread's
+  must terminate ordinarily, and will keep referenced resources alive
+  until they do."
   [& body]
   `(thread-call (^:once fn* [] ~@body) :io))
 
