@@ -65,6 +65,9 @@ Copyright © Rich Hickey and contributors
 ## Changelog
 
 * next
+  * [ASYNC-262](https://clojure.atlassian.net/browse/ASYNC-262) (CLJ) REVERTED from 1.9.829-alpha2
+  * [ASYNC-272](https://clojure.atlassian.net/browse/ASYNC-272) (CLJ) Use JVM virtual threads in io-thread
+  * [ASYNC-271](https://clojure.atlassian.net/browse/ASYNC-271) (CLJ) futurize with no :exec arg throws 
   * [ASYNC-269](https://clojure.atlassian.net/browse/ASYNC-269) (CLJ) Noop callbacks dispatch on caller thread
 * Release 1.9.829-alpha2 on 2025-10-01
   * [ASYNC-262](https://clojure.atlassian.net/browse/ASYNC-262) (CLJ) Use virtual threads when available for go and io-thread
