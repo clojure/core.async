@@ -318,6 +318,8 @@ return nil for unexpected contexts."
               (recur (unchecked-inc i))))
         ^ints idxs (random-array n)
         priority (:priority opts)
+        fret-with (fn [port]
+                    (with-meta #(fret [% port]) (meta fret)))
         ret
         (loop [i 0]
           (when (< i n)
@@ -326,8 +328,8 @@ return nil for unexpected contexts."
                   wport (when (vector? port) (port 0))
                   vbox (if wport
                          (let [val (port 1)]
-                           (impl/put! wport val (alt-handler flag #(fret [% wport]))))
-                         (impl/take! port (alt-handler flag #(fret [% port]))))]
+                           (impl/put! wport val (alt-handler flag (fret-with wport))))
+                         (impl/take! port (alt-handler flag (fret-with port))))]
               (if vbox
                 (channels/box [@vbox (or wport port)])
                 (recur (inc i))))))]
