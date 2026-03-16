@@ -64,6 +64,8 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* next
+  * [ASYNC-270](https://clojure.atlassian.net/browse/ASYNC-270) (CLJ) futurize with no :exec arg throws
 * Release 1.9.847-alpha3 on 2026-03-11
   * [ASYNC-262](https://clojure.atlassian.net/browse/ASYNC-262) (CLJ) REVERTED from 1.9.829-alpha2
   * [ASYNC-272](https://clojure.atlassian.net/browse/ASYNC-272) (CLJ) Use JVM virtual threads in io-thread
