@@ -30,8 +30,10 @@
   (fn [& args]
     (let [^Executor e (if (instance? Executor exec)
                         exec
-                        (disp/executor-for exec))]
-      (.execute e ^Runnable #(apply f args)))))
+                        (disp/executor-for exec))
+          fut (java.util.concurrent.CompletableFuture.)]
+      (.execute e ^Runnable #(.complete fut (apply f args)))
+      fut)))
 
 (defn prep-proc [ret pid {:keys [proc, args, chan-opts] :or {chan-opts {}}}]
   (let [{:keys [ins outs signal-select]} (spi/describe proc)

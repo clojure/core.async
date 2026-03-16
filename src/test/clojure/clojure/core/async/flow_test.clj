@@ -12,10 +12,13 @@
 
 (deftest test-futurize
   (testing ""
-    (let [es (reify java.util.concurrent.ExecutorService
-               (^java.util.concurrent.Future submit [_ ^Callable f]
-                (future-call (comp vector f))))]
+    (let [in-es? (atom false)
+          es (reify java.util.concurrent.Executor
+               (^void execute [_ ^Runnable f]
+                 (reset! in-es? true)
+                 (future-call f)))]
       (is (= 16 @((flow/futurize #(* % %) {:exec :mixed}) 4)))
       (is (= 16 @((flow/futurize #(* % %)) 4)))
-      (is (= [16] @((flow/futurize #(* % %) {:exec es}) 4))))))
+      (is (= 16 @((flow/futurize #(* % %) {:exec es}) 4)))
+      (is @in-es?))))
 
