@@ -64,7 +64,7 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
-* next
+* Release 1.9.859-alpha4 on 2026-03-16
   * [ASYNC-273](https://clojure.atlassian.net/browse/ASYNC-273) (CLJ) alts!! callbacks should dispatch on caller when possible
   * [ASYNC-274](https://clojure.atlassian.net/browse/ASYNC-274) (CLJ) Fixed flow/futurize stopped returning a future on Executor change
   * [ASYNC-270](https://clojure.atlassian.net/browse/ASYNC-270) (CLJ) futurize with no :exec arg throws
