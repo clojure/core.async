@@ -338,4 +338,4 @@
           default :mixed"
   [f & {:keys [exec]
         :or {exec :mixed} :as opts}]
-  (impl/futurize f (assoc opts :exec exec)))
+  (impl/futurize f opts))
