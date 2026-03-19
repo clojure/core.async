@@ -64,11 +64,11 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
-* next alpha
+* Release 1.10.864-alpha1 on 2026-03-19
   * Alpha release of core.async.flow - all APIs subject to change
   * [ASYNC-274](https://clojure.atlassian.net/browse/ASYNC-274) (CLJ) Fixed flow/futurize stopped returning a future on Executor change
   * [ASYNC-270](https://clojure.atlassian.net/browse/ASYNC-270) (CLJ) futurize with no :exec arg throws
-* Release 1.9.865 (accumulated changes since 1.8.741):
+* Release 1.9.865 on 2026-03-19 (accumulated changes since 1.8.741)
   * Added datafy support for channels and buffers
   * [ASYNC-273](https://clojure.atlassian.net/browse/ASYNC-273) (CLJ) alts!! callbacks should dispatch on caller when possible
   * [ASYNC-272](https://clojure.atlassian.net/browse/ASYNC-272) (CLJ) Use JVM virtual threads in io-thread
