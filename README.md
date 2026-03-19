@@ -64,6 +64,15 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* next alpha
+  * Alpha release of core.async.flow - all APIs subject to change
+  * [ASYNC-274](https://clojure.atlassian.net/browse/ASYNC-274) (CLJ) Fixed flow/futurize stopped returning a future on Executor change
+  * [ASYNC-270](https://clojure.atlassian.net/browse/ASYNC-270) (CLJ) futurize with no :exec arg throws
+* next release (accumulated changes since 1.8.741):
+  * Added datafy support for channels and buffers
+  * [ASYNC-273](https://clojure.atlassian.net/browse/ASYNC-273) (CLJ) alts!! callbacks should dispatch on caller when possible
+  * [ASYNC-272](https://clojure.atlassian.net/browse/ASYNC-272) (CLJ) Use JVM virtual threads in io-thread
+  * [ASYNC-269](https://clojure.atlassian.net/browse/ASYNC-269) (CLJ) Noop callbacks dispatch on caller thread
 * Release 1.9.859-alpha4 on 2026-03-16
   * [ASYNC-273](https://clojure.atlassian.net/browse/ASYNC-273) (CLJ) alts!! callbacks should dispatch on caller when possible
   * [ASYNC-274](https://clojure.atlassian.net/browse/ASYNC-274) (CLJ) Fixed flow/futurize stopped returning a future on Executor change
