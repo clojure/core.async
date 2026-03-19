@@ -18,20 +18,20 @@ A Clojure library providing facilities for async programming and communication.
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
-Latest release: 1.8.741
+Latest release: 1.9.865
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22core.async%22)
 
 [deps.edn](https://clojure.org/reference/deps_and_cli) dependency information:
 
 ```clj
-  org.clojure/core.async {:mvn/version "1.8.741"}
+  org.clojure/core.async {:mvn/version "1.9.865"}
  ```
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
 ```clj
- [org.clojure/core.async "1.8.741"]
+ [org.clojure/core.async "1.9.865"]
 ```
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -40,7 +40,7 @@ Latest release: 1.8.741
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>core.async</artifactId>
-  <version>1.8.741</version>
+  <version>1.9.865</version>
 </dependency>
 ```
 
@@ -68,7 +68,7 @@ Copyright © Rich Hickey and contributors
   * Alpha release of core.async.flow - all APIs subject to change
   * [ASYNC-274](https://clojure.atlassian.net/browse/ASYNC-274) (CLJ) Fixed flow/futurize stopped returning a future on Executor change
   * [ASYNC-270](https://clojure.atlassian.net/browse/ASYNC-270) (CLJ) futurize with no :exec arg throws
-* next release (accumulated changes since 1.8.741):
+* Release 1.9.865 (accumulated changes since 1.8.741):
   * Added datafy support for channels and buffers
   * [ASYNC-273](https://clojure.atlassian.net/browse/ASYNC-273) (CLJ) alts!! callbacks should dispatch on caller when possible
   * [ASYNC-272](https://clojure.atlassian.net/browse/ASYNC-272) (CLJ) Use JVM virtual threads in io-thread
