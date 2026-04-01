@@ -5,20 +5,28 @@
 ;;   By using this software in any fashion, you are agreeing to be bound by
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any other, from this software.
-
 (ns clojure.core.async.flow-test
   (:require [clojure.test :refer :all]
-            [clojure.core.async.flow :as flow]))
+            [clojure.core.async.flow :as flow])
+  (:import [java.util.concurrent TimeUnit Future ExecutionException]))
+
+(set! *warn-on-reflection* true)
 
 (deftest test-futurize
-  (testing ""
+  (testing "Happy path use of futurize"
     (let [in-es? (atom false)
           es (reify java.util.concurrent.Executor
-               (^void execute [_ ^Runnable f]
-                 (reset! in-es? true)
-                 (future-call f)))]
+               (^void execute [_ ^Runnable r]
+                (reset! in-es? true)
+                (future (.run r))))]
       (is (= 16 @((flow/futurize #(* % %) {:exec :mixed}) 4)))
       (is (= 16 @((flow/futurize #(* % %)) 4)))
       (is (= 16 @((flow/futurize #(* % %) {:exec es}) 4)))
-      (is @in-es?))))
-
+      (is @in-es?)))
+  (testing "ASYNC-275 regression: futurize Future instance propagates exceptions"
+    (let [cause (ex-info "boom" {})
+          fut   ((flow/futurize (fn [] (throw cause)) {:exec :mixed}))
+          ex    (try
+                  (.get ^Future fut 1000 TimeUnit/MILLISECONDS)
+                  (catch ExecutionException e e))]
+      (is (= cause (.getCause ^ExecutionException ex))))))

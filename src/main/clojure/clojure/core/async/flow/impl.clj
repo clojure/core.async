@@ -14,7 +14,7 @@
             [clojure.core.async.impl.dispatch :as disp]
             [clojure.walk :as walk]
             [clojure.datafy :as datafy])
-  (:import [java.util.concurrent Future Executor TimeUnit CompletableFuture]
+  (:import [java.util.concurrent Future Executor TimeUnit FutureTask]
            [java.util.concurrent.locks ReentrantLock]))
 
 (set! *warn-on-reflection* true)
@@ -31,8 +31,8 @@
     (let [^Executor e (if (instance? Executor exec)
                         exec
                         (disp/executor-for exec))
-          fut (CompletableFuture.)]
-      (.execute e #(.complete fut (apply f args)))
+          fut (FutureTask. #(apply f args))]
+      (.execute e fut)
       fut)))
 
 (defn prep-proc [ret pid {:keys [proc, args, chan-opts] :or {chan-opts {}}}]
