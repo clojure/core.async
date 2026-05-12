@@ -30,3 +30,26 @@
                   (.get ^Future fut 1000 TimeUnit/MILLISECONDS)
                   (catch ExecutionException e e))]
       (is (= cause (.getCause ^ExecutionException ex))))))
+
+(defn minimal-step
+  ([init-state] (minimal-step init-state {}))
+  ([init-state desc]
+   (fn
+     ([] desc)
+     ([_args] init-state)
+     ([state _trans] state)
+     ([state _in _msg] [state nil]))))
+
+(defn ping-state-with [step-fn]
+  (let [g (flow/create-flow {:procs {:p {:proc (flow/process step-fn)}}})]
+    (try
+      (flow/start g)
+      (::flow/state (flow/ping-proc g :p))
+      (finally
+        (flow/stop g)))))
+
+(deftest test-ping-state-not-datafied
+  (testing "ping-proc returns ::flow/state with nondata values unchanged"
+    (let [state-val {:a-var #'identity :a-fn inc}
+          ping-state (ping-state-with (minimal-step state-val))]
+      (is (= state-val ping-state) "state should be returned unchanged"))))

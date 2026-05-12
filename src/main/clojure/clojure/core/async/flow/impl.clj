@@ -272,10 +272,11 @@
                  (let [pong (fn [c]
                               (let [pins (dissoc ins ::flow/control ::flow/casts)
                                     pouts (dissoc outs ::flow/error ::flow/report)]
-                                (async/>!! c (walk/postwalk datafy
-                                                #::flow{:pid pid, :status status
-                                                        :state state, :count count
-                                                        :ins pins :outs pouts}))))
+                                (async/>!! c (assoc (walk/postwalk datafy
+                                                     #::flow{:pid pid, :status status
+                                                             :count count
+                                                             :ins pins :outs pouts})
+                                                    ::flow/state state))))
                        handle-command (partial handle-command pid pong)
                        [nstatus nstate count read-ins]
                        (try
