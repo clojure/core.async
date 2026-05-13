@@ -53,3 +53,10 @@
     (let [state-val {:a-var #'identity :a-fn inc}
           ping-state (ping-state-with (minimal-step state-val))]
       (is (= state-val ping-state) "state should be returned unchanged"))))
+
+(deftest test-ping-map-fn
+  (testing ":ping-map-fn can redact sensitive keys from state"
+    (let [ping-state (ping-state-with (minimal-step {:visible 42 :hidden "secret"}
+                                                    {:ping-map-fn #(select-keys % [:visible])}))]
+      (is (= {:visible 42} ping-state) "secret was not removed"))))
+

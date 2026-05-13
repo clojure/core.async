@@ -244,7 +244,8 @@
   "see lib ns for docs"
   [step {:keys [workload compute-timeout-ms] :or {compute-timeout-ms 5000}}]
   (let [{:keys [params ins] :as desc} (step)
-        workload (or workload (:workload desc) :mixed)]
+        workload (or workload (:workload desc) :mixed)
+        ping-map-fn (or (:ping-map-fn desc) identity)]
     ;;(assert (or (not params) init) "must have :init if :params")
     (reify
       clojure.core.protocols/Datafiable
@@ -276,7 +277,7 @@
                                                      #::flow{:pid pid, :status status
                                                              :count count
                                                              :ins pins :outs pouts})
-                                                    ::flow/state state))))
+                                                    ::flow/state (ping-map-fn state)))))
                        handle-command (partial handle-command pid pong)
                        [nstatus nstate count read-ins]
                        (try

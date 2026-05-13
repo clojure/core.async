@@ -135,7 +135,9 @@
 
 (defn ping
   "pings all processes, returning a map of pid -> proc status and
-  state, for those procs that reply within timeout-ms (default 1000)"
+  state, for those procs that reply within timeout-ms (default 1000).
+  The value at ::flow/state is shaped by the proc's :ping-map-fn (see
+  process), defaulting to the proc's raw state."
   [g & {:keys [timeout-ms] :or {timeout-ms 1000}}]
   (g/ping g timeout-ms))
 
@@ -186,6 +188,9 @@
                    For the simple case of enumerated signal-ids, use a set,
                    e.g. #{:this/signal :that/signal}
                    If no :signal-select is provided, no signals will be received
+  :ping-map-fn - (ping-map-fn state) -> ping-map. The ping-map is
+                 placed under ::flow/state in ping/ping-proc replies.
+                 Defaults to identity.
   :workload with possible values of :mixed :io :compute.
   All entries in the describe return map are optional.
   
