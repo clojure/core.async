@@ -120,8 +120,8 @@ When a flow is created, it starts in the resumed state. The following flow funct
 
 You can also use these functions to ping the running processes and return their current state and status:
 
-* [ping](https://clojure.github.io/core.async/clojure.core.async.flow.html#var-ping) - Pings all procs and returns a map of their status
-* [ping-proc](https://clojure.github.io/core.async/clojure.core.async.flow.html#var-ping-proc) - Pings a single proce by pid and returns a map of status
+* [ping](https://clojure.github.io/core.async/clojure.core.async.flow.html#var-ping) - Pings all procs and returns a map of pid -> proc status and state
+* [ping-proc](https://clojure.github.io/core.async/clojure.core.async.flow.html#var-ping-proc) - Pings a single proc by pid and returns a map of status and state
 
 This function can be used to inject a message to an arbitrary `[pid cid]` channel:
 

@@ -243,7 +243,7 @@
 (defn proc
   "see lib ns for docs"
   [step {:keys [workload compute-timeout-ms] :or {compute-timeout-ms 5000}}]
-  (let [{:keys [params ins] :as desc} (step)
+  (let [{:keys [params ins ping-map-fn] :or {ping-map-fn identity} :as desc} (step)
         workload (or workload (:workload desc) :mixed)]
     ;;(assert (or (not params) init) "must have :init if :params")
     (reify
@@ -272,10 +272,11 @@
                  (let [pong (fn [c]
                               (let [pins (dissoc ins ::flow/control ::flow/casts)
                                     pouts (dissoc outs ::flow/error ::flow/report)]
-                                (async/>!! c (walk/postwalk datafy
-                                                #::flow{:pid pid, :status status
-                                                        :state state, :count count
-                                                        :ins pins :outs pouts}))))
+                                (async/>!! c (assoc (walk/postwalk datafy
+                                                     #::flow{:pid pid, :status status
+                                                             :count count
+                                                             :ins pins :outs pouts})
+                                                    ::flow/state (ping-map-fn state)))))
                        handle-command (partial handle-command pid pong)
                        [nstatus nstate count read-ins]
                        (try
