@@ -113,7 +113,9 @@ The keys in the map are:
 :transform, arity 3 - required</pre></div></div><div class="public anchor" id="var-pause"><h3>pause</h3><div class="usage"><code>(pause g)</code></div><div class="doc"><pre class="plaintext">pauses a running flow
 </pre></div></div><div class="public anchor" id="var-pause-proc"><h3>pause-proc</h3><div class="usage"><code>(pause-proc g pid)</code></div><div class="doc"><pre class="plaintext">pauses a process
 </pre></div></div><div class="public anchor" id="var-ping"><h3>ping</h3><div class="usage"><code>(ping g &amp; {:keys [timeout-ms], :or {timeout-ms 1000}})</code></div><div class="doc"><pre class="plaintext">pings all processes, returning a map of pid -&gt; proc status and
-state, for those procs that reply within timeout-ms (default 1000)</pre></div></div><div class="public anchor" id="var-ping-proc"><h3>ping-proc</h3><div class="usage"><code>(ping-proc g pid &amp; {:keys [timeout-ms], :or {timeout-ms 1000}})</code></div><div class="doc"><pre class="plaintext">like ping, but just pings the specified process
+state, for those procs that reply within timeout-ms (default 1000).
+The value at ::flow/state is that returned by the proc's
+:ping-map-fn (see process).</pre></div></div><div class="public anchor" id="var-ping-proc"><h3>ping-proc</h3><div class="usage"><code>(ping-proc g pid &amp; {:keys [timeout-ms], :or {timeout-ms 1000}})</code></div><div class="doc"><pre class="plaintext">like ping, but just pings the specified process
 </pre></div></div><div class="public anchor" id="var-process"><h3>process</h3><div class="usage"><code>(process step-fn)</code><code>(process step-fn {:keys [workload compute-timeout-ms], :as opts})</code></div><div class="doc"><pre class="plaintext">Given a function of four arities (0-3), aka the 'step-fn',
 returns a launcher that creates a process compliant with the process
 protocol (see the spi/ProcLauncher doc).
@@ -139,6 +141,9 @@ where description is a map with possible keys:
                  For the simple case of enumerated signal-ids, use a set,
                  e.g. #{:this/signal :that/signal}
                  If no :signal-select is provided, no signals will be received
+:ping-map-fn - (state) -&gt; ping-map. Defaults to identity. Given the state,
+               should return a (preferably all data) map, which is conveyed
+               under ::flow/state in ping/ping-proc replies.
 :workload with possible values of :mixed :io :compute.
 All entries in the describe return map are optional.
 

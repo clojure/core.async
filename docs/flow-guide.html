@@ -75,8 +75,8 @@
 </ul>
 <p>You can also use these functions to ping the running processes and return their current state and status:</p>
 <ul>
-<li><a href="https://clojure.github.io/core.async/clojure.core.async.flow.html#var-ping">ping</a> - Pings all procs and returns a map of their status</li>
-<li><a href="https://clojure.github.io/core.async/clojure.core.async.flow.html#var-ping-proc">ping-proc</a> - Pings a single proce by pid and returns a map of status</li>
+<li><a href="https://clojure.github.io/core.async/clojure.core.async.flow.html#var-ping">ping</a> - Pings all procs and returns a map of pid -&gt; proc status and state</li>
+<li><a href="https://clojure.github.io/core.async/clojure.core.async.flow.html#var-ping-proc">ping-proc</a> - Pings a single proc by pid and returns a map of status and state</li>
 </ul>
 <p>This function can be used to inject a message to an arbitrary <code>[pid cid]</code> channel:</p>
 <ul>
