@@ -64,6 +64,8 @@ Copyright © Rich Hickey and contributors
 
 ## Changelog
 
+* next
+  * [ASYNC-277](https://clojure.atlassian.net/browse/ASYNC-277) (CLJ) Add :ping-map-fn so processes can shape the process state returned in a ping
 * Release 1.10.870-alpha2 on 2026-04-06
   * [ASYNC-275](https://clojure.atlassian.net/browse/ASYNC-275) (CLJ) Fixed flow/futurize to retain original behavior of propagating exceptions
 * Release 1.10.864-alpha1 on 2026-03-19
