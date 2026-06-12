@@ -38,7 +38,7 @@ The step-fn should use the transition arity to coordinate the creation, pausing,
 
 ### transform: `(step-fn state input msg) -> [state' {out-id [msgs]}]`
 
-The transform arity is called in a loop by the process for every message received on an input channel and returns a new state and a map of output cids to messages to return. The process will take care of sending these messages to the output channels. Output can be sent to none, any or all of the :outsenumerated, and/or an input named by a [pid inid] tuple (e.g. for reply-to), and/or to the ::flow/report output. A step need not output at all (output or msgs can be empyt/nil), however an output _message_ may never be nil (per core.async channels).
+The transform arity is called in a loop by the process for every message received on an input channel and returns a new state and a map of output cids to messages to return. The process will take care of sending these messages to the output channels. Output can be sent to none, any or all of the :outs enumerated, and/or an input named by a [pid inid] tuple (e.g. for reply-to), and/or to the ::flow/report output. A step need not output at all (output or msgs can be empyt/nil), however an output _message_ may never be nil (per core.async channels).
 
 The step-fn may throw exceptions from any arity and they will be handled by flow. If exceptions are thrown from the transition or transform arities, the exception will be logged on the flow's :error-chan.
 
